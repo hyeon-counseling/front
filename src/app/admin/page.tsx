@@ -266,6 +266,25 @@ export default function AdminPage() {
   };
 
   // ─────────────────────────────────────────────────────────────────
+  // PDF 삭제
+  // ─────────────────────────────────────────────────────────────────
+
+  const handleDeletePdf = async (productId: string, fileIndex: number, filename: string) => {
+    if (!confirm(`"${filename}" 파일을 삭제할까요?`)) return;
+    try {
+      await apiFetch(`/api/products/${productId}/pdf/${fileIndex}`, { method: 'DELETE' });
+      // 로컬 상태에서도 즉시 제거
+      setSelectedProduct((prev) =>
+        prev
+          ? { ...prev, pdfFiles: prev.pdfFiles.filter((_, i) => i !== fileIndex) }
+          : prev
+      );
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'PDF 삭제에 실패했습니다.');
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────
   // 렌더링
   // ─────────────────────────────────────────────────────────────────
 
@@ -611,13 +630,35 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* 기존 PDF 목록 + 삭제 */}
+              {selectedProduct.pdfFiles?.length > 0 && (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
+                    Current PDF Files
+                  </label>
+                  <div className="space-y-2 rounded-xl border border-[var(--border)] p-3">
+                    {selectedProduct.pdfFiles.map((file, idx) => (
+                      <div key={idx} className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm text-[var(--foreground-muted)]">
+                          {file.filename}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePdf(selectedProduct._id, idx, file.filename)}
+                          className="shrink-0 text-xs text-[var(--error)] hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* 추가 PDF 업로드 */}
               <div>
                 <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-                  Add PDF Files{" "}
-                  <span className="text-xs font-normal text-[var(--foreground-subtle)]">
-                    (currently {selectedProduct.pdfFiles?.length ?? 0} file(s))
-                  </span>
+                  Add PDF Files
                 </label>
                 <input
                   type="file"
