@@ -14,6 +14,7 @@ interface Product {
   price: number;
   language: "ko" | "en" | "both";
   pdfFiles: { filename: string; r2Key: string }[];
+  polarProductId?: string;   // Polar.sh에 등록된 상품 ID
 }
 
 export default function BookDetailPage() {
@@ -54,10 +55,23 @@ export default function BookDetailPage() {
       router.push("/login");
       return;
     }
-    // 로그인된 상태 → Polar.sh 체크아웃 페이지로 이동
-    // (NEXT_PUBLIC_POLAR_PRODUCT_ID는 .env.local에서 관리)
-    const polarProductId = process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID;
-    window.location.href = `https://polar.sh/checkout/products/${polarProductId}`;
+
+    if (!product) return;
+
+    // 각 상품에 연결된 Polar 상품 ID 사용
+    // polarProductId가 없는 상품은 구매 불가 안내
+    const polarId = product.polarProductId;
+    if (!polarId) {
+      alert("This product is not yet available for purchase. Please contact us.");
+      return;
+    }
+
+    // Polar.sh 체크아웃 URL 생성
+    // customer_external_id: 결제 완료 웹훅에서 사용자를 자동 매핑하기 위해 MongoDB 사용자 ID 전달
+    const params = new URLSearchParams({
+      customer_external_id: user.id,
+    });
+    window.location.href = `https://polar.sh/checkout/products/${polarId}?${params.toString()}`;
   };
 
   // 로딩 중 스켈레톤
