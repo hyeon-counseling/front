@@ -14,6 +14,7 @@ interface Order {
     _id: string;
     title: string;
     price: number;
+    pdfFiles: { filename: string; r2Key: string }[];
   } | null;
   channel: "polar" | "cafe24";
   amount: number;
@@ -64,6 +65,17 @@ export default function MyPage() {
   const handleLogout = () => {
     logout();
     router.push("/");
+  };
+
+  // PDF 다운로드 — 백엔드에서 R2 서명 URL을 받아 새 탭에서 열기
+  const handleDownload = async (orderId: string, fileIndex: number) => {
+    try {
+      const data = await apiFetch(`/api/orders/my/${orderId}/download/${fileIndex}`);
+      // 반환된 서명 URL을 새 탭에서 열어 다운로드
+      window.open(data.url, "_blank");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "다운로드에 실패했습니다.");
+    }
   };
 
   // 인증 로딩 중이거나 로그인 안 된 상태 → 빈 화면 (리다이렉트 처리 중)
@@ -165,16 +177,23 @@ export default function MyPage() {
                           : "Failed"}
                     </span>
                     {order.status === "paid" && (
-                      <button
-                        className="rounded-full border border-[var(--brand)] px-4 py-1.5 text-xs font-medium text-[var(--brand)] transition-colors hover:bg-[var(--brand)] hover:text-white"
-                        onClick={() =>
-                          alert(
-                            "Download link sent to your email. Direct download coming soon."
-                          )
-                        }
-                      >
-                        Download PDF
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        {order.productId?.pdfFiles?.length ? (
+                          order.productId.pdfFiles.map((file, idx) => (
+                            <button
+                              key={idx}
+                              className="rounded-full border border-[var(--brand)] px-4 py-1.5 text-xs font-medium text-[var(--brand)] transition-colors hover:bg-[var(--brand)] hover:text-white"
+                              onClick={() => handleDownload(order._id, idx)}
+                            >
+                              {order.productId!.pdfFiles.length > 1
+                                ? `Download PDF ${idx + 1}`
+                                : "Download PDF"}
+                            </button>
+                          ))
+                        ) : (
+                          <span className="text-xs text-[var(--foreground-subtle)]">PDF preparing...</span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
