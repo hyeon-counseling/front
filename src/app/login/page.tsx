@@ -114,6 +114,13 @@ export default function LoginPage() {
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
+
+            {/* 비밀번호 찾기 링크 */}
+            <p className="text-center text-sm text-[var(--foreground-subtle)]">
+              <Link href="/forgot-password" className="text-[var(--brand)] hover:underline">
+                Forgot password?
+              </Link>
+            </p>
           </form>
 
           {/* 구분선 */}
