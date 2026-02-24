@@ -46,7 +46,7 @@ export default function Home() {
               </h3>
               <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
                 Every guide is grounded in psychological research and written by
-                a certified counselor with real-world experience.
+                an author with a background in counseling and human behavior.
               </p>
             </div>
 
