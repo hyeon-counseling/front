@@ -48,7 +48,7 @@ export default function Header() {
       )}
       <button
         onClick={handleLogout}
-        className="text-sm font-medium text-[var(--foreground-muted)] transition-colors hover:text-[var(--brand)]"
+        className="cursor-pointer text-sm font-medium text-[var(--foreground-muted)] transition-colors hover:text-[var(--brand)]"
       >
         Logout
       </button>
@@ -95,7 +95,7 @@ export default function Header() {
       )}
       <button
         onClick={handleLogout}
-        className="block w-full px-6 py-3 text-left text-sm font-medium text-[var(--foreground-muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--brand)]"
+        className="block w-full cursor-pointer px-6 py-3 text-left text-sm font-medium text-[var(--foreground-muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--brand)]"
       >
         Logout
       </button>
@@ -152,7 +152,7 @@ export default function Header() {
 
         {/* 모바일 햄버거 버튼 */}
         <button
-          className="flex flex-col gap-1.5 p-1 sm:hidden"
+          className="flex cursor-pointer flex-col gap-1.5 p-1 sm:hidden"
           onClick={() => setMenuOpen((prev) => !prev)}
           aria-label="Toggle menu"
         >

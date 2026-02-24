@@ -99,7 +99,7 @@ export default function AdminPage() {
             </p>
           </div>
           <button
-            className="rounded-full bg-[var(--brand)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+            className="cursor-pointer rounded-full bg-[var(--brand)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
             onClick={() => alert("Product creation form coming soon.")}
           >
             + Add Product
@@ -211,7 +211,7 @@ export default function AdminPage() {
                           </td>
                           <td className="px-5 py-3">
                             <button
-                              className="mr-2 text-xs text-[var(--foreground-muted)] hover:text-[var(--brand)] hover:underline"
+                              className="mr-2 cursor-pointer text-xs text-[var(--foreground-muted)] hover:text-[var(--brand)] hover:underline"
                               onClick={() =>
                                 alert("Edit functionality coming soon.")
                               }
@@ -219,7 +219,7 @@ export default function AdminPage() {
                               Edit
                             </button>
                             <button
-                              className="text-xs text-[var(--error)] hover:underline"
+                              className="cursor-pointer text-xs text-[var(--error)] hover:underline"
                               onClick={() =>
                                 alert("Delete functionality coming soon.")
                               }
