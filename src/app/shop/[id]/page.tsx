@@ -48,30 +48,34 @@ export default function BookDetailPage() {
     if (id) fetchProduct();
   }, [id]);
 
+  const [isPurchasing, setIsPurchasing] = useState(false);
+
   // 구매 버튼 클릭 처리
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!user) {
-      // 로그인 안 된 상태 → 로그인 페이지로 이동
       router.push("/login");
       return;
     }
 
     if (!product) return;
 
-    // 각 상품에 연결된 Polar 상품 ID 사용
-    // polarProductId가 없는 상품은 구매 불가 안내
-    const polarId = product.polarProductId;
-    if (!polarId) {
+    if (!product.polarProductId) {
       alert("This product is not yet available for purchase. Please contact us.");
       return;
     }
 
-    // Polar.sh 체크아웃 URL 생성
-    // customer_external_id: 결제 완료 웹훅에서 사용자를 자동 매핑하기 위해 MongoDB 사용자 ID 전달
-    const params = new URLSearchParams({
-      customer_external_id: user.id,
-    });
-    window.location.href = `https://polar.sh/checkout/products/${polarId}?${params.toString()}`;
+    setIsPurchasing(true);
+    try {
+      // 백엔드에서 Polar 체크아웃 세션 생성 → URL 반환
+      const data = await apiFetch(`/api/products/${product._id}/checkout`, {
+        method: "POST",
+      });
+      // 반환된 Polar 결제 URL로 이동
+      window.location.href = data.url;
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "결제 페이지를 열 수 없습니다. 잠시 후 다시 시도해 주세요.");
+      setIsPurchasing(false);
+    }
   };
 
   // 로딩 중 스켈레톤
@@ -168,11 +172,14 @@ export default function BookDetailPage() {
             </div>
             <button
               onClick={handlePurchase}
-              className="w-full rounded-full bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] sm:w-auto"
+              disabled={isPurchasing}
+              className="w-full rounded-full bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
-              {user
-                ? `Purchase — $${product.price.toFixed(2)}`
-                : "Sign in to Purchase"}
+              {isPurchasing
+                ? "Redirecting..."
+                : user
+                  ? `Purchase — $${product.price.toFixed(2)}`
+                  : "Sign in to Purchase"}
             </button>
           </div>
         </div>
