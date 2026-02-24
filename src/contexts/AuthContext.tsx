@@ -17,6 +17,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useCallback,
   ReactNode,
 } from 'react';
 
@@ -66,20 +67,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // 로그인 처리 — token과 user를 상태 + localStorage에 저장
-  const login = (newToken: string, newUser: AuthUser) => {
+  // useCallback: 함수 참조를 고정해 useEffect 무한 루프 방지
+  const login = useCallback((newToken: string, newUser: AuthUser) => {
     setToken(newToken);
     setUser(newUser);
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(newUser));
-  };
+  }, []);
 
   // 로그아웃 처리 — 상태 초기화 + localStorage 제거
-  const logout = () => {
+  const logout = useCallback(() => {
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, loading }}>

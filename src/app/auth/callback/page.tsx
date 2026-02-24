@@ -37,9 +37,11 @@ function CallbackHandler() {
     }
 
     try {
-      // base64로 인코딩된 user JSON을 디코딩
-      // atob: base64 → 문자열 (브라우저 내장 함수)
-      const decoded = atob(userParam);
+      // URL 전송 시 + 가 공백으로 변환되므로 복원 후 디코딩
+      // TextDecoder로 한글 등 UTF-8 문자도 안전하게 처리
+      const fixedBase64 = userParam.replace(/ /g, '+');
+      const bytes = Uint8Array.from(atob(fixedBase64), (c) => c.charCodeAt(0));
+      const decoded = new TextDecoder('utf-8').decode(bytes);
       const user = JSON.parse(decoded) as AuthUser;
 
       // 전역 로그인 상태 + localStorage에 저장
