@@ -2,15 +2,47 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiFetch } from "@/lib/api";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { login } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(""); // 에러 메시지 (alert 대신 인라인 표시)
+  const [loading, setLoading] = useState(false);
 
-  // 실제 로그인 로직은 추후 API 연결 시 구현
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Login functionality coming soon.");
+    setError("");
+    setLoading(true);
+
+    try {
+      // POST /api/auth/login 호출
+      // 성공 응답: { token: string, user: { id, name, email, role } }
+      const data = await apiFetch("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+
+      // 전역 로그인 상태 + localStorage에 저장
+      login(data.token, data.user);
+
+      // 마이페이지로 이동
+      router.push("/mypage");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "로그인에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 구글 로그인 → 백엔드 OAuth 엔드포인트로 페이지 이동
+  const handleGoogleLogin = () => {
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
   };
 
   return (
@@ -29,6 +61,13 @@ export default function LoginPage() {
         {/* 로그인 폼 */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* 에러 메시지 — 로그인 실패 시 폼 상단에 인라인 표시 */}
+            {error && (
+              <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
             {/* 이메일 */}
             <div>
               <label
@@ -67,12 +106,13 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* 제출 버튼 */}
+            {/* 제출 버튼 — 로딩 중 비활성화 */}
             <button
               type="submit"
-              className="w-full rounded-full bg-[var(--brand)] py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+              disabled={loading}
+              className="w-full rounded-full bg-[var(--brand)] py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Sign In
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
@@ -83,13 +123,13 @@ export default function LoginPage() {
             <div className="h-px flex-1 bg-[var(--border)]" />
           </div>
 
-          {/* 구글 로그인 버튼 (추후 연결) */}
+          {/* 구글 로그인 버튼 */}
           <button
             type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] py-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--surface)]"
-            onClick={() => alert("Google login coming soon.")}
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] py-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {/* 구글 아이콘 (SVG) */}
             <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

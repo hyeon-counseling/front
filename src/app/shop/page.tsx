@@ -1,37 +1,44 @@
-import Link from "next/link";
+"use client";
 
-// 더미 전자책 데이터 (실제 API 연결 전 임시 데이터)
-const DUMMY_BOOKS = [
-  {
-    id: "1",
-    title: "Understanding Anxiety",
-    subtitle: "A Practical Guide to Calming Your Mind",
-    price: 12.0,
-    description:
-      "Learn to recognize anxiety patterns and discover evidence-based techniques to find calm in everyday situations.",
-    tag: "Anxiety",
-  },
-  {
-    id: "2",
-    title: "The Self-Compassion Workbook",
-    subtitle: "Practical Exercises for Inner Healing",
-    price: 14.0,
-    description:
-      "A step-by-step workbook guiding you to treat yourself with the kindness you deserve, backed by self-compassion research.",
-    tag: "Self-Care",
-  },
-  {
-    id: "3",
-    title: "Emotional Boundaries",
-    subtitle: "Protecting Your Energy Without Guilt",
-    price: 11.0,
-    description:
-      "Understand why boundaries matter, how to set them without conflict, and how to maintain them in relationships.",
-    tag: "Relationships",
-  },
-];
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
+
+// 백엔드 상품 데이터 타입
+interface Product {
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  language: "ko" | "en" | "both";
+  isActive: boolean;
+}
 
 export default function ShopPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        // GET /api/products — 활성화된 상품 전체 목록
+        const data = await apiFetch("/api/products");
+        setProducts(data);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "상품 목록을 불러오지 못했습니다."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
     <div className="px-4 py-12 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-5xl">
@@ -45,46 +52,77 @@ export default function ShopPage() {
           </p>
         </div>
 
-        {/* 전자책 카드 목록 */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {DUMMY_BOOKS.map((book) => (
-            <div
-              key={book.id}
-              className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 transition-shadow hover:shadow-md"
-            >
-              {/* 태그 */}
-              <span className="mb-3 inline-block self-start rounded-full bg-[var(--brand-light)] px-3 py-0.5 text-xs font-medium text-[var(--brand)]">
-                {book.tag}
-              </span>
+        {/* 로딩 중 스켈레톤 */}
+        {loading && (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-64 animate-pulse rounded-2xl bg-[var(--surface)]"
+              />
+            ))}
+          </div>
+        )}
 
-              {/* 제목 */}
-              <h2 className="mb-1 text-lg font-semibold text-[var(--foreground)]">
-                {book.title}
-              </h2>
-              <p className="mb-3 text-sm text-[var(--foreground-subtle)]">
-                {book.subtitle}
-              </p>
+        {/* 에러 */}
+        {!loading && error && (
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-10 text-center">
+            <p className="text-[var(--foreground-muted)]">{error}</p>
+          </div>
+        )}
 
-              {/* 설명 */}
-              <p className="mb-5 flex-1 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                {book.description}
-              </p>
+        {/* 상품 없음 */}
+        {!loading && !error && products.length === 0 && (
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-10 text-center">
+            <p className="text-[var(--foreground-muted)]">
+              No e-books available yet. Check back soon!
+            </p>
+          </div>
+        )}
 
-              {/* 가격 + 버튼 */}
-              <div className="flex items-center justify-between">
-                <span className="text-base font-semibold text-[var(--foreground)]">
-                  ${book.price.toFixed(2)}
+        {/* 상품 카드 목록 */}
+        {!loading && !error && products.length > 0 && (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {products.map((product) => (
+              <div
+                key={product._id}
+                className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 transition-shadow hover:shadow-md"
+              >
+                {/* 언어 태그 */}
+                <span className="mb-3 inline-block self-start rounded-full bg-[var(--brand-light)] px-3 py-0.5 text-xs font-medium text-[var(--brand)]">
+                  {product.language === "ko"
+                    ? "Korean"
+                    : product.language === "en"
+                      ? "English"
+                      : "KO / EN"}
                 </span>
-                <Link
-                  href={`/shop/${book.id}`}
-                  className="rounded-full bg-[var(--brand)] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
-                >
-                  View Details
-                </Link>
+
+                {/* 제목 */}
+                <h2 className="mb-3 flex-1 text-lg font-semibold text-[var(--foreground)]">
+                  {product.title}
+                </h2>
+
+                {/* 설명 (최대 2줄) */}
+                <p className="mb-5 line-clamp-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                  {product.description}
+                </p>
+
+                {/* 가격 + 버튼 */}
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-semibold text-[var(--foreground)]">
+                    ${product.price.toFixed(2)}
+                  </span>
+                  <Link
+                    href={`/shop/${product._id}`}
+                    className="rounded-full bg-[var(--brand)] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+                  >
+                    View Details
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

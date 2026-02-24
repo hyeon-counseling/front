@@ -1,18 +1,118 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/shop", label: "Shop" },
-  { href: "/login", label: "Login" },
-];
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user, logout, loading } = useAuth();
+
+  // 로그아웃 처리 후 홈으로 이동
+  const handleLogout = () => {
+    logout();
+    setMenuOpen(false);
+    router.push("/");
+  };
+
+  // 로그인 상태에 따라 오른쪽 메뉴 구성
+  // - 초기 복원 중(loading): 아무것도 안 보여서 깜빡임 방지
+  // - 로그인 전: Login 링크
+  // - 로그인 후: My Page + (관리자면 Admin) + Logout 버튼
+  const authLinks = loading ? null : user ? (
+    <>
+      <Link
+        href="/mypage"
+        className={`text-sm font-medium transition-colors hover:text-[var(--brand)] ${
+          pathname === "/mypage"
+            ? "text-[var(--brand)]"
+            : "text-[var(--foreground-muted)]"
+        }`}
+      >
+        My Page
+      </Link>
+      {user.role === "admin" && (
+        <Link
+          href="/admin"
+          className={`text-sm font-medium transition-colors hover:text-[var(--brand)] ${
+            pathname === "/admin"
+              ? "text-[var(--brand)]"
+              : "text-[var(--foreground-muted)]"
+          }`}
+        >
+          Admin
+        </Link>
+      )}
+      <button
+        onClick={handleLogout}
+        className="text-sm font-medium text-[var(--foreground-muted)] transition-colors hover:text-[var(--brand)]"
+      >
+        Logout
+      </button>
+    </>
+  ) : (
+    <Link
+      href="/login"
+      className={`text-sm font-medium transition-colors hover:text-[var(--brand)] ${
+        pathname === "/login"
+          ? "text-[var(--brand)]"
+          : "text-[var(--foreground-muted)]"
+      }`}
+    >
+      Login
+    </Link>
+  );
+
+  // 모바일 메뉴용 동일 구성
+  const mobileAuthLinks = loading ? null : user ? (
+    <>
+      <Link
+        href="/mypage"
+        onClick={() => setMenuOpen(false)}
+        className={`block px-6 py-3 text-sm font-medium transition-colors hover:bg-[var(--surface)] hover:text-[var(--brand)] ${
+          pathname === "/mypage"
+            ? "text-[var(--brand)]"
+            : "text-[var(--foreground-muted)]"
+        }`}
+      >
+        My Page
+      </Link>
+      {user.role === "admin" && (
+        <Link
+          href="/admin"
+          onClick={() => setMenuOpen(false)}
+          className={`block px-6 py-3 text-sm font-medium transition-colors hover:bg-[var(--surface)] hover:text-[var(--brand)] ${
+            pathname === "/admin"
+              ? "text-[var(--brand)]"
+              : "text-[var(--foreground-muted)]"
+          }`}
+        >
+          Admin
+        </Link>
+      )}
+      <button
+        onClick={handleLogout}
+        className="block w-full px-6 py-3 text-left text-sm font-medium text-[var(--foreground-muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--brand)]"
+      >
+        Logout
+      </button>
+    </>
+  ) : (
+    <Link
+      href="/login"
+      onClick={() => setMenuOpen(false)}
+      className={`block px-6 py-3 text-sm font-medium transition-colors hover:bg-[var(--surface)] hover:text-[var(--brand)] ${
+        pathname === "/login"
+          ? "text-[var(--brand)]"
+          : "text-[var(--foreground-muted)]"
+      }`}
+    >
+      Login
+    </Link>
+  );
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]">
@@ -27,19 +127,27 @@ export default function Header() {
 
         {/* 데스크톱 내비게이션 */}
         <nav className="hidden items-center gap-6 sm:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-[var(--brand)] ${
-                pathname === link.href
-                  ? "text-[var(--brand)]"
-                  : "text-[var(--foreground-muted)]"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          <Link
+            href="/"
+            className={`text-sm font-medium transition-colors hover:text-[var(--brand)] ${
+              pathname === "/"
+                ? "text-[var(--brand)]"
+                : "text-[var(--foreground-muted)]"
+            }`}
+          >
+            Home
+          </Link>
+          <Link
+            href="/shop"
+            className={`text-sm font-medium transition-colors hover:text-[var(--brand)] ${
+              pathname === "/shop" || pathname.startsWith("/shop/")
+                ? "text-[var(--brand)]"
+                : "text-[var(--foreground-muted)]"
+            }`}
+          >
+            Shop
+          </Link>
+          {authLinks}
         </nav>
 
         {/* 모바일 햄버거 버튼 */}
@@ -69,20 +177,29 @@ export default function Header() {
       {/* 모바일 드롭다운 메뉴 */}
       {menuOpen && (
         <nav className="border-t border-[var(--border)] bg-[var(--background)] sm:hidden">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              className={`block px-6 py-3 text-sm font-medium transition-colors hover:bg-[var(--surface)] hover:text-[var(--brand)] ${
-                pathname === link.href
-                  ? "text-[var(--brand)]"
-                  : "text-[var(--foreground-muted)]"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          <Link
+            href="/"
+            onClick={() => setMenuOpen(false)}
+            className={`block px-6 py-3 text-sm font-medium transition-colors hover:bg-[var(--surface)] hover:text-[var(--brand)] ${
+              pathname === "/"
+                ? "text-[var(--brand)]"
+                : "text-[var(--foreground-muted)]"
+            }`}
+          >
+            Home
+          </Link>
+          <Link
+            href="/shop"
+            onClick={() => setMenuOpen(false)}
+            className={`block px-6 py-3 text-sm font-medium transition-colors hover:bg-[var(--surface)] hover:text-[var(--brand)] ${
+              pathname === "/shop" || pathname.startsWith("/shop/")
+                ? "text-[var(--brand)]"
+                : "text-[var(--foreground-muted)]"
+            }`}
+          >
+            Shop
+          </Link>
+          {mobileAuthLinks}
         </nav>
       )}
     </header>
