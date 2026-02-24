@@ -157,7 +157,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-full bg-[var(--brand)] py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full cursor-pointer rounded-full bg-[var(--brand)] py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Creating account..." : "Create Account"}
             </button>
@@ -175,7 +175,7 @@ export default function RegisterPage() {
             type="button"
             onClick={handleGoogleSignup}
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] py-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] py-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
               <path
