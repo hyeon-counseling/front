@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────
+   Hyeon Counseling Brand Colors
+   심리상담 서비스에 어울리는 따뜻하고 차분한 팔레트
+───────────────────────────────────────────── */
+:root {
+  /* 배경 계열 — 따뜻한 크림/베이지 */
+  --background: #faf7f2;
+  --surface: #f3ede4;
+  --surface-muted: #ede5d8;
+
+  /* 텍스트 계열 */
+  --foreground: #2c2420;
+  --foreground-muted: #6b5e57;
+  --foreground-subtle: #9c8e87;
+
+  /* 브랜드 포인트 — 딥 포레스트 그린 */
+  --brand: #3d6b5e;
+  --brand-hover: #2f5449;
+  --brand-light: #d4e8e3;
+
+  /* 보조 색상 */
+  --border: #ddd5c8;
+  --border-light: #ede8e0;
+
+  /* 상태 색상 */
+  --success: #4a7c6f;
+  --error: #b5534a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-subtle: var(--foreground-subtle);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-light: var(--brand-light);
+
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* 기본 body 스타일 */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), "Georgia", serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
