@@ -350,7 +350,8 @@ export default function AdminPage() {
                 </div>
               ) : (
                 <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
-                  <table className="w-full text-sm">
+                  <div className="overflow-x-auto">
+                  <table className="w-full min-w-[560px] text-sm">
                     <thead className="bg-[var(--surface)]">
                       <tr>
                         <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Title</th>
@@ -395,6 +396,7 @@ export default function AdminPage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
             </section>
@@ -408,7 +410,8 @@ export default function AdminPage() {
                 </div>
               ) : (
                 <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
-                  <table className="w-full text-sm">
+                  <div className="overflow-x-auto">
+                  <table className="w-full min-w-[640px] text-sm">
                     <thead className="bg-[var(--surface)]">
                       <tr>
                         <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Customer</th>
@@ -440,6 +443,7 @@ export default function AdminPage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
             </section>
