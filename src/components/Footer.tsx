@@ -34,6 +34,11 @@ export default function Footer() {
           </nav>
         </div>
 
+        {/* 면책 고지 */}
+        <p className="mt-4 text-center text-xs leading-relaxed text-[var(--foreground-subtle)]">
+          All content is for educational purposes only and does not constitute medical or therapeutic advice.
+        </p>
+
         {/* 저작권 */}
         <p className="mt-6 text-center text-xs text-[var(--foreground-subtle)]">
           &copy; {currentYear} Hyeon Counseling. All rights reserved.
