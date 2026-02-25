@@ -28,7 +28,20 @@ function PurchaseSuccessBanner() {
   const searchParams = useSearchParams();
   const [dismissed, setDismissed] = useState(false);
 
-  const showBanner = searchParams.get("purchase") === "success" && !dismissed;
+  const isPurchaseSuccess = searchParams.get("purchase") === "success";
+  const showBanner = isPurchaseSuccess && !dismissed;
+
+  // 모바일 앱에서 접근한 경우: hyeonapp://purchase-success 딥링크로 앱 복귀
+  useEffect(() => {
+    if (isPurchaseSuccess) {
+      // 페이지가 먼저 렌더링된 후 딥링크 시도
+      // 앱이 설치되어 있으면 앱이 열리고, 없으면 그냥 웹페이지에 머무름
+      const timer = setTimeout(() => {
+        window.location.href = "hyeonapp://purchase-success";
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isPurchaseSuccess]);
 
   if (!showBanner) return null;
 
