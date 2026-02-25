@@ -15,6 +15,14 @@ interface Product {
   language: "ko" | "en" | "both";
   pdfFiles: { filename: string; r2Key: string }[];
   polarProductId?: string;   // Polar.sh에 등록된 상품 ID
+  coverImageUrl?: string;
+}
+
+// 주문 목록에서 필요한 최소 타입
+interface OrderSummary {
+  _id: string;
+  productId: { _id: string } | null;
+  status: string;
 }
 
 export default function BookDetailPage() {
@@ -25,6 +33,7 @@ export default function BookDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [alreadyPurchased, setAlreadyPurchased] = useState(false);
 
   const id = params.id as string;
 
@@ -47,6 +56,27 @@ export default function BookDetailPage() {
 
     if (id) fetchProduct();
   }, [id]);
+
+  // 로그인 상태이면 구매 여부 확인 — 이미 구매한 경우 버튼 대신 안내 문구 표시
+  useEffect(() => {
+    if (!user || !id) return;
+
+    const checkPurchased = async () => {
+      try {
+        const orders: OrderSummary[] = await apiFetch("/api/orders/my");
+        const purchased = orders.some(
+          (order) =>
+            order.status === "paid" &&
+            order.productId?._id === id
+        );
+        setAlreadyPurchased(purchased);
+      } catch {
+        // 조회 실패 시 구매 여부 확인 생략 — 기존 구매 버튼 표시
+      }
+    };
+
+    checkPurchased();
+  }, [user, id]);
 
   const [isPurchasing, setIsPurchasing] = useState(false);
 
@@ -120,6 +150,33 @@ export default function BookDetailPage() {
         </Link>
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-8 sm:p-10">
+          {/* 커버 이미지 */}
+          {product.coverImageUrl ? (
+            <img
+              src={product.coverImageUrl}
+              alt={product.title}
+              className="mb-8 w-full max-h-80 object-contain rounded-2xl"
+            />
+          ) : (
+            <div className="mb-8 w-full h-64 bg-[#3d6b5e] rounded-2xl flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="64"
+                height="64"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+            </div>
+          )}
+
           {/* 언어 태그 */}
           <span className="mb-4 inline-block rounded-full bg-[var(--brand-light)] px-3 py-0.5 text-xs font-medium text-[var(--brand)]">
             {product.language === "ko"
@@ -170,17 +227,27 @@ export default function BookDetailPage() {
                 ${product.price.toFixed(2)}
               </p>
             </div>
-            <button
-              onClick={handlePurchase}
-              disabled={isPurchasing}
-              className="w-full rounded-full bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-            >
-              {isPurchasing
-                ? "Redirecting..."
-                : user
-                  ? `Purchase — $${product.price.toFixed(2)}`
-                  : "Sign in to Purchase"}
-            </button>
+            {alreadyPurchased ? (
+              /* 이미 구매한 상품 — 마이페이지 안내 링크 표시 */
+              <Link
+                href="/mypage"
+                className="text-sm font-medium text-[#3d6b5e] hover:underline"
+              >
+                Already purchased &mdash; Go to My Page &rarr;
+              </Link>
+            ) : (
+              <button
+                onClick={handlePurchase}
+                disabled={isPurchasing}
+                className="w-full rounded-full bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              >
+                {isPurchasing
+                  ? "Redirecting..."
+                  : user
+                    ? `Purchase — $${product.price.toFixed(2)}`
+                    : "Sign in to Purchase"}
+              </button>
+            )}
           </div>
         </div>
       </div>

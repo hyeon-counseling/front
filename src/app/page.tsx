@@ -1,6 +1,30 @@
 import Link from "next/link";
 
-export default function Home() {
+// 상품 타입 (API 응답 기준)
+interface Product {
+  _id: string;
+  title: string;
+  price: number;
+  coverImageUrl?: string;
+}
+
+// 서버사이드에서 상품 최대 3개 조회 (60초마다 revalidate)
+async function getProducts(): Promise<Product[]> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/products`,
+      { next: { revalidate: 60 } }
+    );
+    const data = await res.json();
+    return data.success ? data.data.slice(0, 3) : [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function Home() {
+  const products = await getProducts();
+
   return (
     <div>
       {/* ── 히어로 섹션 ─────────────────────────────── */}
@@ -27,6 +51,84 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      {/* ── Featured Books 섹션 (상품 있을 때만 표시) ─── */}
+      {products.length > 0 && (
+        <>
+          <div className="border-t border-[var(--border)]" />
+          <section className="px-4 py-16 sm:px-6">
+            <div className="mx-auto max-w-5xl">
+              {/* 섹션 헤더 */}
+              <div className="mb-10 flex items-end justify-between">
+                <h2 className="text-2xl font-semibold text-[var(--foreground)] sm:text-3xl">
+                  Featured Books
+                </h2>
+                <Link
+                  href="/shop"
+                  className="text-sm font-medium text-[var(--brand)] hover:underline"
+                >
+                  View All Books &rarr;
+                </Link>
+              </div>
+
+              {/* 상품 카드 그리드 */}
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {products.map((product) => (
+                  <div
+                    key={product._id}
+                    className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] transition-shadow hover:shadow-md"
+                  >
+                    {/* 커버 이미지 */}
+                    {product.coverImageUrl ? (
+                      <img
+                        src={product.coverImageUrl}
+                        alt={product.title}
+                        className="w-full h-48 object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-48 bg-[#3d6b5e] flex items-center justify-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="48"
+                          height="48"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="white"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg>
+                      </div>
+                    )}
+
+                    {/* 텍스트 영역 */}
+                    <div className="flex flex-col flex-1 p-6">
+                      <h3 className="mb-3 flex-1 text-base font-semibold text-[var(--foreground)]">
+                        {product.title}
+                      </h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-[var(--foreground)]">
+                          ${product.price.toFixed(2)}
+                        </span>
+                        <Link
+                          href={`/shop/${product._id}`}
+                          className="rounded-full bg-[var(--brand)] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+                        >
+                          View Details
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
 
       {/* ── 구분선 ────────────────────────────────────── */}
       <div className="border-t border-[var(--border)]" />

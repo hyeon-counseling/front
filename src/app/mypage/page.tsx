@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 
@@ -21,6 +21,45 @@ interface Order {
   currency: string;
   status: "pending" | "paid" | "failed";
   createdAt: string;
+}
+
+// 구매 완료 배너 — useSearchParams 사용으로 반드시 Suspense 안에서 렌더링
+function PurchaseSuccessBanner() {
+  const searchParams = useSearchParams();
+  const [dismissed, setDismissed] = useState(false);
+
+  const showBanner = searchParams.get("purchase") === "success" && !dismissed;
+
+  if (!showBanner) return null;
+
+  return (
+    <div className="mb-6 flex items-center justify-between rounded-2xl bg-[#3d6b5e] px-5 py-4 text-white">
+      <p className="text-sm font-medium">
+        Your purchase is complete! Download your PDF below.
+      </p>
+      <button
+        onClick={() => setDismissed(true)}
+        aria-label="Close banner"
+        className="ml-4 flex-shrink-0 opacity-80 hover:opacity-100 transition-opacity"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+  );
 }
 
 export default function MyPage() {
@@ -86,6 +125,11 @@ export default function MyPage() {
   return (
     <div className="px-4 py-12 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-3xl">
+        {/* 구매 완료 배너 — Suspense로 감싸서 useSearchParams 빌드 오류 방지 */}
+        <Suspense fallback={null}>
+          <PurchaseSuccessBanner />
+        </Suspense>
+
         {/* 페이지 헤더 */}
         <div className="mb-10">
           <h1 className="mb-1 text-2xl font-semibold text-[var(--foreground)] sm:text-3xl">
