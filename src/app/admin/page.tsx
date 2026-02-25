@@ -20,6 +20,7 @@ interface Product {
   language: "ko" | "en" | "both";
   isActive: boolean;
   pdfFiles: { filename: string; r2Key: string }[];
+  coverImageUrl?: string;
 }
 
 interface AdminOrder {
@@ -84,6 +85,18 @@ export default function AdminPage() {
   const [uploadDone, setUploadDone] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 이미지 업로드 상태
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // 수정 모달 이미지 상태
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreviewUrl, setEditImagePreviewUrl] = useState<string | null>(null);
+  const [isUploadingEditImage, setIsUploadingEditImage] = useState(false);
+  const editImageInputRef = useRef<HTMLInputElement>(null);
+
   // 접근 권한 확인
   useEffect(() => {
     if (authLoading) return;
@@ -125,6 +138,8 @@ export default function AdminPage() {
     setCreatedProductId(null);
     setPdfFiles([]);
     setUploadDone(false);
+    setImageFile(null);
+    setImagePreviewUrl(null);
     setShowAddModal(true);
   };
 
@@ -133,6 +148,8 @@ export default function AdminPage() {
     setCreatedProductId(null);
     setPdfFiles([]);
     setUploadDone(false);
+    setImageFile(null);
+    setImagePreviewUrl(null);
     fetchData();
   };
 
@@ -198,6 +215,78 @@ export default function AdminPage() {
     }
   };
 
+  // 이미지 파일 선택 핸들러 — 브라우저에서 미리보기 URL 생성
+  const handleImageFileChange = (file: File | null, setFile: (f: File | null) => void, setPreview: (url: string | null) => void) => {
+    if (!file) {
+      setFile(null);
+      setPreview(null);
+      return;
+    }
+    setFile(file);
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+  };
+
+  // 이미지 업로드 실행 (등록 Step 2에서 사용)
+  const handleImageUpload = async (productId: string): Promise<boolean> => {
+    if (!imageFile) return true; // 이미지 없으면 건너뜀
+
+    setIsUploadingImage(true);
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+    try {
+      const formData = new FormData();
+      formData.append("image", imageFile);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/products/${productId}/image`,
+        {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        }
+      );
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "이미지 업로드 실패");
+      return true;
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "이미지 업로드에 실패했습니다.");
+      return false;
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // 수정 모달 이미지 업로드 실행
+  const handleEditImageUpload = async (productId: string): Promise<boolean> => {
+    if (!editImageFile) return true;
+
+    setIsUploadingEditImage(true);
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+    try {
+      const formData = new FormData();
+      formData.append("image", editImageFile);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/products/${productId}/image`,
+        {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        }
+      );
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "이미지 업로드 실패");
+      return true;
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "이미지 업로드에 실패했습니다.");
+      return false;
+    } finally {
+      setIsUploadingEditImage(false);
+    }
+  };
+
   // ─────────────────────────────────────────────────────────────────
   // 상품 수정
   // ─────────────────────────────────────────────────────────────────
@@ -212,6 +301,8 @@ export default function AdminPage() {
     });
     setFormError("");
     setPdfFiles([]);
+    setEditImageFile(null);
+    setEditImagePreviewUrl(null);
     setShowEditModal(true);
   };
 
@@ -219,6 +310,8 @@ export default function AdminPage() {
     setShowEditModal(false);
     setSelectedProduct(null);
     setPdfFiles([]);
+    setEditImageFile(null);
+    setEditImagePreviewUrl(null);
     fetchData();
   };
 
@@ -262,6 +355,12 @@ export default function AdminPage() {
           const data = await res.json();
           if (!data.success) throw new Error(data.message || "PDF 업로드 실패");
         }
+      }
+
+      // 이미지 업로드 (선택한 경우에만)
+      if (editImageFile) {
+        const imageOk = await handleEditImageUpload(selectedProduct._id);
+        if (!imageOk) return;
       }
 
       closeEditModal();
@@ -705,15 +804,35 @@ export default function AdminPage() {
               </form>
             )}
 
-            {/* Step 2: PDF 업로드 */}
+            {/* Step 2: 파일 업로드 (커버 이미지 + PDF) */}
             {createdProductId && !uploadDone && (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <p className="text-sm text-[var(--foreground-muted)]">
-                  Product created successfully! Now upload PDF file(s) for this product.
-                  You can also skip this and upload later via Edit.
+                  Product created successfully! Upload a cover image and/or PDF file(s).
+                  You can also skip and upload later via Edit.
                 </p>
+
+                {/* 커버 이미지 업로드 */}
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">PDF Files</label>
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Cover Image <span className="font-normal text-[var(--foreground-subtle)]">(optional — JPEG, PNG, WebP, max 5MB)</span></label>
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(e) => handleImageFileChange(e.target.files?.[0] ?? null, setImageFile, setImagePreviewUrl)}
+                    className="w-full text-sm text-[var(--foreground-muted)]"
+                  />
+                  {imagePreviewUrl && (
+                    <div className="mt-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={imagePreviewUrl} alt="Cover preview" className="h-32 w-auto rounded-xl object-cover border border-[var(--border)]" />
+                    </div>
+                  )}
+                </div>
+
+                {/* PDF 업로드 */}
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">PDF Files <span className="font-normal text-[var(--foreground-subtle)]">(optional)</span></label>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -737,11 +856,22 @@ export default function AdminPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={handlePdfUpload}
-                    disabled={pdfFiles.length === 0 || isUploadingPdf}
+                    disabled={(pdfFiles.length === 0 && !imageFile) || isUploadingPdf || isUploadingImage}
+                    onClick={async () => {
+                      setFormError("");
+                      if (imageFile) {
+                        const ok = await handleImageUpload(createdProductId);
+                        if (!ok) return;
+                      }
+                      if (pdfFiles.length > 0) {
+                        await handlePdfUpload();
+                      } else {
+                        setUploadDone(true);
+                      }
+                    }}
                     className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50"
                   >
-                    {isUploadingPdf ? "Uploading..." : "Upload PDF"}
+                    {isUploadingPdf || isUploadingImage ? "Uploading..." : "Upload Files"}
                   </button>
                 </div>
               </div>
@@ -849,6 +979,36 @@ export default function AdminPage() {
                   accept="application/pdf"
                   multiple
                   onChange={(e) => setPdfFiles(Array.from(e.target.files ?? []))}
+                  className="w-full text-sm text-[var(--foreground-muted)]"
+                />
+              </div>
+
+              {/* 커버 이미지 업로드/변경 */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+                  Cover Image <span className="font-normal text-[var(--foreground-subtle)]">(JPEG, PNG, WebP, max 5MB)</span>
+                </label>
+                {/* 현재 이미지 미리보기 */}
+                {selectedProduct.coverImageUrl && !editImagePreviewUrl && (
+                  <div className="mb-2">
+                    <p className="mb-1 text-xs text-[var(--foreground-subtle)]">Current image:</p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={selectedProduct.coverImageUrl} alt="Current cover" className="h-24 w-auto rounded-xl object-cover border border-[var(--border)]" />
+                  </div>
+                )}
+                {/* 새 이미지 미리보기 */}
+                {editImagePreviewUrl && (
+                  <div className="mb-2">
+                    <p className="mb-1 text-xs text-[var(--foreground-subtle)]">New image preview:</p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={editImagePreviewUrl} alt="New cover preview" className="h-24 w-auto rounded-xl object-cover border border-[var(--brand)]" />
+                  </div>
+                )}
+                <input
+                  ref={editImageInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleImageFileChange(e.target.files?.[0] ?? null, setEditImageFile, setEditImagePreviewUrl)}
                   className="w-full text-sm text-[var(--foreground-muted)]"
                 />
               </div>
