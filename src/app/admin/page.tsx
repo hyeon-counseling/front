@@ -19,7 +19,7 @@ interface Product {
   price: number;
   language: "ko" | "en" | "both";
   isActive: boolean;
-  pdfFiles: { filename: string; r2Key: string }[];
+  pdfFiles: { filename: string; r2Key: string; expiryDays?: number | null }[];
   coverImageUrl?: string;
   polarProductId?: string;
 }
@@ -71,7 +71,7 @@ export default function AdminPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 이메일 설정 상태
-  const [emailSettings, setEmailSettings] = useState({ emailFromName: "", emailFromLocalPart: "", emailDomain: "hyeon-counseling.com" });
+  const [emailSettings, setEmailSettings] = useState({ emailFromName: "", emailFromLocalPart: "", emailDomain: "hyeon-counseling.com", defaultDownloadExpiryDays: 30 });
   const [emailSettingsSaving, setEmailSettingsSaving] = useState(false);
   const [emailSettingsMsg, setEmailSettingsMsg] = useState("");
 
@@ -516,6 +516,7 @@ export default function AdminPage() {
         body: JSON.stringify({
           emailFromName: emailSettings.emailFromName,
           emailFromLocalPart: emailSettings.emailFromLocalPart,
+          defaultDownloadExpiryDays: emailSettings.defaultDownloadExpiryDays,
         }),
       });
       setEmailSettings(data);
@@ -835,6 +836,22 @@ export default function AdminPage() {
                     </div>
                   )}
 
+                  {/* 다운로드 만료일 설정 */}
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+                      기본 다운로드 만료일 (일)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={emailSettings.defaultDownloadExpiryDays}
+                      onChange={(e) => setEmailSettings({ ...emailSettings, defaultDownloadExpiryDays: parseInt(e.target.value, 10) || 0 })}
+                      className="w-32 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--brand)]"
+                    />
+                    <p className="mt-1 text-xs text-[var(--foreground-subtle)]">구매일로부터 N일간 다운로드 가능합니다. 0을 입력하면 만료 없이 무제한 다운로드됩니다.</p>
+                  </div>
+
                   {emailSettingsMsg && (
                     <p className={`text-sm ${emailSettingsMsg === "저장되었습니다." ? "text-[var(--brand)]" : "text-red-600"}`}>
                       {emailSettingsMsg}
@@ -1069,7 +1086,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* 기존 PDF 목록 + 삭제 */}
+              {/* 기존 PDF 목록 + 삭제 + 만료일 편집 */}
               {selectedProduct.pdfFiles?.length > 0 && (
                 <div>
                   <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
@@ -1077,10 +1094,47 @@ export default function AdminPage() {
                   </label>
                   <div className="space-y-2 rounded-xl border border-[var(--border)] p-3">
                     {selectedProduct.pdfFiles.map((file, idx) => (
-                      <div key={idx} className="flex items-center justify-between gap-2">
-                        <span className="truncate text-sm text-[var(--foreground-muted)]">
+                      <div key={idx} className="flex items-center gap-2">
+                        <span className="min-w-0 flex-1 truncate text-sm text-[var(--foreground-muted)]">
                           {file.filename}
                         </span>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="기본값"
+                            value={file.expiryDays ?? ""}
+                            onChange={(e) => {
+                              const val = e.target.value === "" ? null : parseInt(e.target.value, 10);
+                              setSelectedProduct((prev) =>
+                                prev
+                                  ? {
+                                      ...prev,
+                                      pdfFiles: prev.pdfFiles.map((f, i) =>
+                                        i === idx ? { ...f, expiryDays: isNaN(val as number) ? null : val } : f
+                                      ),
+                                    }
+                                  : prev
+                              );
+                            }}
+                            onBlur={async () => {
+                              // expiryDays 변경을 서버에 저장
+                              const pdfFile = selectedProduct.pdfFiles[idx];
+                              try {
+                                await apiFetch(`/api/products/${selectedProduct._id}/pdf/${idx}/expiry`, {
+                                  method: "PATCH",
+                                  body: JSON.stringify({ expiryDays: pdfFile.expiryDays ?? null }),
+                                });
+                              } catch {
+                                // 저장 실패 시 조용히 처리 (폼 제출 시 재시도)
+                              }
+                            }}
+                            className="w-20 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--foreground)] outline-none focus:border-[var(--brand)]"
+                            title="만료일(일). 비워두면 글로벌 기본값 적용"
+                          />
+                          <span className="text-xs text-[var(--foreground-subtle)]">일</span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => handleDeletePdf(selectedProduct._id, idx, file.filename)}
@@ -1090,6 +1144,7 @@ export default function AdminPage() {
                         </button>
                       </div>
                     ))}
+                    <p className="mt-1 text-xs text-[var(--foreground-subtle)]">만료일 칸을 비워두면 Settings의 기본 만료일이 적용됩니다.</p>
                   </div>
                 </div>
               )}
