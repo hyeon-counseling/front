@@ -21,6 +21,7 @@ interface Product {
   isActive: boolean;
   pdfFiles: { filename: string; r2Key: string }[];
   coverImageUrl?: string;
+  polarProductId?: string;
 }
 
 interface AdminOrder {
@@ -372,6 +373,21 @@ export default function AdminPage() {
   };
 
   // ─────────────────────────────────────────────────────────────────
+  // Polar 재동기화
+  // ─────────────────────────────────────────────────────────────────
+
+  const handlePolarSync = async (product: Product) => {
+    const action = product.polarProductId ? "Polar 정보를 업데이트" : "Polar에 새로 연결";
+    if (!confirm(`"${product.title}" 상품을 ${action}할까요?`)) return;
+    try {
+      await apiFetch(`/api/products/${product._id}/polar-sync`, { method: "POST" });
+      alert(`${action} 완료! 이제 구매 버튼이 활성화됩니다.`);
+      fetchData();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Polar 동기화에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+    }
+  };
+
   // 상품 삭제
   // ─────────────────────────────────────────────────────────────────
 
@@ -567,7 +583,7 @@ export default function AdminPage() {
                         <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Price</th>
                         <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Lang</th>
                         <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">PDFs</th>
-                        <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Status</th>
+                        <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Polar</th>
                         <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Actions</th>
                       </tr>
                     </thead>
@@ -583,9 +599,15 @@ export default function AdminPage() {
                           <td className="px-5 py-3 uppercase text-[var(--foreground-muted)]">{product.language}</td>
                           <td className="px-5 py-3 text-[var(--foreground-muted)]">{product.pdfFiles?.length ?? 0}</td>
                           <td className="px-5 py-3">
-                            <span className="rounded-full bg-[var(--brand-light)] px-2.5 py-0.5 text-xs font-medium text-[var(--brand)]">
-                              {product.isActive ? "Active" : "Hidden"}
-                            </span>
+                            {product.polarProductId ? (
+                              <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                                ✓ 연동됨
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-600">
+                                ✗ 미연동
+                              </span>
+                            )}
                           </td>
                           <td className="px-5 py-3">
                             <button
@@ -594,6 +616,14 @@ export default function AdminPage() {
                             >
                               Edit
                             </button>
+                            {!product.polarProductId && (
+                              <button
+                                className="mr-2 cursor-pointer text-xs text-blue-600 hover:underline"
+                                onClick={() => handlePolarSync(product)}
+                              >
+                                Polar 연동
+                              </button>
+                            )}
                             <button
                               className="cursor-pointer text-xs text-[var(--error)] hover:underline"
                               onClick={() => handleDelete(product)}
