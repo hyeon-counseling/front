@@ -70,6 +70,11 @@ export default function AdminPage() {
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // 이메일 설정 상태
+  const [emailSettings, setEmailSettings] = useState({ emailFromName: "", emailFromLocalPart: "", emailDomain: "hyeon-counseling.com" });
+  const [emailSettingsSaving, setEmailSettingsSaving] = useState(false);
+  const [emailSettingsMsg, setEmailSettingsMsg] = useState("");
+
   // 콘텐츠 관리 상태
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [showContentModal, setShowContentModal] = useState(false);
@@ -109,14 +114,16 @@ export default function AdminPage() {
   const fetchData = async () => {
     try {
       setDataLoading(true);
-      const [productsData, ordersData, contentsData] = await Promise.all([
+      const [productsData, ordersData, contentsData, settingsData] = await Promise.all([
         apiFetch("/api/products"),
         apiFetch("/api/orders"),
         apiFetch("/api/admin/contents"),
+        apiFetch("/api/admin/settings"),
       ]);
       setProducts(productsData);
       setOrders(ordersData);
       setContents(contentsData);
+      setEmailSettings(settingsData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "데이터를 불러오지 못했습니다.");
     } finally {
@@ -499,6 +506,27 @@ export default function AdminPage() {
     }
   };
 
+  const handleSaveEmailSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailSettingsSaving(true);
+    setEmailSettingsMsg("");
+    try {
+      const data = await apiFetch("/api/admin/settings", {
+        method: "PUT",
+        body: JSON.stringify({
+          emailFromName: emailSettings.emailFromName,
+          emailFromLocalPart: emailSettings.emailFromLocalPart,
+        }),
+      });
+      setEmailSettings(data);
+      setEmailSettingsMsg("저장되었습니다.");
+    } catch (err) {
+      setEmailSettingsMsg(err instanceof Error ? err.message : "저장에 실패했습니다.");
+    } finally {
+      setEmailSettingsSaving(false);
+    }
+  };
+
   const handleContentDelete = async (content: ContentItem) => {
     if (!confirm(`"${content.title}" 콘텐츠를 삭제할까요?\n삭제하면 복구할 수 없습니다.`)) return;
     try {
@@ -755,6 +783,73 @@ export default function AdminPage() {
                   </div>
                 </div>
               )}
+            </section>
+
+            {/* 이메일 설정 */}
+            <section className="mt-10">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">Email Settings</h2>
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6">
+                <form onSubmit={handleSaveEmailSettings} className="space-y-4">
+                  {/* 발신자 이름 */}
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+                      발신자 이름
+                    </label>
+                    <input
+                      type="text"
+                      value={emailSettings.emailFromName}
+                      onChange={(e) => setEmailSettings({ ...emailSettings, emailFromName: e.target.value })}
+                      placeholder="Hyeon Counseling"
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--brand)]"
+                    />
+                    <p className="mt-1 text-xs text-[var(--foreground-subtle)]">받는 사람의 메일함에 표시되는 이름입니다.</p>
+                  </div>
+
+                  {/* 발신 이메일 주소 */}
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+                      발신 이메일 주소
+                    </label>
+                    <div className="flex items-center gap-0">
+                      <input
+                        type="text"
+                        value={emailSettings.emailFromLocalPart}
+                        onChange={(e) => setEmailSettings({ ...emailSettings, emailFromLocalPart: e.target.value })}
+                        placeholder="no-reply"
+                        className="w-40 rounded-l-xl border border-r-0 border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--foreground)] outline-none focus:border-[var(--brand)]"
+                      />
+                      <span className="flex h-[42px] items-center rounded-r-xl border border-[var(--border)] bg-[var(--surface-muted,#f5f5f5)] px-3 text-sm text-[var(--foreground-subtle)]">
+                        @{emailSettings.emailDomain}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-[var(--foreground-subtle)]">영문, 숫자, -, _, . 만 사용 가능합니다.</p>
+                  </div>
+
+                  {/* 미리보기 */}
+                  {emailSettings.emailFromName && emailSettings.emailFromLocalPart && (
+                    <div className="rounded-xl bg-[var(--surface)] px-4 py-3">
+                      <p className="text-xs text-[var(--foreground-subtle)]">미리보기</p>
+                      <p className="mt-0.5 text-sm font-medium text-[var(--foreground)]">
+                        {emailSettings.emailFromName} &lt;{emailSettings.emailFromLocalPart}@{emailSettings.emailDomain}&gt;
+                      </p>
+                    </div>
+                  )}
+
+                  {emailSettingsMsg && (
+                    <p className={`text-sm ${emailSettingsMsg === "저장되었습니다." ? "text-[var(--brand)]" : "text-red-600"}`}>
+                      {emailSettingsMsg}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={emailSettingsSaving}
+                    className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50"
+                  >
+                    {emailSettingsSaving ? "저장 중..." : "저장"}
+                  </button>
+                </form>
+              </div>
             </section>
           </>
         )}
