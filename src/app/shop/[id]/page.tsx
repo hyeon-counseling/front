@@ -67,7 +67,7 @@ export default function BookDetailPage() {
         const purchased = orders.some(
           (order) =>
             order.status === "paid" &&
-            order.productId?._id === id
+            String(order.productId?._id) === id
         );
         setAlreadyPurchased(purchased);
       } catch {
