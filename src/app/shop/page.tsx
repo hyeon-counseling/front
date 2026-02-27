@@ -85,9 +85,10 @@ export default function ShopPage() {
         {!loading && !error && products.length > 0 && (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => (
-              <div
+              <Link
                 key={product._id}
-                className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] transition-shadow hover:shadow-md"
+                href={`/shop/${product._id}`}
+                className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--background)] transition-shadow hover:shadow-md"
               >
                 {/* 커버 이미지 영역 */}
                 {product.coverImageUrl ? (
@@ -143,15 +144,12 @@ export default function ShopPage() {
                     <span className="text-base font-semibold text-[var(--foreground)]">
                       ${product.price.toFixed(2)}
                     </span>
-                    <Link
-                      href={`/shop/${product._id}`}
-                      className="rounded-full bg-[var(--brand)] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
-                    >
+                    <span className="rounded-full bg-[var(--brand)] px-4 py-2 text-xs font-medium text-white transition-colors group-hover:bg-[var(--brand-hover)]">
                       View Details
-                    </Link>
+                    </span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
