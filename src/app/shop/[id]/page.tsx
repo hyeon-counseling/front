@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -191,10 +193,63 @@ export default function BookDetailPage() {
             {product.title}
           </h1>
 
-          {/* 설명 */}
-          <p className="mb-8 leading-relaxed text-[var(--foreground-muted)]">
-            {product.description}
-          </p>
+          {/* 설명 — 마크다운 렌더링 */}
+          <div className="mb-8">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }) => (
+                  <h1 className="mb-4 mt-8 text-2xl font-bold text-[var(--foreground)]">{children}</h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="mb-3 mt-7 text-lg font-bold text-[var(--foreground)]">{children}</h2>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="mb-2 mt-5 text-base font-semibold text-[var(--foreground)]">{children}</h3>
+                ),
+                p: ({ children }) => (
+                  <p className="mb-4 leading-7 text-[var(--foreground-muted)]">{children}</p>
+                ),
+                ul: ({ children }) => (
+                  <ul className="mb-4 list-disc space-y-1.5 pl-5 text-[var(--foreground-muted)]">{children}</ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="mb-4 list-decimal space-y-1.5 pl-5 text-[var(--foreground-muted)]">{children}</ol>
+                ),
+                li: ({ children }) => <li className="leading-7">{children}</li>,
+                strong: ({ children }) => (
+                  <strong className="font-semibold text-[var(--foreground)]">{children}</strong>
+                ),
+                em: ({ children }) => (
+                  <em className="italic text-[var(--foreground-muted)]">{children}</em>
+                ),
+                hr: () => <hr className="my-6 border-[var(--border)]" />,
+                blockquote: ({ children }) => (
+                  <blockquote className="mb-4 rounded-r-xl border-l-4 border-[var(--brand)] bg-[var(--surface)] py-3 pl-4 pr-4 italic text-[var(--foreground-muted)]">
+                    {children}
+                  </blockquote>
+                ),
+                table: ({ children }) => (
+                  <div className="mb-4 overflow-x-auto">
+                    <table className="w-full border-collapse text-sm text-[var(--foreground-muted)]">{children}</table>
+                  </div>
+                ),
+                th: ({ children }) => (
+                  <th className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-left font-semibold text-[var(--foreground)]">{children}</th>
+                ),
+                td: ({ children }) => (
+                  <td className="border border-[var(--border)] px-3 py-2">{children}</td>
+                ),
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-[var(--brand)] underline hover:opacity-80">
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {product.description}
+            </ReactMarkdown>
+          </div>
 
           {/* PDF 파일 목록 (있을 때만 표시) */}
           {product.pdfFiles && product.pdfFiles.length > 0 && (
