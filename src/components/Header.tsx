@@ -157,6 +157,16 @@ export default function Header() {
           >
             Articles
           </Link>
+          <Link
+            href="/about"
+            className={`text-sm font-medium transition-colors hover:text-[var(--brand)] ${
+              pathname === "/about"
+                ? "text-[var(--brand)]"
+                : "text-[var(--foreground-muted)]"
+            }`}
+          >
+            About
+          </Link>
           {authLinks}
         </nav>
 
@@ -219,6 +229,17 @@ export default function Header() {
             }`}
           >
             Articles
+          </Link>
+          <Link
+            href="/about"
+            onClick={() => setMenuOpen(false)}
+            className={`block px-6 py-3 text-sm font-medium transition-colors hover:bg-[var(--surface)] hover:text-[var(--brand)] ${
+              pathname === "/about"
+                ? "text-[var(--brand)]"
+                : "text-[var(--foreground-muted)]"
+            }`}
+          >
+            About
           </Link>
           {mobileAuthLinks}
         </nav>

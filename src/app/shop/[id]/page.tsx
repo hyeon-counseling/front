@@ -216,6 +216,35 @@ export default function BookDetailPage() {
             </div>
           )}
 
+          {/* 저자 정보 */}
+          <div className="mb-8 rounded-xl bg-[var(--surface)] p-5">
+            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">
+              About the Author
+            </h2>
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-base text-white">
+                &#129504;
+              </div>
+              <div>
+                <p className="mb-1 text-sm font-semibold text-[var(--foreground)]">Hyeon</p>
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  <span className="inline-block rounded-full bg-[var(--brand-light)] px-2.5 py-0.5 text-xs font-medium text-[var(--brand)]">
+                    M.A. Counseling &amp; Psychotherapy
+                  </span>
+                  <span className="inline-block rounded-full bg-[var(--brand-light)] px-2.5 py-0.5 text-xs font-medium text-[var(--brand)]">
+                    B.A. Youth Counseling
+                  </span>
+                </div>
+                <p className="text-xs leading-relaxed text-[var(--foreground-muted)]">
+                  A licensed psychological counselor and author based in Seoul, South Korea.
+                  Holds a Master&apos;s degree in Counseling and Psychotherapy and a Bachelor&apos;s degree in
+                  Youth Counseling. Specializes in translating evidence-based psychological frameworks
+                  — including CBT — into practical, accessible guides for everyday self-understanding.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* 구분선 */}
           <div className="mb-6 border-t border-[var(--border)]" />
 
