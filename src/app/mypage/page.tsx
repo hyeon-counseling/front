@@ -21,6 +21,17 @@ interface Order {
   currency: string;
   status: "pending" | "paid" | "failed";
   createdAt: string;
+  // 파일별 만료일 (getMyOrders에서 서버가 계산하여 포함)
+  fileExpiryDates?: { fileIndex: number; expiryDate: string | null }[];
+}
+
+// 만료일 포맷 헬퍼
+function formatExpiryDate(expiryDate: string | null | undefined): string | null {
+  if (!expiryDate) return null; // null = 만료 없음
+  const date = new Date(expiryDate);
+  const now = new Date();
+  if (date < now) return "Expired";
+  return `Expires ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 }
 
 // 구매 완료 배너 — useSearchParams 사용으로 반드시 Suspense 안에서 렌더링
@@ -236,17 +247,33 @@ export default function MyPage() {
                     {order.status === "paid" && (
                       <div className="flex flex-wrap gap-2">
                         {order.productId?.pdfFiles?.length ? (
-                          order.productId.pdfFiles.map((file, idx) => (
-                            <button
-                              key={idx}
-                              className="rounded-full border border-[var(--brand)] px-4 py-1.5 text-xs font-medium text-[var(--brand)] transition-colors hover:bg-[var(--brand)] hover:text-white"
-                              onClick={() => handleDownload(order._id, idx)}
-                            >
-                              {order.productId!.pdfFiles.length > 1
-                                ? `Download PDF ${idx + 1}`
-                                : "Download PDF"}
-                            </button>
-                          ))
+                          order.productId.pdfFiles.map((file, idx) => {
+                            const expiryInfo = order.fileExpiryDates?.find((e) => e.fileIndex === idx);
+                            const expiryLabel = formatExpiryDate(expiryInfo?.expiryDate);
+                            const isExpired = expiryLabel === "Expired";
+                            return (
+                              <div key={idx} className="flex flex-col items-start gap-0.5">
+                                <button
+                                  className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-colors ${
+                                    isExpired
+                                      ? "cursor-not-allowed border-[var(--border)] text-[var(--foreground-subtle)] opacity-50"
+                                      : "border-[var(--brand)] text-[var(--brand)] hover:bg-[var(--brand)] hover:text-white"
+                                  }`}
+                                  onClick={() => !isExpired && handleDownload(order._id, idx)}
+                                  disabled={isExpired}
+                                >
+                                  {order.productId!.pdfFiles.length > 1
+                                    ? `Download PDF ${idx + 1}`
+                                    : "Download PDF"}
+                                </button>
+                                {expiryLabel && (
+                                  <span className={`pl-1 text-[10px] ${isExpired ? "text-red-400" : "text-[var(--foreground-subtle)]"}`}>
+                                    {expiryLabel}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })
                         ) : (
                           <span className="text-xs text-[var(--foreground-subtle)]">PDF preparing...</span>
                         )}
