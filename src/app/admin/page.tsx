@@ -128,7 +128,7 @@ export default function AdminPage() {
     try {
       setDataLoading(true);
       const [productsData, ordersData, contentsData, settingsData] = await Promise.all([
-        apiFetch("/api/products"),
+        apiFetch("/api/products?channel=all"),
         apiFetch("/api/orders"),
         apiFetch("/api/admin/contents"),
         apiFetch("/api/admin/settings"),
@@ -748,7 +748,7 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--border)] bg-[var(--background)]">
-                      {products.map((product) => (
+                      {products.filter((p) => p.channel !== "cafe24").map((product) => (
                         <tr key={product._id} className="hover:bg-[var(--surface)]">
                           <td className="px-5 py-3 font-medium text-[var(--foreground)]">
                             <Link href={`/shop/${product._id}`} className="hover:text-[var(--brand)] hover:underline">
