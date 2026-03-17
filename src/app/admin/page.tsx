@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
@@ -11,6 +11,13 @@ import remarkGfm from "remark-gfm";
 // ─────────────────────────────────────────────────────────────────
 // 타입 정의
 // ─────────────────────────────────────────────────────────────────
+
+interface ProductVariant {
+  variantCode: string;
+  optionName: string;
+  additionalAmount: number;
+  pdfFiles: { filename: string; r2Key: string; expiryDays?: number | null }[];
+}
 
 interface Product {
   _id: string;
@@ -24,6 +31,7 @@ interface Product {
   polarProductId?: string;
   cafe24ProductNo?: number;
   channel?: "polar" | "cafe24" | "both";
+  variants?: ProductVariant[];
 }
 
 interface AdminOrder {
@@ -115,6 +123,10 @@ export default function AdminPage() {
   const [isCafe24Submitting, setIsCafe24Submitting] = useState(false);
   const [cafe24FormError, setCafe24FormError] = useState("");
   const [isUploadingCafe24Pdf, setIsUploadingCafe24Pdf] = useState(false);
+  // variant별 PDF 업로드용 파일 상태: { [variantCode]: File }
+  const [cafe24VariantPdfFiles, setCafe24VariantPdfFiles] = useState<Record<string, File | null>>({});
+  // variant별 업로드 진행 중 여부: { [variantCode]: boolean }
+  const [uploadingVariants, setUploadingVariants] = useState<Record<string, boolean>>({});
 
   // 접근 권한 확인
   useEffect(() => {
@@ -595,6 +607,8 @@ export default function AdminPage() {
     setSelectedCafe24Product(null);
     setCafe24PdfFiles([]);
     setCafe24FormError("");
+    setCafe24VariantPdfFiles({});
+    setUploadingVariants({});
     fetchData();
   };
 
@@ -664,6 +678,72 @@ export default function AdminPage() {
           ? { ...prev, pdfFiles: prev.pdfFiles.filter((_, i) => i !== fileIndex) }
           : prev
       );
+    } catch (err) {
+      setCafe24FormError(err instanceof Error ? err.message : "PDF 삭제에 실패했습니다.");
+    }
+  };
+
+  // variant별 PDF 업로드: POST /api/products/:id/variants/:variantCode/pdf
+  const handleVariantPdfUpload = async (productId: string, variantCode: string) => {
+    const file = cafe24VariantPdfFiles[variantCode];
+    if (!file) return;
+
+    setUploadingVariants((prev) => ({ ...prev, [variantCode]: true }));
+    setCafe24FormError("");
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+    try {
+      const formData = new FormData();
+      formData.append("pdf", file);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/products/${productId}/variants/${variantCode}/pdf`,
+        {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        }
+      );
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "PDF 업로드 실패");
+
+      // 로컬 상태에서 해당 variant의 pdfFiles 업데이트
+      setSelectedCafe24Product((prev) => {
+        if (!prev || !prev.variants) return prev;
+        return {
+          ...prev,
+          variants: prev.variants.map((v) =>
+            v.variantCode === variantCode
+              ? { ...v, pdfFiles: data.product?.variants?.find((vv: ProductVariant) => vv.variantCode === variantCode)?.pdfFiles ?? v.pdfFiles }
+              : v
+          ),
+        };
+      });
+      // 업로드 완료 후 파일 선택 초기화
+      setCafe24VariantPdfFiles((prev) => ({ ...prev, [variantCode]: null }));
+    } catch (err) {
+      setCafe24FormError(err instanceof Error ? err.message : "PDF 업로드에 실패했습니다.");
+    } finally {
+      setUploadingVariants((prev) => ({ ...prev, [variantCode]: false }));
+    }
+  };
+
+  // variant별 PDF 삭제: DELETE /api/products/:id/variants/:variantCode/pdf/:fileIndex
+  const handleVariantDeletePdf = async (productId: string, variantCode: string, fileIndex: number, filename: string) => {
+    if (!confirm(`"${filename}" 파일을 삭제할까요?`)) return;
+    try {
+      await apiFetch(`/api/products/${productId}/variants/${variantCode}/pdf/${fileIndex}`, { method: "DELETE" });
+      // 로컬 상태에서 즉시 반영
+      setSelectedCafe24Product((prev) => {
+        if (!prev || !prev.variants) return prev;
+        return {
+          ...prev,
+          variants: prev.variants.map((v) =>
+            v.variantCode === variantCode
+              ? { ...v, pdfFiles: v.pdfFiles.filter((_, i) => i !== fileIndex) }
+              : v
+          ),
+        };
+      });
     } catch (err) {
       setCafe24FormError(err instanceof Error ? err.message : "PDF 삭제에 실패했습니다.");
     }
@@ -857,36 +937,70 @@ export default function AdminPage() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--border)] bg-[var(--background)]">
-                          {cafe24Products.map((product) => (
-                            <tr key={product._id} className="hover:bg-[var(--surface)]">
-                              <td className="px-5 py-3 font-medium text-[var(--foreground)]">{product.title}</td>
-                              <td className="px-5 py-3 text-[var(--foreground-muted)]">
-                                {product.cafe24ProductNo ?? <span className="text-[var(--foreground-subtle)]">—</span>}
-                              </td>
-                              <td className="px-5 py-3 text-[var(--foreground-muted)]">
-                                {product.price.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}
-                              </td>
-                              <td className="px-5 py-3">
-                                {product.pdfFiles?.length > 0 ? (
-                                  <span className="rounded-full bg-[var(--brand-light)] px-2.5 py-0.5 text-xs font-medium text-[var(--brand)]">
-                                    {product.pdfFiles.length} file{product.pdfFiles.length > 1 ? "s" : ""}
-                                  </span>
-                                ) : (
-                                  <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">
-                                    None
-                                  </span>
-                                )}
-                              </td>
-                              <td className="px-5 py-3">
-                                <button
-                                  className="cursor-pointer text-xs text-[var(--foreground-muted)] hover:text-[var(--brand)] hover:underline"
-                                  onClick={() => openCafe24EditModal(product)}
-                                >
-                                  Edit
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
+                          {cafe24Products.map((product) => {
+                            const hasVariants = product.variants && product.variants.length > 0;
+                            return (
+                              <Fragment key={product._id}>
+                                {/* 상품 메인 행 */}
+                                <tr key={product._id} className="hover:bg-[var(--surface)]">
+                                  <td className="px-5 py-3 font-medium text-[var(--foreground)]">{product.title}</td>
+                                  <td className="px-5 py-3 text-[var(--foreground-muted)]">
+                                    {product.cafe24ProductNo ?? <span className="text-[var(--foreground-subtle)]">—</span>}
+                                  </td>
+                                  <td className="px-5 py-3 text-[var(--foreground-muted)]">
+                                    {product.price.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}
+                                  </td>
+                                  <td className="px-5 py-3">
+                                    {/* variant 있으면 상품 레벨 PDF 칸 비움 — 각 variant 행에서 표시 */}
+                                    {!hasVariants && (
+                                      product.pdfFiles?.length > 0 ? (
+                                        <span className="rounded-full bg-[var(--brand-light)] px-2.5 py-0.5 text-xs font-medium text-[var(--brand)]">
+                                          {product.pdfFiles.length} file{product.pdfFiles.length > 1 ? "s" : ""}
+                                        </span>
+                                      ) : (
+                                        <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">
+                                          None
+                                        </span>
+                                      )
+                                    )}
+                                  </td>
+                                  <td className="px-5 py-3">
+                                    <button
+                                      className="cursor-pointer text-xs text-[var(--foreground-muted)] hover:text-[var(--brand)] hover:underline"
+                                      onClick={() => openCafe24EditModal(product)}
+                                    >
+                                      Edit
+                                    </button>
+                                  </td>
+                                </tr>
+                                {/* variant 하위 행들 */}
+                                {hasVariants && product.variants!.map((variant) => (
+                                  <tr key={`${product._id}-${variant.variantCode}`} className="bg-[var(--surface)]">
+                                    <td className="py-2 pl-10 pr-5 text-xs text-[var(--foreground-muted)]">
+                                      <span className="text-[var(--foreground-subtle)] mr-1">└</span>
+                                      {variant.optionName}
+                                    </td>
+                                    <td className="px-5 py-2 text-xs text-[var(--foreground-subtle)]"></td>
+                                    <td className="px-5 py-2 text-xs text-[var(--foreground-muted)]">
+                                      +{variant.additionalAmount.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}
+                                    </td>
+                                    <td className="px-5 py-2">
+                                      {variant.pdfFiles?.length > 0 ? (
+                                        <span className="rounded-full bg-[var(--brand-light)] px-2 py-0.5 text-xs font-medium text-[var(--brand)]">
+                                          {variant.pdfFiles.length} file{variant.pdfFiles.length > 1 ? "s" : ""}
+                                        </span>
+                                      ) : (
+                                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">
+                                          None
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="px-5 py-2"></td>
+                                  </tr>
+                                ))}
+                              </Fragment>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -1440,102 +1554,175 @@ export default function AdminPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           onClick={(e) => { if (e.target === e.currentTarget) closeCafe24EditModal(); }}
         >
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="mb-1 text-lg font-semibold text-[var(--foreground)]">Edit Cafe24 Product</h2>
-            {/* 주의 문구: 다음 동기화 시 덮어쓰일 수 있는 필드 안내 */}
-            <p className="mb-5 text-xs text-[var(--foreground-subtle)]">
-              Note: Product name and price may be overwritten on the next sync from Cafe24.
-            </p>
+          <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-2xl bg-white shadow-xl">
+            {/* 모달 헤더 */}
+            <div className="flex-shrink-0 border-b border-[var(--border)] px-6 py-5">
+              <h2 className="text-lg font-semibold text-[var(--foreground)]">
+                Edit Cafe24 Product
+              </h2>
+              <p className="mt-1 text-xs text-amber-600">
+                Product name and price will be overwritten on next sync from Cafe24.
+              </p>
+            </div>
 
-            <form onSubmit={handleCafe24Update} className="space-y-4">
-              {/* 상품명 */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Product Name</label>
-                <input
-                  type="text"
-                  value={cafe24EditForm.title}
-                  onChange={(e) => setCafe24EditForm({ ...cafe24EditForm, title: e.target.value })}
-                  className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)]"
-                  required
-                />
-              </div>
+            {/* 모달 본문 (스크롤 가능) */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              {(() => {
+                const hasVariants = selectedCafe24Product.variants && selectedCafe24Product.variants.length > 0;
 
-              {/* 가격 (원화) */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Price (KRW)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={cafe24EditForm.price}
-                  onChange={(e) => setCafe24EditForm({ ...cafe24EditForm, price: e.target.value })}
-                  className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)]"
-                  placeholder="25000"
-                  required
-                />
-              </div>
+                return (
+                  <div className="space-y-5">
+                    {/* 상품 기본 정보 (read-only) */}
+                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 space-y-1">
+                      <p className="text-xs text-[var(--foreground-subtle)]">상품 #{selectedCafe24Product.cafe24ProductNo}</p>
+                      <p className="font-medium text-[var(--foreground)]">{selectedCafe24Product.title}</p>
+                      <p className="text-sm text-[var(--foreground-muted)]">
+                        기본가격: {selectedCafe24Product.price.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}
+                      </p>
+                    </div>
 
-              {/* 현재 등록된 PDF 목록 */}
-              {selectedCafe24Product.pdfFiles?.length > 0 && (
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">Current PDF Files</label>
-                  <div className="space-y-2 rounded-xl border border-[var(--border)] p-3">
-                    {selectedCafe24Product.pdfFiles.map((file, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <span className="min-w-0 flex-1 truncate text-sm text-[var(--foreground-muted)]">
-                          {file.filename}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleCafe24DeletePdf(selectedCafe24Product._id, idx, file.filename)}
-                          className="shrink-0 text-xs text-[var(--error)] hover:underline"
-                        >
-                          Delete
-                        </button>
+                    {hasVariants ? (
+                      /* ── variant 있는 상품: 옵션별 PDF 관리 ── */
+                      <div>
+                        <p className="mb-3 text-sm font-medium text-[var(--foreground)]">옵션별 PDF 관리</p>
+                        <div className="space-y-4">
+                          {selectedCafe24Product.variants!.map((variant) => (
+                            <div
+                              key={variant.variantCode}
+                              className="rounded-xl border border-[var(--border)] p-4 space-y-3"
+                            >
+                              {/* variant 이름 + 추가금액 */}
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-[var(--foreground)]">
+                                  {variant.optionName}
+                                </span>
+                                <span className="text-xs text-[var(--foreground-muted)]">
+                                  +{variant.additionalAmount.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}
+                                </span>
+                              </div>
+
+                              {/* 현재 PDF 목록 */}
+                              {variant.pdfFiles?.length > 0 ? (
+                                <div className="space-y-1.5">
+                                  {variant.pdfFiles.map((file, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 rounded-lg bg-[var(--surface)] px-3 py-1.5">
+                                      <span className="min-w-0 flex-1 truncate text-xs text-[var(--foreground-muted)]">
+                                        {file.filename}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleVariantDeletePdf(selectedCafe24Product._id, variant.variantCode, idx, file.filename)}
+                                        className="shrink-0 text-xs text-[var(--error)] hover:underline"
+                                      >
+                                        삭제
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-[var(--foreground-subtle)]">PDF 없음</p>
+                              )}
+
+                              {/* PDF 업로드 */}
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="file"
+                                  accept="application/pdf"
+                                  onChange={(e) =>
+                                    setCafe24VariantPdfFiles((prev) => ({
+                                      ...prev,
+                                      [variant.variantCode]: e.target.files?.[0] ?? null,
+                                    }))
+                                  }
+                                  className="flex-1 text-xs text-[var(--foreground-muted)]"
+                                />
+                                <button
+                                  type="button"
+                                  disabled={!cafe24VariantPdfFiles[variant.variantCode] || uploadingVariants[variant.variantCode]}
+                                  onClick={() => handleVariantPdfUpload(selectedCafe24Product._id, variant.variantCode)}
+                                  className="shrink-0 rounded-full bg-[var(--brand)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-40"
+                                >
+                                  {uploadingVariants[variant.variantCode] ? "업로드 중..." : "업로드"}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
+                    ) : (
+                      /* ── variant 없는 상품: 기존 PDF 관리 방식 ── */
+                      <form id="cafe24-edit-form" onSubmit={handleCafe24Update} className="space-y-4">
+                        {/* 현재 등록된 PDF 목록 */}
+                        {selectedCafe24Product.pdfFiles?.length > 0 && (
+                          <div>
+                            <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">Current PDF Files</label>
+                            <div className="space-y-2 rounded-xl border border-[var(--border)] p-3">
+                              {selectedCafe24Product.pdfFiles.map((file, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <span className="min-w-0 flex-1 truncate text-sm text-[var(--foreground-muted)]">
+                                    {file.filename}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCafe24DeletePdf(selectedCafe24Product._id, idx, file.filename)}
+                                    className="shrink-0 text-xs text-[var(--error)] hover:underline"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* PDF 추가 업로드 */}
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+                            Add PDF Files <span className="font-normal text-[var(--foreground-subtle)]">(optional)</span>
+                          </label>
+                          <input
+                            type="file"
+                            accept="application/pdf"
+                            multiple
+                            onChange={(e) => setCafe24PdfFiles(Array.from(e.target.files ?? []))}
+                            className="w-full text-sm text-[var(--foreground-muted)]"
+                          />
+                          {cafe24PdfFiles.length > 0 && (
+                            <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
+                              {cafe24PdfFiles.length} file(s) selected: {cafe24PdfFiles.map((f) => f.name).join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      </form>
+                    )}
+
+                    {cafe24FormError && <p className="text-sm text-red-600">{cafe24FormError}</p>}
                   </div>
-                </div>
-              )}
+                );
+              })()}
+            </div>
 
-              {/* PDF 추가 업로드 */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
-                  Add PDF Files <span className="font-normal text-[var(--foreground-subtle)]">(optional)</span>
-                </label>
-                <input
-                  type="file"
-                  accept="application/pdf"
-                  multiple
-                  onChange={(e) => setCafe24PdfFiles(Array.from(e.target.files ?? []))}
-                  className="w-full text-sm text-[var(--foreground-muted)]"
-                />
-                {cafe24PdfFiles.length > 0 && (
-                  <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
-                    {cafe24PdfFiles.length} file(s) selected: {cafe24PdfFiles.map((f) => f.name).join(", ")}
-                  </p>
-                )}
-              </div>
-
-              {cafe24FormError && <p className="text-sm text-red-600">{cafe24FormError}</p>}
-
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={closeCafe24EditModal}
-                  className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]"
-                >
-                  Cancel
-                </button>
+            {/* 모달 하단 버튼 */}
+            <div className="flex-shrink-0 flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
+              <button
+                type="button"
+                onClick={closeCafe24EditModal}
+                className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]"
+              >
+                {selectedCafe24Product.variants && selectedCafe24Product.variants.length > 0 ? "닫기" : "Cancel"}
+              </button>
+              {/* variant 없는 상품만 Save 버튼 표시 */}
+              {(!selectedCafe24Product.variants || selectedCafe24Product.variants.length === 0) && (
                 <button
                   type="submit"
+                  form="cafe24-edit-form"
                   disabled={isCafe24Submitting || isUploadingCafe24Pdf}
                   className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50"
                 >
                   {isCafe24Submitting || isUploadingCafe24Pdf ? "Saving..." : "Save Changes"}
                 </button>
-              </div>
-            </form>
+              )}
+            </div>
           </div>
         </div>
       )}
