@@ -8,6 +8,11 @@ import { apiFetch } from "@/lib/api";
 
 // 백엔드 주문 데이터 타입
 // productId는 populate되어 상품 정보가 담긴 객체로 옴
+interface FileDownload {
+  fileIndex: number;
+  myPageDownloadCount: number;
+}
+
 interface Order {
   _id: string;
   productId: {
@@ -15,6 +20,7 @@ interface Order {
     title: string;
     price: number;
     pdfFiles: { filename: string; r2Key: string }[];
+    isActive: boolean;
   } | null;
   channel: "polar" | "cafe24";
   amount: number;
@@ -23,6 +29,8 @@ interface Order {
   createdAt: string;
   // 파일별 만료일 (getMyOrders에서 서버가 계산하여 포함)
   fileExpiryDates?: { fileIndex: number; expiryDate: string | null }[];
+  // 파일별 다운로드 횟수 추적
+  fileDownloads?: FileDownload[];
 }
 
 // 만료일 포맷 헬퍼
@@ -137,7 +145,7 @@ export default function MyPage() {
       // 반환된 서명 URL을 새 탭에서 열어 다운로드
       window.open(data.url, "_blank");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "다운로드에 실패했습니다.");
+      alert(err instanceof Error ? err.message : "Download failed. Please try again.");
     }
   };
 
@@ -246,27 +254,40 @@ export default function MyPage() {
                     </span>
                     {order.status === "paid" && (
                       <div className="flex flex-wrap gap-2">
-                        {order.productId?.pdfFiles?.length ? (
+                        {/* 상품이 삭제된 경우 */}
+                        {order.productId && !order.productId.isActive ? (
+                          <span className="rounded-full border border-[var(--border)] px-4 py-1.5 text-xs font-medium text-[var(--foreground-subtle)] opacity-50">
+                            No longer available
+                          </span>
+                        ) : order.productId?.pdfFiles?.length ? (
                           order.productId.pdfFiles.map((file, idx) => {
                             const expiryInfo = order.fileExpiryDates?.find((e) => e.fileIndex === idx);
                             const expiryLabel = formatExpiryDate(expiryInfo?.expiryDate);
                             const isExpired = expiryLabel === "Expired";
+                            const isDownloaded =
+                              (order.fileDownloads?.find((fd) => fd.fileIndex === idx)?.myPageDownloadCount ?? 0) >= 1;
+                            const isDisabled = isExpired || isDownloaded;
+
+                            const buttonLabel = isDownloaded
+                              ? "Downloaded"
+                              : order.productId!.pdfFiles.length > 1
+                                ? `Download PDF ${idx + 1}`
+                                : "Download PDF";
+
                             return (
                               <div key={idx} className="flex flex-col items-start gap-0.5">
                                 <button
                                   className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-colors ${
-                                    isExpired
+                                    isDisabled
                                       ? "cursor-not-allowed border-[var(--border)] text-[var(--foreground-subtle)] opacity-50"
                                       : "border-[var(--brand)] text-[var(--brand)] hover:bg-[var(--brand)] hover:text-white"
                                   }`}
-                                  onClick={() => !isExpired && handleDownload(order._id, idx)}
-                                  disabled={isExpired}
+                                  onClick={() => !isDisabled && handleDownload(order._id, idx)}
+                                  disabled={isDisabled}
                                 >
-                                  {order.productId!.pdfFiles.length > 1
-                                    ? `Download PDF ${idx + 1}`
-                                    : "Download PDF"}
+                                  {buttonLabel}
                                 </button>
-                                {expiryLabel && (
+                                {expiryLabel && !isDownloaded && (
                                   <span className={`pl-1 text-[10px] ${isExpired ? "text-red-400" : "text-[var(--foreground-subtle)]"}`}>
                                     {expiryLabel}
                                   </span>

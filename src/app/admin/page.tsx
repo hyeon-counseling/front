@@ -22,6 +22,8 @@ interface Product {
   pdfFiles: { filename: string; r2Key: string; expiryDays?: number | null }[];
   coverImageUrl?: string;
   polarProductId?: string;
+  cafe24ProductNo?: number;
+  channel?: "polar" | "cafe24" | "both";
 }
 
 interface AdminOrder {
@@ -102,6 +104,17 @@ export default function AdminPage() {
   const [editImagePreviewUrl, setEditImagePreviewUrl] = useState<string | null>(null);
   const [isUploadingEditImage, setIsUploadingEditImage] = useState(false);
   const editImageInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Cafe24 상품 관리 상태 ──────────────────────────────────────
+  const [isCafe24Syncing, setIsCafe24Syncing] = useState(false);
+  const [cafe24SyncMsg, setCafe24SyncMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [showCafe24EditModal, setShowCafe24EditModal] = useState(false);
+  const [selectedCafe24Product, setSelectedCafe24Product] = useState<Product | null>(null);
+  const [cafe24EditForm, setCafe24EditForm] = useState({ title: "", price: "" });
+  const [cafe24PdfFiles, setCafe24PdfFiles] = useState<File[]>([]);
+  const [isCafe24Submitting, setIsCafe24Submitting] = useState(false);
+  const [cafe24FormError, setCafe24FormError] = useState("");
+  const [isUploadingCafe24Pdf, setIsUploadingCafe24Pdf] = useState(false);
 
   // 접근 권한 확인
   useEffect(() => {
@@ -539,6 +552,124 @@ export default function AdminPage() {
   };
 
   // ─────────────────────────────────────────────────────────────────
+  // Cafe24 상품 관리
+  // ─────────────────────────────────────────────────────────────────
+
+  // Cafe24 동기화: POST /api/cafe24/sync 호출 후 상품 목록 새로고침
+  const handleCafe24Sync = async () => {
+    setIsCafe24Syncing(true);
+    setCafe24SyncMsg(null);
+    try {
+      const result = await apiFetch("/api/cafe24/sync", { method: "POST" });
+      const { added = 0, updated = 0, deactivated = 0 } = result as { added?: number; updated?: number; deactivated?: number };
+      setCafe24SyncMsg({
+        type: "success",
+        text: `Sync complete: ${added} added, ${updated} updated, ${deactivated} deactivated`,
+      });
+      fetchData(); // 상품 목록 새로고침
+    } catch (err) {
+      setCafe24SyncMsg({
+        type: "error",
+        text: err instanceof Error ? err.message : "Sync failed. Please try again.",
+      });
+    } finally {
+      setIsCafe24Syncing(false);
+    }
+  };
+
+  // Cafe24 상품 수정 모달 열기
+  const openCafe24EditModal = (product: Product) => {
+    setSelectedCafe24Product(product);
+    setCafe24EditForm({
+      title: product.title,
+      price: String(product.price),
+    });
+    setCafe24PdfFiles([]);
+    setCafe24FormError("");
+    setShowCafe24EditModal(true);
+  };
+
+  // Cafe24 상품 수정 모달 닫기 + 목록 새로고침
+  const closeCafe24EditModal = () => {
+    setShowCafe24EditModal(false);
+    setSelectedCafe24Product(null);
+    setCafe24PdfFiles([]);
+    setCafe24FormError("");
+    fetchData();
+  };
+
+  // Cafe24 상품 정보 저장: PUT /api/products/:id
+  const handleCafe24Update = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCafe24Product) return;
+    setCafe24FormError("");
+
+    const priceNum = parseFloat(cafe24EditForm.price);
+    if (!cafe24EditForm.title.trim() || isNaN(priceNum) || priceNum < 0) {
+      setCafe24FormError("상품명과 가격을 올바르게 입력해 주세요.");
+      return;
+    }
+
+    setIsCafe24Submitting(true);
+    try {
+      // 상품 기본 정보 저장
+      await apiFetch(`/api/products/${selectedCafe24Product._id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          title: cafe24EditForm.title.trim(),
+          description: selectedCafe24Product.description,
+          price: priceNum,
+          language: selectedCafe24Product.language,
+        }),
+      });
+
+      // 추가 PDF 파일이 있으면 업로드
+      if (cafe24PdfFiles.length > 0) {
+        setIsUploadingCafe24Pdf(true);
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        for (const file of cafe24PdfFiles) {
+          const formData = new FormData();
+          formData.append("pdf", file);
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/products/${selectedCafe24Product._id}/pdf`,
+            {
+              method: "POST",
+              headers: token ? { Authorization: `Bearer ${token}` } : {},
+              body: formData,
+            }
+          );
+          const data = await res.json();
+          if (!data.success) throw new Error(data.message || "PDF 업로드 실패");
+        }
+        setIsUploadingCafe24Pdf(false);
+      }
+
+      closeCafe24EditModal();
+    } catch (err) {
+      setCafe24FormError(err instanceof Error ? err.message : "저장에 실패했습니다.");
+      setIsUploadingCafe24Pdf(false);
+    } finally {
+      setIsCafe24Submitting(false);
+    }
+  };
+
+  // Cafe24 상품의 PDF 파일 삭제: DELETE /api/products/:id/pdf/:fileIndex
+  const handleCafe24DeletePdf = async (productId: string, fileIndex: number, filename: string) => {
+    if (!confirm(`"${filename}" 파일을 삭제할까요?`)) return;
+    try {
+      await apiFetch(`/api/products/${productId}/pdf/${fileIndex}`, { method: "DELETE" });
+      // 로컬 상태에서도 즉시 반영
+      setSelectedCafe24Product((prev) =>
+        prev
+          ? { ...prev, pdfFiles: prev.pdfFiles.filter((_, i) => i !== fileIndex) }
+          : prev
+      );
+    } catch (err) {
+      setCafe24FormError(err instanceof Error ? err.message : "PDF 삭제에 실패했습니다.");
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────
   // 렌더링
   // ─────────────────────────────────────────────────────────────────
 
@@ -667,6 +798,101 @@ export default function AdminPage() {
                   </div>
                 </div>
               )}
+            </section>
+
+            {/* ── Cafe24 Products 섹션 ──────────────────────────────────── */}
+            <section className="mb-10">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">Cafe24 Products</h2>
+                <button
+                  onClick={handleCafe24Sync}
+                  disabled={isCafe24Syncing}
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] px-4 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--surface)] disabled:opacity-50"
+                >
+                  {/* 동기화 아이콘 */}
+                  <svg
+                    className={`h-3.5 w-3.5 ${isCafe24Syncing ? "animate-spin" : ""}`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {isCafe24Syncing ? "Syncing..." : "Sync from Cafe24"}
+                </button>
+              </div>
+
+              {/* 동기화 결과 메시지 */}
+              {cafe24SyncMsg && (
+                <div className={`mb-4 rounded-xl px-4 py-3 text-sm ${cafe24SyncMsg.type === "success" ? "bg-[var(--brand-light)] text-[var(--brand)]" : "bg-red-50 text-red-700"}`}>
+                  {cafe24SyncMsg.text}
+                </div>
+              )}
+
+              {/* Cafe24 상품 테이블 — channel === 'cafe24'인 상품만 표시 */}
+              {(() => {
+                const cafe24Products = products.filter((p) => p.channel === "cafe24");
+                if (cafe24Products.length === 0) {
+                  return (
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-8 text-center">
+                      <p className="text-sm text-[var(--foreground-muted)]">
+                        No Cafe24 products yet. Click &quot;Sync from Cafe24&quot; to import products.
+                      </p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[580px] text-sm">
+                        <thead className="bg-[var(--surface)]">
+                          <tr>
+                            <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Product Name</th>
+                            <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Cafe24 No.</th>
+                            <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Price</th>
+                            <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">PDF</th>
+                            <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[var(--border)] bg-[var(--background)]">
+                          {cafe24Products.map((product) => (
+                            <tr key={product._id} className="hover:bg-[var(--surface)]">
+                              <td className="px-5 py-3 font-medium text-[var(--foreground)]">{product.title}</td>
+                              <td className="px-5 py-3 text-[var(--foreground-muted)]">
+                                {product.cafe24ProductNo ?? <span className="text-[var(--foreground-subtle)]">—</span>}
+                              </td>
+                              <td className="px-5 py-3 text-[var(--foreground-muted)]">
+                                {product.price.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}
+                              </td>
+                              <td className="px-5 py-3">
+                                {product.pdfFiles?.length > 0 ? (
+                                  <span className="rounded-full bg-[var(--brand-light)] px-2.5 py-0.5 text-xs font-medium text-[var(--brand)]">
+                                    {product.pdfFiles.length} file{product.pdfFiles.length > 1 ? "s" : ""}
+                                  </span>
+                                ) : (
+                                  <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">
+                                    None
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-5 py-3">
+                                <button
+                                  className="cursor-pointer text-xs text-[var(--foreground-muted)] hover:text-[var(--brand)] hover:underline"
+                                  onClick={() => openCafe24EditModal(product)}
+                                >
+                                  Edit
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
             </section>
 
             {/* 최근 주문 목록 */}
@@ -1201,6 +1427,112 @@ export default function AdminPage() {
                 </button>
                 <button type="submit" disabled={isSubmitting} className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">
                   {isSubmitting ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cafe24 상품 수정 모달 ────────────────────────────────────── */}
+      {showCafe24EditModal && selectedCafe24Product && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) closeCafe24EditModal(); }}
+        >
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="mb-1 text-lg font-semibold text-[var(--foreground)]">Edit Cafe24 Product</h2>
+            {/* 주의 문구: 다음 동기화 시 덮어쓰일 수 있는 필드 안내 */}
+            <p className="mb-5 text-xs text-[var(--foreground-subtle)]">
+              Note: Product name and price may be overwritten on the next sync from Cafe24.
+            </p>
+
+            <form onSubmit={handleCafe24Update} className="space-y-4">
+              {/* 상품명 */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Product Name</label>
+                <input
+                  type="text"
+                  value={cafe24EditForm.title}
+                  onChange={(e) => setCafe24EditForm({ ...cafe24EditForm, title: e.target.value })}
+                  className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)]"
+                  required
+                />
+              </div>
+
+              {/* 가격 (원화) */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">Price (KRW)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={cafe24EditForm.price}
+                  onChange={(e) => setCafe24EditForm({ ...cafe24EditForm, price: e.target.value })}
+                  className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)]"
+                  placeholder="25000"
+                  required
+                />
+              </div>
+
+              {/* 현재 등록된 PDF 목록 */}
+              {selectedCafe24Product.pdfFiles?.length > 0 && (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">Current PDF Files</label>
+                  <div className="space-y-2 rounded-xl border border-[var(--border)] p-3">
+                    {selectedCafe24Product.pdfFiles.map((file, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <span className="min-w-0 flex-1 truncate text-sm text-[var(--foreground-muted)]">
+                          {file.filename}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCafe24DeletePdf(selectedCafe24Product._id, idx, file.filename)}
+                          className="shrink-0 text-xs text-[var(--error)] hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* PDF 추가 업로드 */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+                  Add PDF Files <span className="font-normal text-[var(--foreground-subtle)]">(optional)</span>
+                </label>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  multiple
+                  onChange={(e) => setCafe24PdfFiles(Array.from(e.target.files ?? []))}
+                  className="w-full text-sm text-[var(--foreground-muted)]"
+                />
+                {cafe24PdfFiles.length > 0 && (
+                  <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
+                    {cafe24PdfFiles.length} file(s) selected: {cafe24PdfFiles.map((f) => f.name).join(", ")}
+                  </p>
+                )}
+              </div>
+
+              {cafe24FormError && <p className="text-sm text-red-600">{cafe24FormError}</p>}
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeCafe24EditModal}
+                  className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCafe24Submitting || isUploadingCafe24Pdf}
+                  className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50"
+                >
+                  {isCafe24Submitting || isUploadingCafe24Pdf ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>
