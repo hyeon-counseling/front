@@ -83,6 +83,7 @@ export default function KakaoTemplatesPage() {
   const [solapiList, setSolapiList] = useState<SolapiTemplate[]>([]);
   const [solapiLoading, setSolapiLoading] = useState(false);
   const [solapiError, setSolapiError] = useState("");
+  const [pickedSolapiId, setPickedSolapiId] = useState(""); // 선택 하이라이트용
 
   useEffect(() => {
     if (authLoading) return;
@@ -112,6 +113,7 @@ export default function KakaoTemplatesPage() {
     setForm(emptyForm);
     setFormError("");
     setSolapiError("");
+    setPickedSolapiId("");
     setShowModal(true);
   };
 
@@ -128,6 +130,7 @@ export default function KakaoTemplatesPage() {
     });
     setFormError("");
     setSolapiError("");
+    setPickedSolapiId("");
     setShowModal(true);
   };
 
@@ -135,6 +138,7 @@ export default function KakaoTemplatesPage() {
     setShowModal(false);
     setEditing(null);
     setSolapiList([]);
+    setPickedSolapiId("");
     fetchTemplates();
   };
 
@@ -154,12 +158,14 @@ export default function KakaoTemplatesPage() {
 
   // Solapi 템플릿 선택 → 폼에 채우기 (변수 키 자동 매핑)
   const pickSolapiTemplate = (t: SolapiTemplate) => {
+    const vars = t.variables ?? [];
     setForm((prev) => ({
       ...prev,
       name: prev.name || t.name,
       templateId: t.templateId,
-      variables: t.variables.map((k) => ({ key: k, valueTemplate: guessMapping(k) })),
+      variables: vars.map((k) => ({ key: k, valueTemplate: guessMapping(k) })),
     }));
+    setPickedSolapiId(t.templateId); // 선택 표시
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -278,13 +284,31 @@ export default function KakaoTemplatesPage() {
                 {solapiError && <p className="mt-2 text-xs text-red-600">{solapiError}</p>}
                 {solapiList.length > 0 && (
                   <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">
-                    {solapiList.map((t) => (
-                      <button key={t.templateId} type="button" onClick={() => pickSolapiTemplate(t)} className="block w-full rounded-lg px-2 py-1.5 text-left text-xs hover:bg-[var(--surface)]">
-                        <span className="font-medium text-[var(--foreground)]">{t.name}</span>
-                        <span className="ml-2 text-[var(--foreground-subtle)]">{t.status} · 변수 {t.variables.length}개</span>
-                      </button>
-                    ))}
+                    {solapiList.map((t) => {
+                      const selected = t.templateId === pickedSolapiId;
+                      return (
+                        <button
+                          key={t.templateId}
+                          type="button"
+                          onClick={() => pickSolapiTemplate(t)}
+                          className={`flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left text-xs transition-colors ${
+                            selected
+                              ? "border-[var(--brand)] bg-[var(--brand-light)]"
+                              : "border-transparent hover:bg-[var(--surface)]"
+                          }`}
+                        >
+                          <span className={`shrink-0 ${selected ? "text-[var(--brand)]" : "text-transparent"}`}>✓</span>
+                          <span className="min-w-0 flex-1">
+                            <span className="font-medium text-[var(--foreground)]">{t.name}</span>
+                            <span className="ml-2 text-[var(--foreground-subtle)]">{t.status} · 변수 {(t.variables ?? []).length}개</span>
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
+                )}
+                {pickedSolapiId && (
+                  <p className="mt-2 text-xs text-[var(--brand)]">✓ 선택됨 — 아래 폼에 템플릿 ID와 변수가 채워졌습니다.</p>
                 )}
               </div>
 
