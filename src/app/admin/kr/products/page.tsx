@@ -6,6 +6,8 @@ import { apiFetch } from "@/lib/api";
 import { uploadFile } from "../../_lib/upload";
 import { Product, ProductVariant, EmailTemplate, KakaoTemplate } from "../../_lib/types";
 
+const KIND_LABEL: Record<string, string> = { digital: "전자책", counseling: "상담", test: "심리검사" };
+
 // 한국어 쇼핑몰(카페24) 상품 관리 — 동기화/재인증/옵션PDF/주문 알림 설정.
 // 가드는 admin/layout.tsx에서 처리.
 
@@ -32,6 +34,7 @@ export default function KrProductsPage() {
 
   // 알림 설정
   const [notifForm, setNotifForm] = useState<{ emailEnabled: boolean; emailTemplateId: string; kakaoEnabled: boolean; kakaoTemplateId: string }>({ emailEnabled: true, emailTemplateId: "", kakaoEnabled: false, kakaoTemplateId: "" });
+  const [kindValue, setKindValue] = useState<"digital" | "counseling" | "test">("digital");
   const [notifSaving, setNotifSaving] = useState(false);
   const [notifMsg, setNotifMsg] = useState("");
 
@@ -83,6 +86,7 @@ export default function KrProductsPage() {
       kakaoEnabled: product.notification?.kakaoEnabled === true,
       kakaoTemplateId: product.notification?.kakaoTemplateId ? String(product.notification.kakaoTemplateId) : "",
     });
+    setKindValue((product.kind as "digital" | "counseling" | "test") ?? "digital");
     setNotifMsg("");
     setShowEditModal(true);
   };
@@ -106,6 +110,7 @@ export default function KrProductsPage() {
       await apiFetch(`/api/products/${selected._id}`, {
         method: "PUT",
         body: JSON.stringify({
+          kind: kindValue,
           notification: {
             emailEnabled: notifForm.emailEnabled,
             emailTemplateId: notifForm.emailTemplateId || null,
@@ -327,10 +332,17 @@ export default function KrProductsPage() {
                 return (
                   <div className="space-y-5">
                     {/* 상품 기본 정보 (read-only) */}
-                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 space-y-1">
+                    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 space-y-2">
                       <p className="text-xs text-[var(--foreground-subtle)]">상품 #{selected.cafe24ProductNo}</p>
                       <p className="font-medium text-[var(--foreground)]">{selected.title}</p>
                       <p className="text-sm text-[var(--foreground-muted)]">기본가격: {selected.price.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}</p>
+                      <div className="flex items-center gap-2 pt-1">
+                        <label className="text-xs text-[var(--foreground-subtle)]">상품 종류</label>
+                        <select value={kindValue} onChange={(e) => setKindValue(e.target.value as "digital" | "counseling" | "test")} className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1 text-xs outline-none focus:border-[var(--brand)]">
+                          {Object.entries(KIND_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                        <span className="text-[10px] text-[var(--foreground-subtle)]">상담/검사면 주문 시 예약이 생성됩니다 (아래 저장 버튼으로 함께 저장)</span>
+                      </div>
                     </div>
 
                     {/* 주문 알림 설정 */}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { Customer, AdminOrder } from "../../_lib/types";
+import { Customer, AdminOrder, Reservation, RESERVATION_STATUS_LABEL } from "../../_lib/types";
 
 // 고객(CRM) 관리 — 한국어 쇼핑몰(카페24). 가드는 admin/layout.tsx에서 처리.
 // 카페24 주문이 들어오면 고객이 자동 생성/연결된다(운영 프로필).
@@ -15,6 +15,7 @@ export default function CustomersPage() {
   // 상세 모달
   const [selected, setSelected] = useState<Customer | null>(null);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [memo, setMemo] = useState("");
   const [tagsText, setTagsText] = useState("");
@@ -50,6 +51,7 @@ export default function CustomersPage() {
       const data = await apiFetch(`/api/admin/customers/${customer._id}`);
       setSelected(data.customer);
       setOrders(data.orders ?? []);
+      setReservations(data.reservations ?? []);
     } catch {
       // 무시
     } finally {
@@ -170,6 +172,28 @@ export default function CustomersPage() {
                   <button onClick={handleSave} disabled={saving} className="rounded-full bg-[var(--brand)] px-4 py-1.5 text-xs font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{saving ? "저장 중..." : "저장"}</button>
                   {saveMsg && <span className="text-xs text-[var(--foreground-muted)]">{saveMsg}</span>}
                 </div>
+              </div>
+
+              {/* 예약 이력 */}
+              <div>
+                <p className="mb-2 text-sm font-medium text-[var(--foreground)]">예약 이력 (상담·검사)</p>
+                {detailLoading ? (
+                  <div className="h-12 animate-pulse rounded-xl bg-[var(--surface)]" />
+                ) : reservations.length === 0 ? (
+                  <p className="text-xs text-[var(--foreground-subtle)]">예약 이력이 없습니다.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {reservations.map((r) => (
+                      <div key={r._id} className="flex items-center justify-between rounded-xl border border-[var(--border)] px-4 py-2 text-sm">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-[var(--foreground)]">{r.productName}</p>
+                          <p className="text-xs text-[var(--foreground-subtle)]">{r.scheduledAt ? new Date(r.scheduledAt).toLocaleString("ko-KR", { dateStyle: "medium", timeStyle: "short" }) : "일정 미정"}</p>
+                        </div>
+                        <span className="shrink-0 text-xs text-[var(--brand)]">{RESERVATION_STATUS_LABEL[r.status]}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* 주문 이력 */}

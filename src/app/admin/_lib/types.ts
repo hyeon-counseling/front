@@ -19,6 +19,7 @@ export interface Product {
   polarProductId?: string;
   cafe24ProductNo?: number;
   channel?: "polar" | "cafe24" | "both";
+  kind?: "digital" | "counseling" | "test";
   variants?: ProductVariant[];
   notification?: {
     emailEnabled: boolean;
@@ -76,3 +77,31 @@ export interface Customer {
   source: "cafe24" | "polar" | "manual";
   createdAt: string;
 }
+
+export type ReservationStatus = "requested" | "confirmed" | "in_progress" | "completed" | "canceled" | "no_show";
+
+export interface Reservation {
+  _id: string;
+  customerId?: string | null;
+  productId?: string | null;
+  externalOrderId: string;
+  serviceKind: "counseling" | "test";
+  productName: string;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  variantCode?: string | null;
+  slotLabel?: string | null;
+  scheduledAt?: string | null;
+  status: ReservationStatus;
+  memo: string;
+  createdAt: string;
+}
+
+export const RESERVATION_STATUS_LABEL: Record<ReservationStatus, string> = {
+  requested: "접수",
+  confirmed: "확정",
+  in_progress: "진행중",
+  completed: "완료",
+  canceled: "취소",
+  no_show: "노쇼",
+};
