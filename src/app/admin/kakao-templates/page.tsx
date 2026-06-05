@@ -37,8 +37,16 @@ interface SolapiTemplate {
   variables: string[]; // ["#{상품명}", ...]
 }
 
-// 주문 정보로 채울 수 있는 치환 변수
-const ORDER_VARS = ["{{고객명}}", "{{상품명}}", "{{옵션명}}", "{{다운로드링크}}", "{{만료일수}}", "{{주문번호}}"];
+// 주문 정보로 채울 수 있는 치환 변수 (라벨 + 실제 토큰)
+const ORDER_VAR_OPTIONS: { value: string; label: string }[] = [
+  { value: "{{고객명}}", label: "고객명" },
+  { value: "{{상품명}}", label: "상품명" },
+  { value: "{{옵션명}}", label: "옵션명" },
+  { value: "{{다운로드링크}}", label: "다운로드 링크" },
+  { value: "{{만료일수}}", label: "만료일수" },
+  { value: "{{주문번호}}", label: "주문번호" },
+];
+const ORDER_VARS = ORDER_VAR_OPTIONS.map((o) => o.value);
 
 const emptyForm: {
   name: string;
@@ -308,7 +316,21 @@ export default function KakaoTemplatesPage() {
                         <div key={idx} className="flex items-center gap-2">
                           <input type="text" value={v.key} onChange={(e) => updateVar(idx, { key: e.target.value })} placeholder="#{상품명}" className="w-2/5 rounded-lg border border-[var(--border)] px-2 py-1.5 font-mono text-xs outline-none focus:border-[var(--brand)]" />
                           <span className="text-xs text-[var(--foreground-subtle)]">→</span>
-                          <input type="text" value={v.valueTemplate} onChange={(e) => updateVar(idx, { valueTemplate: e.target.value })} placeholder="{{상품명}}" className="flex-1 rounded-lg border border-[var(--border)] px-2 py-1.5 font-mono text-xs outline-none focus:border-[var(--brand)]" />
+                          {/* 매핑 값: 사용 가능한 주문 변수 드롭다운에서 선택 */}
+                          <select
+                            value={v.valueTemplate}
+                            onChange={(e) => updateVar(idx, { valueTemplate: e.target.value })}
+                            className="flex-1 rounded-lg border border-[var(--border)] px-2 py-1.5 text-xs outline-none focus:border-[var(--brand)]"
+                          >
+                            <option value="">— 변수 선택 —</option>
+                            {ORDER_VAR_OPTIONS.map((o) => (
+                              <option key={o.value} value={o.value}>{o.label} {o.value}</option>
+                            ))}
+                            {/* 기존에 직접 입력해 둔 값(프리셋에 없는 값)은 잃지 않도록 보존 */}
+                            {v.valueTemplate && !ORDER_VARS.includes(v.valueTemplate) && (
+                              <option value={v.valueTemplate}>직접입력: {v.valueTemplate}</option>
+                            )}
+                          </select>
                           <button type="button" onClick={() => removeVar(idx)} className="shrink-0 text-xs text-[var(--error)] hover:underline">삭제</button>
                         </div>
                       ))}
