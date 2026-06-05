@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 
 // ─────────────────────────────────────────────────────────────────
@@ -66,9 +64,6 @@ function guessMapping(key: string): string {
 }
 
 export default function KakaoTemplatesPage() {
-  const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
-
   const [templates, setTemplates] = useState<KakaoTemplate[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState("");
@@ -85,12 +80,6 @@ export default function KakaoTemplatesPage() {
   const [solapiError, setSolapiError] = useState("");
   const [pickedSolapiId, setPickedSolapiId] = useState(""); // 선택 하이라이트용
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) { router.replace("/login"); return; }
-    if (user.role !== "admin") { router.replace("/"); }
-  }, [authLoading, user, router]);
-
   const fetchTemplates = async () => {
     try {
       setDataLoading(true);
@@ -104,9 +93,8 @@ export default function KakaoTemplatesPage() {
   };
 
   useEffect(() => {
-    if (!user || user.role !== "admin") return;
     fetchTemplates();
-  }, [user]);
+  }, []);
 
   const openCreate = () => {
     setEditing(null);
@@ -212,7 +200,7 @@ export default function KakaoTemplatesPage() {
   const addVar = () => setForm((prev) => ({ ...prev, variables: [...prev.variables, { key: "", valueTemplate: "" }] }));
   const removeVar = (idx: number) => setForm((prev) => ({ ...prev, variables: prev.variables.filter((_, i) => i !== idx) }));
 
-  if (authLoading || dataLoading) {
+  if (dataLoading) {
     return <div className="p-10 text-sm text-[var(--foreground-muted)]">불러오는 중...</div>;
   }
 

@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 
 // ─────────────────────────────────────────────────────────────────
@@ -29,9 +27,6 @@ const emptyForm = { name: "", subjectTemplate: "", bodyHtmlTemplate: "", descrip
 const PLACEHOLDERS = ["{{고객명}}", "{{상품명}}", "{{옵션명}}", "{{다운로드링크}}", "{{만료일수}}"];
 
 export default function EmailTemplatesPage() {
-  const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
-
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState("");
@@ -41,13 +36,6 @@ export default function EmailTemplatesPage() {
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // 접근 권한 확인
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) { router.replace("/login"); return; }
-    if (user.role !== "admin") { router.replace("/"); }
-  }, [authLoading, user, router]);
 
   const fetchTemplates = async () => {
     try {
@@ -62,9 +50,8 @@ export default function EmailTemplatesPage() {
   };
 
   useEffect(() => {
-    if (!user || user.role !== "admin") return;
     fetchTemplates();
-  }, [user]);
+  }, []);
 
   const openCreate = () => {
     setEditing(null);
@@ -130,7 +117,7 @@ export default function EmailTemplatesPage() {
     }
   };
 
-  if (authLoading || dataLoading) {
+  if (dataLoading) {
     return <div className="p-10 text-sm text-[var(--foreground-muted)]">불러오는 중...</div>;
   }
 
