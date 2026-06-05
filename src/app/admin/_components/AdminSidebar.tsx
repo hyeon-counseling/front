@@ -55,6 +55,7 @@ export default function AdminSidebar() {
         <SectionLabel>한국어 쇼핑몰 · 카페24</SectionLabel>
         <NavLink item={{ label: "상품", href: "/admin/kr/products" }} />
         <NavLink item={{ label: "주문", href: "/admin/kr/orders" }} />
+        <NavLink item={{ label: "고객", href: "/admin/kr/customers" }} />
 
         {/* 영어 쇼핑몰 (Polar) — 당분간 비활성, 접이식 */}
         <button

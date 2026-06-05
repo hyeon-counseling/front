@@ -63,3 +63,16 @@ export interface ContentItem {
   isPublished: boolean;
   createdAt: string;
 }
+
+export interface Customer {
+  _id: string;
+  cafe24MemberId?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  name?: string | null;
+  kakaoConsent: boolean;
+  tags: string[];
+  memo: string;
+  source: "cafe24" | "polar" | "manual";
+  createdAt: string;
+}

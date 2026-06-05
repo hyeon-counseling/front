@@ -34,6 +34,7 @@ export default function AdminDashboard() {
   const quickLinks = [
     { label: "한국어 상품 (카페24)", href: "/admin/kr/products", desc: "동기화·옵션 PDF·주문 알림" },
     { label: "한국어 주문", href: "/admin/kr/orders", desc: "카페24 주문 내역" },
+    { label: "고객 (CRM)", href: "/admin/kr/customers", desc: "주문 자동 연결·메모·태그" },
     { label: "콘텐츠", href: "/admin/common/contents", desc: "칼럼·뉴스레터" },
     { label: "이메일 템플릿", href: "/admin/email-templates", desc: "주문 이메일 템플릿" },
     { label: "카카오 템플릿", href: "/admin/kakao-templates", desc: "알림톡 템플릿" },
