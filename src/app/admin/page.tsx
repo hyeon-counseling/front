@@ -32,6 +32,16 @@ interface Product {
   cafe24ProductNo?: number;
   channel?: "polar" | "cafe24" | "both";
   variants?: ProductVariant[];
+  notification?: { emailEnabled: boolean; emailTemplateId?: string | null };
+}
+
+interface EmailTemplate {
+  _id: string;
+  name: string;
+  subjectTemplate: string;
+  bodyHtmlTemplate: string;
+  description?: string;
+  isActive: boolean;
 }
 
 interface AdminOrder {
@@ -128,6 +138,12 @@ export default function AdminPage() {
   // variant별 업로드 진행 중 여부: { [variantCode]: boolean }
   const [uploadingVariants, setUploadingVariants] = useState<Record<string, boolean>>({});
 
+  // ── 알림 설정 상태 (Cafe24 상품별 이메일 발송 여부 + 템플릿) ──────
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
+  const [notifForm, setNotifForm] = useState<{ emailEnabled: boolean; emailTemplateId: string }>({ emailEnabled: true, emailTemplateId: "" });
+  const [notifSaving, setNotifSaving] = useState(false);
+  const [notifMsg, setNotifMsg] = useState("");
+
   // 접근 권한 확인
   useEffect(() => {
     if (authLoading) return;
@@ -139,16 +155,18 @@ export default function AdminPage() {
   const fetchData = async () => {
     try {
       setDataLoading(true);
-      const [productsData, ordersData, contentsData, settingsData] = await Promise.all([
+      const [productsData, ordersData, contentsData, settingsData, emailTemplatesData] = await Promise.all([
         apiFetch("/api/products?channel=all"),
         apiFetch("/api/orders"),
         apiFetch("/api/admin/contents"),
         apiFetch("/api/admin/settings"),
+        apiFetch("/api/admin/email-templates"),
       ]);
       setProducts(productsData);
       setOrders(ordersData);
       setContents(contentsData);
       setEmailSettings(settingsData);
+      setEmailTemplates(emailTemplatesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "데이터를 불러오지 못했습니다.");
     } finally {
@@ -598,7 +616,36 @@ export default function AdminPage() {
     });
     setCafe24PdfFiles([]);
     setCafe24FormError("");
+    // 알림 설정 폼 초기화 (미설정이면 이메일 ON + 기본 템플릿)
+    setNotifForm({
+      emailEnabled: product.notification?.emailEnabled !== false,
+      emailTemplateId: product.notification?.emailTemplateId ? String(product.notification.emailTemplateId) : "",
+    });
+    setNotifMsg("");
     setShowCafe24EditModal(true);
+  };
+
+  // Cafe24 상품 알림 설정 저장 (옵션 상품/일반 상품 모두 동작하도록 독립 저장)
+  const handleSaveCafe24Notification = async () => {
+    if (!selectedCafe24Product) return;
+    setNotifSaving(true);
+    setNotifMsg("");
+    try {
+      await apiFetch(`/api/products/${selectedCafe24Product._id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          notification: {
+            emailEnabled: notifForm.emailEnabled,
+            emailTemplateId: notifForm.emailTemplateId || null,
+          },
+        }),
+      });
+      setNotifMsg("저장되었습니다.");
+    } catch (err) {
+      setNotifMsg(err instanceof Error ? err.message : "저장에 실패했습니다.");
+    } finally {
+      setNotifSaving(false);
+    }
   };
 
   // Cafe24 상품 수정 모달 닫기 + 목록 새로고침
@@ -1602,6 +1649,52 @@ export default function AdminPage() {
                       <p className="font-medium text-[var(--foreground)]">{selectedCafe24Product.title}</p>
                       <p className="text-sm text-[var(--foreground-muted)]">
                         기본가격: {selectedCafe24Product.price.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}
+                      </p>
+                    </div>
+
+                    {/* ── 주문 알림 설정 (이메일 on/off + 템플릿) ── */}
+                    <div className="rounded-xl border border-[var(--border)] p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-[var(--foreground)]">주문 알림 설정</p>
+                        <Link href="/admin/email-templates" className="text-xs text-[var(--brand)] hover:underline">
+                          템플릿 관리 →
+                        </Link>
+                      </div>
+                      <label className="flex items-center gap-2 text-sm text-[var(--foreground-muted)]">
+                        <input
+                          type="checkbox"
+                          checked={notifForm.emailEnabled}
+                          onChange={(e) => setNotifForm({ ...notifForm, emailEnabled: e.target.checked })}
+                        />
+                        주문 시 이메일 발송
+                      </label>
+                      <div>
+                        <label className="mb-1 block text-xs text-[var(--foreground-subtle)]">이메일 템플릿</label>
+                        <select
+                          value={notifForm.emailTemplateId}
+                          disabled={!notifForm.emailEnabled}
+                          onChange={(e) => setNotifForm({ ...notifForm, emailTemplateId: e.target.value })}
+                          className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] disabled:opacity-50"
+                        >
+                          <option value="">기본 템플릿 (한국어 안내)</option>
+                          {emailTemplates.filter((t) => t.isActive).map((t) => (
+                            <option key={t._id} value={t._id}>{t.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleSaveCafe24Notification}
+                          disabled={notifSaving}
+                          className="rounded-full bg-[var(--brand)] px-4 py-1.5 text-xs font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50"
+                        >
+                          {notifSaving ? "저장 중..." : "알림 설정 저장"}
+                        </button>
+                        {notifMsg && <span className="text-xs text-[var(--foreground-muted)]">{notifMsg}</span>}
+                      </div>
+                      <p className="text-xs text-[var(--foreground-subtle)]">
+                        이메일을 끄면 이 상품 주문 시 이메일이 발송되지 않습니다. (카카오 알림톡은 다음 단계에서 추가됩니다)
                       </p>
                     </div>
 
