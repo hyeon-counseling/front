@@ -884,24 +884,48 @@ export default function AdminPage() {
             <section className="mb-10">
               <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">Cafe24 Products</h2>
-                <button
-                  onClick={handleCafe24Sync}
-                  disabled={isCafe24Syncing}
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] px-4 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--surface)] disabled:opacity-50"
-                >
-                  {/* 동기화 아이콘 */}
-                  <svg
-                    className={`h-3.5 w-3.5 ${isCafe24Syncing ? "animate-spin" : ""}`}
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* 재인증: Refresh Token 만료(14일 초과 방치) 시 새 토큰 재발급.
+                      카페24 관리자 로그인 세션을 사용하므로 새 탭으로 연다. */}
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_API_URL}/api/cafe24/auth/start`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="동기화가 invalid_grant 오류로 실패할 때 눌러 토큰을 재발급하세요"
+                    className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] px-4 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--surface)]"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  {isCafe24Syncing ? "Syncing..." : "Sync from Cafe24"}
-                </button>
+                    {/* 열쇠 아이콘 */}
+                    <svg
+                      className="h-3.5 w-3.5"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    카페24 재인증
+                  </a>
+                  <button
+                    onClick={handleCafe24Sync}
+                    disabled={isCafe24Syncing}
+                    className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] px-4 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--surface)] disabled:opacity-50"
+                  >
+                    {/* 동기화 아이콘 */}
+                    <svg
+                      className={`h-3.5 w-3.5 ${isCafe24Syncing ? "animate-spin" : ""}`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {isCafe24Syncing ? "Syncing..." : "Sync from Cafe24"}
+                  </button>
+                </div>
               </div>
 
               {/* 동기화 결과 메시지 */}
