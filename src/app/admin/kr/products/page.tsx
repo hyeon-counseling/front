@@ -275,7 +275,9 @@ export default function KrProductsPage() {
               </thead>
               <tbody className="divide-y divide-[var(--border)] bg-[var(--background)]">
                 {cafe24Products.map((product) => {
-                  const hasVariants = product.variants && product.variants.length > 0;
+                  // 상담/검사는 옵션이 '예약 슬롯'이므로 전자책 변형처럼 펼쳐 보이지 않는다
+                  const isService = product.kind === "counseling" || product.kind === "test";
+                  const hasVariants = product.variants && product.variants.length > 0 && !isService;
                   return (
                     <Fragment key={product._id}>
                       <tr className="hover:bg-[var(--surface)]">
@@ -283,7 +285,9 @@ export default function KrProductsPage() {
                         <td className="px-5 py-3 text-[var(--foreground-muted)]">{product.cafe24ProductNo ?? <span className="text-[var(--foreground-subtle)]">—</span>}</td>
                         <td className="px-5 py-3 text-[var(--foreground-muted)]">{product.price.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}</td>
                         <td className="px-5 py-3">
-                          {!hasVariants && (product.pdfFiles?.length > 0 ? (
+                          {isService ? (
+                            <span className="rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-600">{KIND_LABEL[product.kind!]} · 예약</span>
+                          ) : !hasVariants && (product.pdfFiles?.length > 0 ? (
                             <span className="rounded-full bg-[var(--brand-light)] px-2.5 py-0.5 text-xs font-medium text-[var(--brand)]">{product.pdfFiles.length} file{product.pdfFiles.length > 1 ? "s" : ""}</span>
                           ) : (
                             <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">None</span>
@@ -328,7 +332,9 @@ export default function KrProductsPage() {
 
             <div className="flex-1 overflow-y-auto px-6 py-5">
               {(() => {
-                const hasVariants = selected.variants && selected.variants.length > 0;
+                // 상담/검사면 옵션은 예약 슬롯이므로 옵션별 PDF 관리 UI를 숨긴다(드롭다운 즉시 반영)
+                const isService = kindValue === "counseling" || kindValue === "test";
+                const hasVariants = selected.variants && selected.variants.length > 0 && !isService;
                 return (
                   <div className="space-y-5">
                     {/* 상품 기본 정보 (read-only) */}
@@ -419,6 +425,11 @@ export default function KrProductsPage() {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    ) : isService ? (
+                      <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-sm text-purple-700">
+                        <p className="font-medium">예약형 상품 ({KIND_LABEL[kindValue]})</p>
+                        <p className="mt-1 text-xs text-purple-600">이 상품의 옵션은 예약 날짜·시간 슬롯입니다. PDF를 첨부하지 않으며, 주문이 들어오면 <b>예약 캘린더</b>에 자동 등록됩니다. 슬롯은 카페24 상품 옵션에서 관리하세요.</p>
                       </div>
                     ) : (
                       <form id="cafe24-edit-form" onSubmit={handleUpdate} className="space-y-4">
