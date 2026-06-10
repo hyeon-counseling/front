@@ -38,11 +38,14 @@ export default function KrProductsPage() {
   const [notifSaving, setNotifSaving] = useState(false);
   const [notifMsg, setNotifMsg] = useState("");
 
+  // 상태별 그룹 접기/펼치기 (판매중지·삭제됨은 기본 접힘)
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ stopped: false, deleted: false });
+
   const fetchAll = async () => {
     try {
       setLoading(true);
       const [productsData, emailTpl, kakaoTpl] = await Promise.all([
-        apiFetch("/api/products?channel=all"),
+        apiFetch("/api/products?channel=all&includeInactive=true"),
         apiFetch("/api/admin/email-templates"),
         apiFetch("/api/admin/kakao-templates"),
       ]);
@@ -224,6 +227,64 @@ export default function KrProductsPage() {
 
   const cafe24Products = products.filter((p) => p.channel === "cafe24");
 
+  // 카페24 진열(display)·판매(selling)·삭제(isActive) 상태로 상품을 4개 그룹으로 분류
+  const statusOf = (p: Product): "live" | "hidden" | "stopped" | "deleted" => {
+    if (!p.isActive) return "deleted";          // 카페24 목록에서 사라짐 = 삭제
+    if (p.cafe24Selling === false) return "stopped";  // 판매중지
+    return p.cafe24Display === false ? "hidden" : "live"; // 미진열 vs 진열중
+  };
+  const groupDefs: { key: string; label: string; dotClass: string; collapsible: boolean }[] = [
+    { key: "live", label: "진열중 · 판매중", dotClass: "bg-green-500", collapsible: false },
+    { key: "hidden", label: "미진열 · 판매중", dotClass: "bg-amber-500", collapsible: false },
+    { key: "stopped", label: "판매중지", dotClass: "bg-gray-400", collapsible: true },
+    { key: "deleted", label: "삭제됨 (카페24에서 제거)", dotClass: "bg-red-400", collapsible: true },
+  ];
+  const groups = groupDefs.map((g) => ({ ...g, items: cafe24Products.filter((p) => statusOf(p) === g.key) }));
+
+  // 상품 1건의 행(옵션 하위행 포함) 렌더 — 그룹별 테이블에서 재사용
+  const renderProductRow = (product: Product) => {
+    // 상담/검사는 옵션이 '예약 슬롯'이므로 전자책 변형처럼 펼쳐 보이지 않는다
+    const isService = product.kind === "counseling" || product.kind === "test";
+    const hasVariants = product.variants && product.variants.length > 0 && !isService;
+    const dimmed = !product.isActive || product.cafe24Selling === false; // 판매중지/삭제는 흐리게
+    return (
+      <Fragment key={product._id}>
+        <tr className={`hover:bg-[var(--surface)] ${dimmed ? "opacity-60" : ""}`}>
+          <td className="px-5 py-3 font-medium text-[var(--foreground)]">{product.title}</td>
+          <td className="px-5 py-3 text-[var(--foreground-muted)]">{product.cafe24ProductNo ?? <span className="text-[var(--foreground-subtle)]">—</span>}</td>
+          <td className="px-5 py-3 text-[var(--foreground-muted)]">{product.price.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}</td>
+          <td className="px-5 py-3">
+            {isService ? (
+              <span className="rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-600">{KIND_LABEL[product.kind!]} · 예약</span>
+            ) : !hasVariants && (product.pdfFiles?.length > 0 ? (
+              <span className="rounded-full bg-[var(--brand-light)] px-2.5 py-0.5 text-xs font-medium text-[var(--brand)]">{product.pdfFiles.length} file{product.pdfFiles.length > 1 ? "s" : ""}</span>
+            ) : (
+              <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">None</span>
+            ))}
+          </td>
+          <td className="px-5 py-3">
+            <button className="cursor-pointer text-xs text-[var(--foreground-muted)] hover:text-[var(--brand)] hover:underline" onClick={() => openEditModal(product)}>Edit</button>
+          </td>
+        </tr>
+        {hasVariants && product.variants!.map((variant) => (
+          <tr key={`${product._id}-${variant.variantCode}`} className="bg-[var(--surface)]">
+            <td className="py-2 pl-10 pr-5 text-xs text-[var(--foreground-muted)]"><span className="text-[var(--foreground-subtle)] mr-1">└</span>{variant.optionName}</td>
+            <td className="px-5 py-2 text-xs text-[var(--foreground-subtle)]"></td>
+            <td className="px-5 py-2 text-xs text-[var(--foreground-muted)]">+{variant.additionalAmount.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}</td>
+            <td className="px-5 py-2">
+              {variant.pdfFiles?.length > 0 ? (
+                <span className="rounded-full bg-[var(--brand-light)] px-2 py-0.5 text-xs font-medium text-[var(--brand)]">{variant.pdfFiles.length} file{variant.pdfFiles.length > 1 ? "s" : ""}</span>
+              ) : (
+                <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">None</span>
+              )}
+            </td>
+            <td className="px-5 py-2"></td>
+          </tr>
+        ))}
+      </Fragment>
+    );
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -261,63 +322,49 @@ export default function KrProductsPage() {
           <p className="text-sm text-[var(--foreground-muted)]">No Cafe24 products yet. Click &quot;Sync from Cafe24&quot; to import products.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[580px] text-sm">
-              <thead className="bg-[var(--surface)]">
-                <tr>
-                  <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Product Name</th>
-                  <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Cafe24 No.</th>
-                  <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Price</th>
-                  <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">PDF</th>
-                  <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border)] bg-[var(--background)]">
-                {cafe24Products.map((product) => {
-                  // 상담/검사는 옵션이 '예약 슬롯'이므로 전자책 변형처럼 펼쳐 보이지 않는다
-                  const isService = product.kind === "counseling" || product.kind === "test";
-                  const hasVariants = product.variants && product.variants.length > 0 && !isService;
-                  return (
-                    <Fragment key={product._id}>
-                      <tr className="hover:bg-[var(--surface)]">
-                        <td className="px-5 py-3 font-medium text-[var(--foreground)]">{product.title}</td>
-                        <td className="px-5 py-3 text-[var(--foreground-muted)]">{product.cafe24ProductNo ?? <span className="text-[var(--foreground-subtle)]">—</span>}</td>
-                        <td className="px-5 py-3 text-[var(--foreground-muted)]">{product.price.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}</td>
-                        <td className="px-5 py-3">
-                          {isService ? (
-                            <span className="rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-600">{KIND_LABEL[product.kind!]} · 예약</span>
-                          ) : !hasVariants && (product.pdfFiles?.length > 0 ? (
-                            <span className="rounded-full bg-[var(--brand-light)] px-2.5 py-0.5 text-xs font-medium text-[var(--brand)]">{product.pdfFiles.length} file{product.pdfFiles.length > 1 ? "s" : ""}</span>
-                          ) : (
-                            <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">None</span>
-                          ))}
-                        </td>
-                        <td className="px-5 py-3">
-                          <button className="cursor-pointer text-xs text-[var(--foreground-muted)] hover:text-[var(--brand)] hover:underline" onClick={() => openEditModal(product)}>Edit</button>
-                        </td>
-                      </tr>
-                      {hasVariants && product.variants!.map((variant) => (
-                        <tr key={`${product._id}-${variant.variantCode}`} className="bg-[var(--surface)]">
-                          <td className="py-2 pl-10 pr-5 text-xs text-[var(--foreground-muted)]"><span className="text-[var(--foreground-subtle)] mr-1">└</span>{variant.optionName}</td>
-                          <td className="px-5 py-2 text-xs text-[var(--foreground-subtle)]"></td>
-                          <td className="px-5 py-2 text-xs text-[var(--foreground-muted)]">+{variant.additionalAmount.toLocaleString("ko-KR", { style: "currency", currency: "KRW" })}</td>
-                          <td className="px-5 py-2">
-                            {variant.pdfFiles?.length > 0 ? (
-                              <span className="rounded-full bg-[var(--brand-light)] px-2 py-0.5 text-xs font-medium text-[var(--brand)]">{variant.pdfFiles.length} file{variant.pdfFiles.length > 1 ? "s" : ""}</span>
-                            ) : (
-                              <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">None</span>
-                            )}
-                          </td>
-                          <td className="px-5 py-2"></td>
+        <div className="space-y-4">
+          {groups.map((g) => {
+            if (g.items.length === 0) return null;
+            const open = g.collapsible ? (openGroups[g.key] ?? false) : true;
+            return (
+              <div key={g.key} className="overflow-hidden rounded-2xl border border-[var(--border)]">
+                <button
+                  type="button"
+                  onClick={g.collapsible ? () => setOpenGroups((prev) => ({ ...prev, [g.key]: !open })) : undefined}
+                  className={`flex w-full items-center justify-between gap-2 bg-[var(--surface)] px-5 py-3 text-left ${g.collapsible ? "cursor-pointer hover:bg-[var(--border)]/40" : "cursor-default"}`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium text-[var(--foreground)]">
+                    <span className={`h-2 w-2 rounded-full ${g.dotClass}`} />
+                    {g.label}
+                    <span className="rounded-full bg-[var(--background)] px-2 py-0.5 text-xs font-normal text-[var(--foreground-subtle)]">{g.items.length}</span>
+                  </span>
+                  {g.collapsible && (
+                    <svg className={`h-4 w-4 text-[var(--foreground-subtle)] transition-transform ${open ? "rotate-180" : ""}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </button>
+                {open && (
+                  <div className="overflow-x-auto border-t border-[var(--border)]">
+                    <table className="w-full min-w-[580px] text-sm">
+                      <thead className="bg-[var(--background)]">
+                        <tr>
+                          <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Product Name</th>
+                          <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Cafe24 No.</th>
+                          <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Price</th>
+                          <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">PDF</th>
+                          <th className="px-5 py-3 text-left font-medium text-[var(--foreground-subtle)]">Action</th>
                         </tr>
-                      ))}
-                    </Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--border)] bg-[var(--background)]">
+                        {g.items.map((product) => renderProductRow(product))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

@@ -18,6 +18,8 @@ export interface Product {
   coverImageUrl?: string;
   polarProductId?: string;
   cafe24ProductNo?: number;
+  cafe24Display?: boolean;   // 카페24 진열 상태
+  cafe24Selling?: boolean;   // 카페24 판매 상태
   channel?: "polar" | "cafe24" | "both";
   kind?: "digital" | "counseling" | "test";
   variants?: ProductVariant[];
