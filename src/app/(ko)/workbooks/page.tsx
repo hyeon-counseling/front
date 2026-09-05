@@ -31,7 +31,7 @@ export default function WorkbooksPage() {
               회원가입하고 소식 받기
             </Link>
             <a
-              href={process.env.NEXT_PUBLIC_SHOP_URL ?? "https://gulleobofficial.cafe24.com"}
+              href={process.env.NEXT_PUBLIC_SHOP_URL ?? "https://hyeon-counseling.com"}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-6 py-2.5 text-sm font-medium text-[var(--foreground)] hover:border-[var(--brand)] hover:text-[var(--brand)]"

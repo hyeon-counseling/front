@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 };
 
 // 당분간 신청·결제는 카페24 쇼핑몰에서 진행한다 (상담운영시스템은 추후).
-const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL ?? "https://gulleobofficial.cafe24.com";
+const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL ?? "https://hyeon-counseling.com";
 
 const STEPS = [
   { t: "신청", d: "쇼핑몰에서 상담 상품을 선택하고 원하는 날짜·시간을 고릅니다. 결제가 끝나면 예약이 확정됩니다." },
