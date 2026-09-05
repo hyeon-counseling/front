@@ -40,8 +40,8 @@ export default function ArticlesPage() {
   return (
     <div className="px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-5xl">
-        <p className="eyebrow mb-4">아티클</p>
-        <h1 className="font-display text-4xl leading-tight text-[var(--brand-ink)] sm:text-5xl">읽으면서 시작하기</h1>
+        <p className="mb-4"><span className="eyebrow">아티클</span></p>
+        <h1 className="font-display text-4xl leading-tight text-[var(--foreground)] sm:text-5xl">읽으면서 시작하기</h1>
         <p className="mt-4 max-w-2xl text-[var(--foreground-muted)]">누구나 무료로 읽는 심리 지식. 짧고, 근거 있고, 오늘 써볼 수 있는 이야기.</p>
 
         {!loading && !error && categories.length > 0 && (
@@ -76,7 +76,7 @@ export default function ArticlesPage() {
                 <Link
                   key={item._id}
                   href={`/articles/${item._id}`}
-                  className={`group flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 transition-all hover:-translate-y-0.5 hover:border-[var(--brand)] rise rise-${Math.min(i + 1, 5)}`}
+                  className={`group flex flex-col card p-6 transition-all hover:-translate-y-0.5 hover:border-[var(--brand)] rise rise-${Math.min(i + 1, 5)}`}
                 >
                   {item.category && <span className="eyebrow mb-3">{item.category}</span>}
                   <h2 className="font-display mb-3 flex-1 text-xl leading-snug text-[var(--foreground)] group-hover:text-[var(--brand)]">{item.title}</h2>

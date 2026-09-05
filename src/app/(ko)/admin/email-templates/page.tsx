@@ -131,7 +131,7 @@ export default function EmailTemplatesPage() {
         </div>
         <button
           onClick={openCreate}
-          className="rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]"
+          className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]"
         >
           + 새 템플릿
         </button>
@@ -248,10 +248,10 @@ export default function EmailTemplatesPage() {
               </form>
             </div>
             <div className="flex-shrink-0 flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-              <button type="button" onClick={closeModal} className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">
+              <button type="button" onClick={closeModal} className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">
                 취소
               </button>
-              <button type="submit" form="template-form" disabled={isSubmitting} className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">
+              <button type="submit" form="template-form" disabled={isSubmitting} className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">
                 {isSubmitting ? "저장 중..." : "저장"}
               </button>
             </div>

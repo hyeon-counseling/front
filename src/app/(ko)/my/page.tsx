@@ -28,15 +28,15 @@ export default function MyPage() {
   return (
     <div className="px-4 py-14 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-4xl">
-        <p className="eyebrow mb-3">내 학습</p>
-        <h1 className="font-display text-3xl text-[var(--brand-ink)] sm:text-4xl">
+        <p className="mb-3"><span className="eyebrow">내 학습</span></p>
+        <h1 className="font-display text-3xl text-[var(--foreground)] sm:text-4xl">
           {user.name}님, 오늘도 10분.
         </h1>
         <p className="mt-2 text-sm text-[var(--foreground-muted)]">{user.email}</p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
           {cards.map((c) => (
-            <Link key={c.title} href={c.href} className="group rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6 transition-colors hover:border-[var(--brand)]">
+            <Link key={c.title} href={c.href} className="group card p-6 transition-colors hover:border-[var(--brand)]">
               <h2 className="font-display text-xl text-[var(--foreground)] group-hover:text-[var(--brand)]">{c.title}</h2>
               <p className="mt-1 text-sm text-[var(--foreground-muted)]">{c.desc}</p>
               {c.note && <p className="mt-4 text-xs text-[var(--foreground-subtle)]">{c.note}</p>}

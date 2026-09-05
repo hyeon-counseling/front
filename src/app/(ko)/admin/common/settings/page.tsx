@@ -77,7 +77,7 @@ export default function SettingsPage() {
       {loading ? (
         <div className="h-48 animate-pulse rounded-2xl bg-[var(--surface)]" />
       ) : (
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-6">
+        <div className="card p-6">
           <form onSubmit={handleSave} className="space-y-4">
             {/* 발신자 이름 */}
             <div>
@@ -141,7 +141,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50"
+              className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50"
             >
               {saving ? "저장 중..." : "저장"}
             </button>

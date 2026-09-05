@@ -318,7 +318,7 @@ export default function KrProductsPage() {
       {loading ? (
         <div className="h-48 animate-pulse rounded-2xl bg-[var(--surface)]" />
       ) : cafe24Products.length === 0 ? (
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-8 text-center">
+        <div className="card p-8 text-center">
           <p className="text-sm text-[var(--foreground-muted)]">No Cafe24 products yet. Click &quot;Sync from Cafe24&quot; to import products.</p>
         </div>
       ) : (
@@ -435,7 +435,7 @@ export default function KrProductsPage() {
                       </div>
 
                       <div className="flex items-center gap-2 pt-1">
-                        <button type="button" onClick={handleSaveNotification} disabled={notifSaving} className="rounded-full bg-[var(--brand)] px-4 py-1.5 text-xs font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{notifSaving ? "저장 중..." : "알림 설정 저장"}</button>
+                        <button type="button" onClick={handleSaveNotification} disabled={notifSaving} className="rounded-xl bg-[var(--brand)] px-4 py-1.5 text-xs font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{notifSaving ? "저장 중..." : "알림 설정 저장"}</button>
                         {notifMsg && <span className="text-xs text-[var(--foreground-muted)]">{notifMsg}</span>}
                       </div>
                       <p className="text-xs text-[var(--foreground-subtle)]">끄면 이 상품 주문 시 해당 알림이 발송되지 않습니다. 카카오 알림톡은 전화번호가 있을 때만 발송되며, 실패 시 문자로 대체됩니다.</p>
@@ -465,7 +465,7 @@ export default function KrProductsPage() {
                               )}
                               <div className="flex items-center gap-2">
                                 <input type="file" accept="application/pdf" onChange={(e) => setVariantPdfFiles((prev) => ({ ...prev, [variant.variantCode]: e.target.files?.[0] ?? null }))} className="flex-1 text-xs text-[var(--foreground-muted)]" />
-                                <button type="button" disabled={!variantPdfFiles[variant.variantCode] || uploadingVariants[variant.variantCode]} onClick={() => handleVariantPdfUpload(selected._id, variant.variantCode)} className="shrink-0 rounded-full bg-[var(--brand)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-40">
+                                <button type="button" disabled={!variantPdfFiles[variant.variantCode] || uploadingVariants[variant.variantCode]} onClick={() => handleVariantPdfUpload(selected._id, variant.variantCode)} className="shrink-0 rounded-xl bg-[var(--brand)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-40">
                                   {uploadingVariants[variant.variantCode] ? "업로드 중..." : "업로드"}
                                 </button>
                               </div>
@@ -508,11 +508,11 @@ export default function KrProductsPage() {
             </div>
 
             <div className="flex-shrink-0 flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-              <button type="button" onClick={closeEditModal} className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">
+              <button type="button" onClick={closeEditModal} className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">
                 {selected.variants && selected.variants.length > 0 ? "닫기" : "Cancel"}
               </button>
               {(!selected.variants || selected.variants.length === 0) && (
-                <button type="submit" form="cafe24-edit-form" disabled={isSubmitting || isUploadingPdf} className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">
+                <button type="submit" form="cafe24-edit-form" disabled={isSubmitting || isUploadingPdf} className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">
                   {isSubmitting || isUploadingPdf ? "Saving..." : "Save Changes"}
                 </button>
               )}

@@ -69,8 +69,8 @@ export default function ArticleDetailPage() {
           ← 아티클
         </Link>
         <header className="mt-6 mb-10 border-b border-[var(--border)] pb-8">
-          {content.category && <p className="eyebrow mb-3">{content.category}</p>}
-          <h1 className="font-display text-3xl leading-tight text-[var(--brand-ink)] sm:text-4xl">{content.title}</h1>
+          {content.category && <p className="mb-3"><span className="eyebrow">{content.category}</span></p>}
+          <h1 className="font-display text-3xl leading-tight text-[var(--foreground)] sm:text-4xl">{content.title}</h1>
           <p className="mt-4 text-sm text-[var(--foreground-subtle)]">
             심리상담가 현 ·{" "}
             {new Date(content.createdAt).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}
@@ -79,12 +79,12 @@ export default function ArticleDetailPage() {
         <div className="prose-ko text-[1.02rem]">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{content.body}</ReactMarkdown>
         </div>
-        <footer className="mt-14 rounded-2xl border border-[var(--border-light)] bg-[var(--surface)] p-6">
+        <footer className="mt-14 rounded-2xl bg-[var(--surface)] p-6">
           <p className="font-display text-lg text-[var(--foreground)]">더 깊이 가고 싶다면</p>
           <p className="mt-1 text-sm text-[var(--foreground-muted)]">워크북으로 매일 10분씩 직접 해보거나, 강의로 원리를 배워 보세요.</p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link href="/workbooks" className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">워크북</Link>
-            <Link href="/courses" className="rounded-full border border-[var(--border)] px-5 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[var(--brand)] hover:text-[var(--brand)]">강의</Link>
+            <Link href="/workbooks" className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">워크북</Link>
+            <Link href="/courses" className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[var(--brand)] hover:text-[var(--brand)]">강의</Link>
           </div>
         </footer>
       </div>

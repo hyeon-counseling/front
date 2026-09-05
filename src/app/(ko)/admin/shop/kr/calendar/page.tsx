@@ -128,9 +128,9 @@ export default function CalendarPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-[var(--foreground)]">예약 캘린더</h1>
         <div className="flex items-center gap-3">
-          <button onClick={prevMonth} className="rounded-full border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--surface)]">←</button>
+          <button onClick={prevMonth} className="rounded-xl border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--surface)]">←</button>
           <span className="text-sm font-medium text-[var(--foreground)]">{cursor.year}년 {cursor.month + 1}월</span>
-          <button onClick={nextMonth} className="rounded-full border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--surface)]">→</button>
+          <button onClick={nextMonth} className="rounded-xl border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--surface)]">→</button>
         </div>
       </div>
 
@@ -209,8 +209,8 @@ export default function CalendarPage() {
             </div>
 
             <div className="mt-5 flex justify-end gap-3">
-              <button onClick={closeEdit} className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">닫기</button>
-              <button onClick={handleSave} disabled={saving} className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{saving ? "저장 중..." : "저장"}</button>
+              <button onClick={closeEdit} className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">닫기</button>
+              <button onClick={handleSave} disabled={saving} className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{saving ? "저장 중..." : "저장"}</button>
             </div>
           </div>
         </div>

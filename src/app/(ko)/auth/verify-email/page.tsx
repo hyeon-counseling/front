@@ -56,7 +56,7 @@ function VerifyEmailHandler() {
   return (
     <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4">
       <div className="w-full max-w-md text-center">
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-10">
+        <div className="card p-10">
           {status === "loading" && (
             <>
               <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-[var(--brand)] border-t-transparent" />
@@ -75,7 +75,7 @@ function VerifyEmailHandler() {
               <p className="mb-6 text-sm text-[var(--foreground-muted)]">{message}</p>
               <Link
                 href="/login"
-                className="inline-block rounded-full bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+                className="inline-block rounded-xl bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
               >
                 로그인
               </Link>
@@ -94,7 +94,7 @@ function VerifyEmailHandler() {
               <div className="flex flex-col gap-3">
                 <Link
                   href="/login"
-                  className="inline-block rounded-full bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+                  className="inline-block rounded-xl bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
                 >
                   로그인으로
                 </Link>

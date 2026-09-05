@@ -61,8 +61,8 @@ export default function FaqPage() {
   return (
     <div className="px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-3xl">
-        <p className="eyebrow mb-4">자주 묻는 질문</p>
-        <h1 className="font-display text-4xl leading-tight text-[var(--brand-ink)] sm:text-5xl">궁금한 것들</h1>
+        <p className="mb-4"><span className="eyebrow">자주 묻는 질문</span></p>
+        <h1 className="font-display text-4xl leading-tight text-[var(--foreground)] sm:text-5xl">궁금한 것들</h1>
         <div className="mt-10 border-t border-[var(--border)]">
           {FAQS.map((f) => <Item key={f.q} {...f} />)}
         </div>

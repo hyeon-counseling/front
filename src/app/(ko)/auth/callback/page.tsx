@@ -60,11 +60,11 @@ function CallbackHandler() {
     return (
       <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-10">
+          <div className="card p-10">
             <p className="mb-4 text-sm text-red-600">{error}</p>
             <button
               onClick={() => router.push("/login")}
-              className="rounded-full bg-[var(--brand)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+              className="rounded-xl bg-[var(--brand)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
             >
               로그인으로
             </button>

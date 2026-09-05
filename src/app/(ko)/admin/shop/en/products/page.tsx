@@ -244,7 +244,7 @@ export default function EnProductsPage() {
           <h1 className="text-xl font-semibold text-[var(--foreground)]">상품 · 영어 쇼핑몰 (Polar)</h1>
           <p className="mt-1 text-xs text-amber-600">이 채널은 당분간 비활성입니다.</p>
         </div>
-        <button onClick={openAddModal} className="rounded-full bg-[var(--brand)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
+        <button onClick={openAddModal} className="rounded-xl bg-[var(--brand)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
           + Add Product
         </button>
       </div>
@@ -254,7 +254,7 @@ export default function EnProductsPage() {
       {loading ? (
         <div className="h-48 animate-pulse rounded-2xl bg-[var(--surface)]" />
       ) : visible.length === 0 ? (
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-8 text-center">
+        <div className="card p-8 text-center">
           <p className="text-sm text-[var(--foreground-muted)]">No products yet.</p>
         </div>
       ) : (
@@ -334,8 +334,8 @@ export default function EnProductsPage() {
                 </div>
                 {formError && <p className="text-sm text-red-600">{formError}</p>}
                 <div className="flex justify-end gap-3 pt-2">
-                  <button type="button" onClick={closeAddModal} className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">Cancel</button>
-                  <button type="submit" disabled={isSubmitting} className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{isSubmitting ? "Creating..." : "Create Product"}</button>
+                  <button type="button" onClick={closeAddModal} className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">Cancel</button>
+                  <button type="submit" disabled={isSubmitting} className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{isSubmitting ? "Creating..." : "Create Product"}</button>
                 </div>
               </form>
             )}
@@ -360,7 +360,7 @@ export default function EnProductsPage() {
                 </div>
                 {formError && <p className="text-sm text-red-600">{formError}</p>}
                 <div className="flex justify-end gap-3 pt-2">
-                  <button type="button" onClick={closeAddModal} className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">Skip & Close</button>
+                  <button type="button" onClick={closeAddModal} className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">Skip & Close</button>
                   <button
                     type="button"
                     disabled={(pdfFiles.length === 0 && !imageFile) || isUploadingPdf || isUploadingImage}
@@ -376,7 +376,7 @@ export default function EnProductsPage() {
                         setUploadDone(true);
                       }
                     }}
-                    className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50"
+                    className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50"
                   >
                     {isUploadingPdf || isUploadingImage ? "Uploading..." : "Upload Files"}
                   </button>
@@ -387,7 +387,7 @@ export default function EnProductsPage() {
             {createdProductId && uploadDone && (
               <div className="space-y-4 text-center">
                 <p className="text-[var(--brand)] font-medium">PDF uploaded successfully!</p>
-                <button onClick={closeAddModal} className="rounded-full bg-[var(--brand)] px-6 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">Done</button>
+                <button onClick={closeAddModal} className="rounded-xl bg-[var(--brand)] px-6 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">Done</button>
               </div>
             )}
           </div>
@@ -489,8 +489,8 @@ export default function EnProductsPage() {
               {formError && <p className="text-sm text-red-600">{formError}</p>}
 
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={closeEditModal} className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">Cancel</button>
-                <button type="submit" disabled={isSubmitting} className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{isSubmitting ? "Saving..." : "Save Changes"}</button>
+                <button type="button" onClick={closeEditModal} className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{isSubmitting ? "Saving..." : "Save Changes"}</button>
               </div>
             </form>
           </div>

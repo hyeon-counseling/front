@@ -164,7 +164,7 @@ export default function MyPage() {
 
         {/* 페이지 헤더 */}
         <div className="mb-10">
-          <p className="eyebrow mb-3">내 학습</p>
+          <p className="mb-3"><span className="eyebrow">내 학습</span></p>
           <h1 className="font-display mb-1 text-3xl text-[var(--brand-ink)]">
             주문 내역
           </h1>
@@ -194,20 +194,20 @@ export default function MyPage() {
 
           {/* 에러 */}
           {!ordersLoading && error && (
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 text-center">
+            <div className="card p-5 text-center">
               <p className="text-sm text-[var(--foreground-muted)]">{error}</p>
             </div>
           )}
 
           {/* 구매 내역 없음 */}
           {!ordersLoading && !error && orders.length === 0 && (
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-10 text-center">
+            <div className="card p-10 text-center">
               <p className="mb-4 text-[var(--foreground-muted)]">
                 아직 주문이 없어요.
               </p>
               <Link
                 href="/en/shop"
-                className="inline-block rounded-full bg-[var(--brand)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+                className="inline-block rounded-xl bg-[var(--brand)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
               >
                 전자책 둘러보기
               </Link>
@@ -220,7 +220,7 @@ export default function MyPage() {
               {orders.map((order) => (
                 <div
                   key={order._id}
-                  className="flex flex-col gap-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 card p-5 sm:flex-row sm:items-center sm:justify-between"
                 >
                   {/* 상품 정보 */}
                   <div>
@@ -258,7 +258,7 @@ export default function MyPage() {
                       <div className="flex flex-wrap gap-2">
                         {/* 상품이 삭제된 경우 */}
                         {order.productId && !order.productId.isActive ? (
-                          <span className="rounded-full border border-[var(--border)] px-4 py-1.5 text-xs font-medium text-[var(--foreground-subtle)] opacity-50">
+                          <span className="rounded-xl border border-[var(--border)] px-4 py-1.5 text-xs font-medium text-[var(--foreground-subtle)] opacity-50">
                             판매 종료
                           </span>
                         ) : order.productId?.pdfFiles?.length ? (
@@ -314,7 +314,7 @@ export default function MyPage() {
           <h2 className="mb-4 text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">
             계정
           </h2>
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5">
+          <div className="card p-5">
             <p className="text-sm text-[var(--foreground-muted)]">
               <span className="font-medium text-[var(--foreground)]">
                 {user.email}

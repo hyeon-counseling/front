@@ -6,7 +6,7 @@ import { AdminOrder } from "../_lib/types";
 export default function OrdersTable({ orders }: { orders: AdminOrder[] }) {
   if (orders.length === 0) {
     return (
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-8 text-center">
+      <div className="card p-8 text-center">
         <p className="text-sm text-[var(--foreground-muted)]">주문이 없습니다.</p>
       </div>
     );

@@ -5,8 +5,8 @@ export function LegalPage({ eyebrow, title, updated, children }: { eyebrow: stri
   return (
     <div className="px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-3xl">
-        <p className="eyebrow mb-4">{eyebrow}</p>
-        <h1 className="font-display text-3xl leading-tight text-[var(--brand-ink)] sm:text-4xl">{title}</h1>
+        <p className="mb-4"><span className="eyebrow">{eyebrow}</span></p>
+        <h1 className="font-display text-3xl leading-tight text-[var(--foreground)] sm:text-4xl">{title}</h1>
         <p className="mt-3 text-xs text-[var(--foreground-subtle)]">시행일 {updated}</p>
         <div className="mt-10 space-y-10 text-sm leading-relaxed text-[var(--foreground-muted)]">{children}</div>
       </div>

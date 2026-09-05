@@ -15,11 +15,11 @@ export default function ContactPage() {
   return (
     <div className="px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-3xl">
-        <p className="eyebrow mb-4">문의</p>
-        <h1 className="font-display text-4xl leading-tight text-[var(--brand-ink)] sm:text-5xl">이메일로 편하게</h1>
+        <p className="mb-4"><span className="eyebrow">문의</span></p>
+        <h1 className="font-display text-4xl leading-tight text-[var(--foreground)] sm:text-5xl">이메일로 편하게</h1>
         <p className="mt-4 max-w-2xl text-[var(--foreground-muted)]">영업일 기준 1~2일 안에 답변드립니다. 계정 이메일과 상황을 함께 적어 주시면 더 빨리 도와드릴 수 있어요.</p>
 
-        <div className="mt-10 rounded-3xl border border-[var(--border-light)] bg-[var(--surface)] p-8 text-center sm:p-10">
+        <div className="mt-10 rounded-3xl bg-[var(--surface)] p-8 text-center sm:p-10">
           <p className="text-sm text-[var(--foreground-muted)]">문의 메일</p>
           <a href="mailto:support@hyeoncounseling.com" className="font-display mt-2 inline-block text-2xl text-[var(--brand)] hover:underline sm:text-3xl">
             support@hyeoncounseling.com
@@ -29,7 +29,7 @@ export default function ContactPage() {
 
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
           {KINDS.map((k) => (
-            <div key={k.t} className="rounded-2xl border border-[var(--border-light)] bg-[var(--background)] p-5">
+            <div key={k.t} className="card p-5">
               <h3 className="font-semibold text-[var(--foreground)]">{k.t}</h3>
               <p className="mt-1.5 text-xs leading-relaxed text-[var(--foreground-muted)]">{k.d}</p>
             </div>

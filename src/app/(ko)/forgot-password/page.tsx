@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-8">
+        <div className="card p-8">
           {submitted ? (
             // 전송 완료 상태
             <div className="text-center">
@@ -107,7 +107,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full cursor-pointer rounded-full bg-[var(--brand)] py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full cursor-pointer rounded-xl bg-[var(--brand)] py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isLoading ? "보내는 중..." : "재설정 링크 보내기"}
               </button>

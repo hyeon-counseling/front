@@ -11,8 +11,8 @@ export default function CoursesPage() {
   return (
     <div className="px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-3xl">
-        <p className="eyebrow mb-4">강의</p>
-        <h1 className="font-display text-4xl leading-tight text-[var(--brand-ink)] sm:text-5xl">
+        <p className="mb-4"><span className="eyebrow">강의</span></p>
+        <h1 className="font-display text-4xl leading-tight text-[var(--foreground)] sm:text-5xl">
           10분씩, 한 편씩.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[var(--foreground-muted)]">
@@ -24,10 +24,10 @@ export default function CoursesPage() {
             공개되면 회원에게 이메일로 알려드릴게요. 그동안 무료 아티클과 워크북 1주차를 먼저 만나 보세요.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link href="/register" className="inline-flex items-center rounded-full bg-[var(--brand)] px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
+            <Link href="/register" className="inline-flex items-center rounded-xl bg-[var(--brand)] px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
               회원가입하고 소식 받기
             </Link>
-            <Link href="/articles" className="inline-flex items-center rounded-full border border-[var(--border)] px-6 py-2.5 text-sm font-medium text-[var(--foreground)] hover:border-[var(--brand)] hover:text-[var(--brand)]">
+            <Link href="/articles" className="inline-flex items-center rounded-xl border border-[var(--border)] px-6 py-2.5 text-sm font-medium text-[var(--foreground)] hover:border-[var(--brand)] hover:text-[var(--brand)]">
               아티클 읽기
             </Link>
           </div>

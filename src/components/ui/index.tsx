@@ -19,7 +19,7 @@ type Size = "sm" | "md" | "lg";
 
 const variantClass: Record<Variant, string> = {
   primary: "bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]",
-  secondary: "border border-[var(--brand)] text-[var(--brand)] hover:bg-[var(--brand-light)]",
+  secondary: "bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-muted)]",
   ghost: "text-[var(--foreground-muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]",
   danger: "border border-[var(--error)] text-[var(--error)] hover:bg-red-50",
 };
@@ -41,7 +41,7 @@ export function Button({ variant = "primary", size = "md", loading, className, c
       {...rest}
       disabled={disabled || loading}
       className={cx(
-        "inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60",
         variantClass[variant],
         sizeClass[size],
         className
@@ -65,7 +65,7 @@ export function LinkButton({ href, variant = "primary", size = "md", className, 
     <Link
       href={href}
       className={cx(
-        "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-colors",
+        "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors",
         variantClass[variant],
         sizeClass[size],
         className
@@ -81,8 +81,8 @@ export function Card({ className, children, muted }: { className?: string; child
   return (
     <div
       className={cx(
-        "rounded-2xl border border-[var(--border)]",
-        muted ? "bg-[var(--surface)]" : "bg-[var(--background)]",
+        "rounded-2xl",
+        muted ? "bg-[var(--surface)]" : "card",
         className
       )}
     >
@@ -93,7 +93,7 @@ export function Card({ className, children, muted }: { className?: string; child
 
 // ── Input / Textarea ──
 const fieldClass =
-  "w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-[var(--foreground-subtle)] outline-none transition-colors focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-light)]";
+  "w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-[0.95rem] text-[var(--foreground)] placeholder-[var(--foreground-subtle)] outline-none transition-colors focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-light)]";
 
 interface FieldProps {
   label?: string;
@@ -163,7 +163,7 @@ export function Alert({ tone = "error", children }: { tone?: "error" | "info" | 
 export function EmptyState({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return (
     <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background)] p-10 text-center">
-      <p className="font-display text-lg text-[var(--foreground)]">{title}</p>
+      <p className="text-lg font-bold text-[var(--foreground)]">{title}</p>
       {description && <p className="mt-2 text-sm text-[var(--foreground-muted)]">{description}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
@@ -230,7 +230,7 @@ export function Modal({
 export function PageHeader({ eyebrow, title, description, children }: { eyebrow?: string; title: string; description?: string; children?: ReactNode }) {
   return (
     <div className="mb-10 sm:mb-14">
-      {eyebrow && <p className="eyebrow mb-3">{eyebrow}</p>}
+      {eyebrow && <p className="mb-3"><span className="eyebrow">{eyebrow}</span></p>}
       <h1 className="font-display text-3xl leading-tight text-[var(--foreground)] sm:text-4xl">{title}</h1>
       {description && <p className="mt-3 max-w-2xl text-[var(--foreground-muted)] leading-relaxed">{description}</p>}
       {children}

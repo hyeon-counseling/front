@@ -27,7 +27,7 @@ function ResetPasswordHandler() {
   if (!token) {
     return (
       <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4">
-        <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--background)] p-8 text-center">
+        <div className="w-full max-w-sm card p-8 text-center">
           <p className="mb-4 text-sm text-[var(--foreground-muted)]">유효하지 않거나 만료된 링크예요.</p>
           <Link href="/forgot-password" className="text-sm font-medium text-[var(--brand)] hover:underline">
             새 링크 요청하기
@@ -84,7 +84,7 @@ function ResetPasswordHandler() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-8">
+        <div className="card p-8">
           {success ? (
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-light)] text-[var(--brand)]">
@@ -98,7 +98,7 @@ function ResetPasswordHandler() {
               </p>
               <Link
                 href="/login"
-                className="inline-block rounded-full bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+                className="inline-block rounded-xl bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
               >
                 로그인
               </Link>
@@ -150,7 +150,7 @@ function ResetPasswordHandler() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full cursor-pointer rounded-full bg-[var(--brand)] py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full cursor-pointer rounded-xl bg-[var(--brand)] py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isLoading ? "변경 중..." : "비밀번호 변경"}
               </button>

@@ -18,8 +18,8 @@ export default function AboutPage() {
     <div>
       <section className="px-4 pb-16 pt-16 sm:px-6 sm:pb-24 sm:pt-24">
         <div className="mx-auto max-w-3xl">
-          <p className="eyebrow rise rise-1 mb-4">소개</p>
-          <h1 className="font-display rise rise-2 text-4xl leading-tight text-[var(--brand-ink)] sm:text-5xl">
+          <p className="mb-4"><span className="eyebrow rise rise-1">소개</span></p>
+          <h1 className="font-display rise rise-2 text-4xl leading-tight text-[var(--foreground)] sm:text-5xl">
             심리 지식을,
             <br />
             누구나 쓸 수 있는 말로.
@@ -35,9 +35,9 @@ export default function AboutPage() {
       {/* 상담가 */}
       <section className="px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-3xl">
-          <div className="rounded-3xl border border-[var(--border-light)] bg-[var(--surface)] p-8 sm:p-10">
+          <div className="rounded-3xl bg-[var(--surface)] p-8 sm:p-10">
             <div className="mb-6 flex items-center gap-4">
-              <div className="font-display flex h-14 w-14 items-center justify-center rounded-full bg-[var(--brand)] text-2xl font-bold text-white">
+              <div className="font-display flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--brand)] text-2xl font-bold text-white">
                 현
               </div>
               <div>
@@ -95,12 +95,12 @@ export default function AboutPage() {
             한국에서는 <strong className="text-[var(--foreground)]">심리상담실 현</strong>, 해외에서는 <strong className="text-[var(--foreground)]">Hyeon Counseling</strong>이라는 이름으로 같은 일을 합니다.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--background)] p-6">
+            <div className="card p-6">
               <p className="eyebrow mb-1">한국어</p>
               <h3 className="font-display text-lg text-[var(--foreground)]">심리상담실 현</h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">강의 · 셀프 워크북 · 상담과 심리검사. 이 사이트입니다.</p>
             </div>
-            <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--background)] p-6">
+            <div className="card p-6">
               <p className="eyebrow mb-1">English</p>
               <h3 className="font-display text-lg text-[var(--foreground)]">Hyeon Counseling</h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">

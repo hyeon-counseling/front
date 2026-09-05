@@ -211,7 +211,7 @@ export default function KakaoTemplatesPage() {
           <Link href="/admin" className="text-xs text-[var(--brand)] hover:underline">← 어드민으로</Link>
           <h1 className="mt-1 text-xl font-semibold text-[var(--foreground)]">카카오 알림톡 템플릿 관리</h1>
         </div>
-        <button onClick={openCreate} className="rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
+        <button onClick={openCreate} className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
           + 새 템플릿
         </button>
       </div>
@@ -265,7 +265,7 @@ export default function KakaoTemplatesPage() {
               <div className="mb-4 rounded-xl border border-[var(--border)] p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-[var(--foreground)]">Solapi 승인 템플릿 불러오기</span>
-                  <button type="button" onClick={loadSolapiTemplates} disabled={solapiLoading} className="rounded-full border border-[var(--border)] px-3 py-1 text-xs hover:bg-[var(--surface)] disabled:opacity-50">
+                  <button type="button" onClick={loadSolapiTemplates} disabled={solapiLoading} className="rounded-xl border border-[var(--border)] px-3 py-1 text-xs hover:bg-[var(--surface)] disabled:opacity-50">
                     {solapiLoading ? "불러오는 중..." : "목록 불러오기"}
                   </button>
                 </div>
@@ -363,8 +363,8 @@ export default function KakaoTemplatesPage() {
               </form>
             </div>
             <div className="flex-shrink-0 flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-              <button type="button" onClick={closeModal} className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">취소</button>
-              <button type="submit" form="kakao-template-form" disabled={isSubmitting} className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">
+              <button type="button" onClick={closeModal} className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">취소</button>
+              <button type="submit" form="kakao-template-form" disabled={isSubmitting} className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">
                 {isSubmitting ? "저장 중..." : "저장"}
               </button>
             </div>

@@ -36,13 +36,13 @@ export default function RegisterPage() {
   if (success) {
     return (
       <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center px-4 py-12 sm:px-6">
-        <div className="w-full max-w-md rounded-3xl border border-[var(--border)] bg-[var(--background)] p-10 text-center">
-          <p className="eyebrow mb-3">거의 다 됐어요</p>
-          <h2 className="font-display text-2xl text-[var(--brand-ink)]">메일함을 확인해 주세요</h2>
+        <div className="w-full max-w-md card p-10 text-center">
+          <p className="mb-3"><span className="eyebrow">거의 다 됐어요</span></p>
+          <h2 className="font-display text-2xl text-[var(--foreground)]">메일함을 확인해 주세요</h2>
           <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
             <span className="font-medium text-[var(--foreground)]">{email}</span> 로 인증 링크를 보냈어요. 링크를 누르면 계정이 활성화됩니다. 메일이 안 보이면 스팸함도 확인해 주세요.
           </p>
-          <Link href="/login" className="mt-6 inline-flex items-center rounded-full bg-[var(--brand)] px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
+          <Link href="/login" className="mt-6 inline-flex items-center rounded-xl bg-[var(--brand)] px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
             로그인으로
           </Link>
         </div>
@@ -54,12 +54,12 @@ export default function RegisterPage() {
     <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center px-4 py-12 sm:px-6">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <p className="eyebrow mb-3">회원가입</p>
-          <h1 className="font-display text-3xl text-[var(--brand-ink)]">이메일 하나면 충분해요</h1>
+          <p className="mb-3"><span className="eyebrow">회원가입</span></p>
+          <h1 className="font-display text-3xl text-[var(--foreground)]">이메일 하나면 충분해요</h1>
           <p className="mt-2 text-sm text-[var(--foreground-muted)]">워크북 1주차는 가입만 하면 무료로 시작할 수 있어요.</p>
         </div>
 
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--background)] p-8">
+        <div className="card p-8 shadow-soft">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && <Alert>{error}</Alert>}
             <Input id="name" label="이름" value={name} onChange={(e) => setName(e.target.value)} placeholder="이름 또는 닉네임" required autoComplete="name" />
@@ -104,7 +104,7 @@ export default function RegisterPage() {
             type="button"
             variant="secondary"
             size="lg"
-            className="w-full border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--surface)]"
+            className="w-full bg-white text-[var(--foreground)] ring-1 ring-[var(--border)] hover:bg-[var(--surface)]"
             onClick={() => {
               window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
             }}

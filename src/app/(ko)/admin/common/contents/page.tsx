@@ -105,7 +105,7 @@ export default function ContentsPage() {
     <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-[var(--foreground)]">콘텐츠 관리</h1>
-        <button onClick={() => openModal()} className="rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
+        <button onClick={() => openModal()} className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
           + 콘텐츠 추가
         </button>
       </div>
@@ -115,7 +115,7 @@ export default function ContentsPage() {
       {loading ? (
         <div className="h-48 animate-pulse rounded-2xl bg-[var(--surface)]" />
       ) : contents.length === 0 ? (
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-8 text-center">
+        <div className="card p-8 text-center">
           <p className="text-sm text-[var(--foreground-muted)]">아직 콘텐츠가 없습니다.</p>
         </div>
       ) : (
@@ -233,8 +233,8 @@ export default function ContentsPage() {
               </form>
             </div>
             <div className="flex-shrink-0 flex justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-              <button type="button" onClick={closeModal} className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">Cancel</button>
-              <button type="submit" form="content-form" disabled={submitting} className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{submitting ? "Saving..." : "Save"}</button>
+              <button type="button" onClick={closeModal} className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">Cancel</button>
+              <button type="submit" form="content-form" disabled={submitting} className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{submitting ? "Saving..." : "Save"}</button>
             </div>
           </div>
         </div>

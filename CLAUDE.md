@@ -35,7 +35,7 @@ src/
 └── lib/api.ts              ← apiFetch (JWT 자동 첨부)
 ```
 
-- 새 한국어 페이지는 `app/(ko)/` 아래에 만들고, 제목은 `font-display`(고운바탕), 본문은 기본 서체(Pretendard).
+- 새 한국어 페이지는 `app/(ko)/` 아래에 만들고, 제목은 `font-display`(Pretendard 굵게), 본문도 Pretendard. 디자인 톤은 한국형 SaaS(흰 바탕·둥근 카드 `.card`·옅은 그림자). 영어 사이트는 `.site-en`이 기존 크림 톤 복원.
 - 색상은 `globals.css`의 CSS 변수만 사용 (`--brand` #3d6b5e 유지). 라벨은 `.eyebrow`, 링크는 `.link-underline`.
 - 옛 경로 리다이렉트는 `next.config.ts`(`/shop→/en/shop`, `/mypage→/my`, `/admin/kr→/admin/shop/kr` 등).
 

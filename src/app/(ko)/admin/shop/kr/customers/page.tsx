@@ -101,14 +101,14 @@ export default function CustomersPage() {
             placeholder="이름·이메일·전화 검색"
             className="w-56 rounded-full border border-[var(--border)] bg-[var(--background)] px-4 py-1.5 text-sm outline-none focus:border-[var(--brand)]"
           />
-          <button type="submit" className="rounded-full bg-[var(--brand)] px-4 py-1.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">검색</button>
+          <button type="submit" className="rounded-xl bg-[var(--brand)] px-4 py-1.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">검색</button>
         </form>
       </div>
 
       {loading ? (
         <div className="h-48 animate-pulse rounded-2xl bg-[var(--surface)]" />
       ) : customers.length === 0 ? (
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-8 text-center">
+        <div className="card p-8 text-center">
           <p className="text-sm text-[var(--foreground-muted)]">고객이 없습니다. 카페24 주문이 들어오면 자동으로 추가됩니다.</p>
         </div>
       ) : (
@@ -169,7 +169,7 @@ export default function CustomersPage() {
                   카카오 알림톡 수신 동의
                 </label>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleSave} disabled={saving} className="rounded-full bg-[var(--brand)] px-4 py-1.5 text-xs font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{saving ? "저장 중..." : "저장"}</button>
+                  <button onClick={handleSave} disabled={saving} className="rounded-xl bg-[var(--brand)] px-4 py-1.5 text-xs font-medium text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">{saving ? "저장 중..." : "저장"}</button>
                   {saveMsg && <span className="text-xs text-[var(--foreground-muted)]">{saveMsg}</span>}
                 </div>
               </div>
@@ -223,7 +223,7 @@ export default function CustomersPage() {
             </div>
 
             <div className="flex-shrink-0 flex justify-end border-t border-[var(--border)] px-6 py-4">
-              <button onClick={closeDetail} className="rounded-full border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">닫기</button>
+              <button onClick={closeDetail} className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm text-[var(--foreground-muted)] hover:bg-[var(--surface)]">닫기</button>
             </div>
           </div>
         </div>

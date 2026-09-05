@@ -52,21 +52,21 @@ export default function AdminDashboard() {
 
       {/* 요약 카드 */}
       <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5">
+        <div className="card p-5">
           <p className="text-xs uppercase tracking-wider text-[var(--foreground-subtle)]">전체 상품</p>
           <p className="mt-1 text-3xl font-semibold text-[var(--foreground)]">{loading ? "—" : products.length}</p>
           <p className="mt-1 text-xs text-[var(--foreground-subtle)]">카페24 {loading ? "—" : cafe24Count}</p>
         </div>
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5">
+        <div className="card p-5">
           <p className="text-xs uppercase tracking-wider text-[var(--foreground-subtle)]">전체 주문</p>
           <p className="mt-1 text-3xl font-semibold text-[var(--foreground)]">{loading ? "—" : orders.length}</p>
           <p className="mt-1 text-xs text-[var(--foreground-subtle)]">카페24 {loading ? "—" : cafe24Orders}</p>
         </div>
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5">
+        <div className="card p-5">
           <p className="text-xs uppercase tracking-wider text-[var(--foreground-subtle)]">결제 완료 매출</p>
           <p className="mt-1 text-3xl font-semibold text-[var(--foreground)]">{loading ? "—" : `$${totalRevenue.toFixed(2)}`}</p>
         </div>
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5">
+        <div className="card p-5">
           <p className="text-xs uppercase tracking-wider text-[var(--foreground-subtle)]">결제 대기</p>
           <p className="mt-1 text-3xl font-semibold text-[var(--foreground)]">{loading ? "—" : orders.filter((o) => o.status === "pending").length}</p>
         </div>
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
           <Link
             key={link.href}
             href={link.href}
-            className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 transition-colors hover:border-[var(--brand)] hover:bg-[var(--surface)]"
+            className="card p-5 transition-colors hover:border-[var(--brand)] hover:bg-[var(--surface)]"
           >
             <p className="font-medium text-[var(--foreground)]">{link.label}</p>
             <p className="mt-1 text-xs text-[var(--foreground-muted)]">{link.desc}</p>

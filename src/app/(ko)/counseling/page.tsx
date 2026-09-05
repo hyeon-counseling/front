@@ -19,8 +19,8 @@ export default function CounselingPage() {
   return (
     <div className="px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-3xl">
-        <p className="eyebrow rise rise-1 mb-4">상담 · 심리검사</p>
-        <h1 className="font-display rise rise-2 text-4xl leading-tight text-[var(--brand-ink)] sm:text-5xl">
+        <p className="mb-4"><span className="eyebrow rise rise-1">상담 · 심리검사</span></p>
+        <h1 className="font-display rise rise-2 text-4xl leading-tight text-[var(--foreground)] sm:text-5xl">
           혼자 하기 어려울 때는,
           <br />
           함께 이야기합니다.
@@ -34,7 +34,7 @@ export default function CounselingPage() {
             href={SHOP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--brand)] px-7 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+            className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand)] px-7 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
           >
             쇼핑몰에서 상담 신청하기
             <span aria-hidden>↗</span>
@@ -56,7 +56,7 @@ export default function CounselingPage() {
         </div>
 
         {/* 안내 */}
-        <div className="mt-12 rounded-2xl border border-[var(--border-light)] bg-[var(--surface)] p-6 text-sm leading-relaxed text-[var(--foreground-muted)]">
+        <div className="mt-12 rounded-2xl bg-[var(--surface)] p-6 text-sm leading-relaxed text-[var(--foreground-muted)]">
           <p className="mb-2 font-semibold text-[var(--foreground)]">알아두세요</p>
           <ul className="list-disc space-y-1.5 pl-5">
             <li>상담은 심리 교육과 자기 이해를 돕는 서비스이며 정신과 진료를 대체하지 않습니다.</li>

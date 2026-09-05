@@ -1,39 +1,63 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────
-   심리상담실 현 — 디자인 토큰
-   따뜻한 종이(크림) 위에 딥 포레스트 그린 한 가지 포인트.
-   제목은 명조(고운바탕), 본문은 Pretendard.
+   심리상담실 현 — 디자인 토큰 (v2: 한국형 SaaS 톤)
+   흰 바탕 · Pretendard 굵은 제목 · 둥근 카드 · 옅은 그림자
+   브랜드 그린(#3d6b5e)은 포인트 색으로만 사용.
+   영어 사이트(/en)는 .site-en 에서 기존 크림 팔레트로 되돌린다.
 ───────────────────────────────────────────── */
 :root {
-  /* 배경 — 종이 */
+  /* 배경 */
+  --background: #ffffff;
+  --surface: #f6f8f7;          /* 섹션 대비용 아주 옅은 회녹색 */
+  --surface-muted: #eef2f0;
+
+  /* 텍스트 */
+  --foreground: #16201d;
+  --foreground-muted: #5f6b67;
+  --foreground-subtle: #98a3a0;
+
+  /* 브랜드 */
+  --brand: #3d6b5e;
+  --brand-hover: #2f5449;
+  --brand-light: #e3f0eb;
+  --brand-ink: #1f3a33;
+  --brand-mint: #9fd6c2;       /* 그라데이션·장식용 */
+
+  /* 보조 */
+  --border: #e6eae8;
+  --border-light: #f0f3f1;
+
+  /* 상태 */
+  --success: #2f8f6e;
+  --error: #d64545;
+  --warning: #d98b1f;
+
+  /* 서체 — 전부 Pretendard */
+  --font-display: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+
+  /* 그림자 */
+  --shadow-sm: 0 1px 2px rgba(22, 32, 29, 0.04), 0 1px 3px rgba(22, 32, 29, 0.06);
+  --shadow-md: 0 4px 16px rgba(22, 32, 29, 0.08);
+  --shadow-lg: 0 16px 40px rgba(22, 32, 29, 0.12);
+}
+
+/* 영어 사이트(/en) — 기존 크림·세리프 톤 유지 */
+.site-en {
   --background: #faf7f2;
   --surface: #f3ede4;
   --surface-muted: #ede5d8;
-
-  /* 텍스트 */
   --foreground: #2c2420;
   --foreground-muted: #6b5e57;
   --foreground-subtle: #9c8e87;
-
-  /* 브랜드 — 딥 포레스트 그린 */
-  --brand: #3d6b5e;
-  --brand-hover: #2f5449;
   --brand-light: #d4e8e3;
-  --brand-ink: #1f3a33;
-
-  /* 보조 */
   --border: #ddd5c8;
   --border-light: #ede8e0;
-
-  /* 상태 */
-  --success: #4a7c6f;
-  --error: #b5534a;
-  --warning: #b07d2c;
-
-  /* 서체 */
-  --font-display: "Gowun Batang", "Nanum Myeongjo", Georgia, serif;
-  --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-body: var(--font-geist-sans), Georgia, serif;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
 }
 
 @theme inline {
@@ -58,89 +82,121 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* 기본 body */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  word-break: keep-all;           /* 한국어 단어 단위 줄바꿈 */
+  word-break: keep-all;
   overflow-wrap: anywhere;
 }
 
-/* 제목용 명조 */
+/* 제목 — 굵고 촘촘하게 */
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.font-display-tight {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
-/* 종이 질감 — 아주 옅은 노이즈 (한국어 셸 전용) */
-.paper::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+/* 카드·그림자 유틸 */
+.card {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-sm);
 }
-.paper > * {
-  position: relative;
-  z-index: 1;
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--brand-light);
+}
+.shadow-soft { box-shadow: var(--shadow-md); }
+.shadow-float { box-shadow: var(--shadow-lg); }
 
-/* 등장 애니메이션 — 페이지 로드 시 순차 노출 */
+/* 등장 애니메이션 */
 @keyframes rise {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.rise {
-  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
+.rise { animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .rise-1 { animation-delay: 0.05s; }
-.rise-2 { animation-delay: 0.15s; }
-.rise-3 { animation-delay: 0.25s; }
-.rise-4 { animation-delay: 0.35s; }
-.rise-5 { animation-delay: 0.45s; }
+.rise-2 { animation-delay: 0.12s; }
+.rise-3 { animation-delay: 0.2s; }
+.rise-4 { animation-delay: 0.28s; }
+.rise-5 { animation-delay: 0.36s; }
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.floaty { animation: floaty 5s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .rise { animation: none; }
+  .rise, .floaty { animation: none; }
 }
 
-/* 아이브로우(작은 라벨) */
+/* 라벨 칩 */
 .eyebrow {
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--brand);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
   font-weight: 600;
+  color: var(--brand);
+  background: var(--brand-light);
+  border-radius: 999px;
+  padding: 4px 12px;
 }
 
-/* 링크 밑줄 — 얇고 브랜드색 */
+/* 링크 밑줄 */
 .link-underline {
   text-decoration: underline;
-  text-decoration-thickness: 1px;
+  text-decoration-thickness: 1.5px;
   text-underline-offset: 4px;
-  text-decoration-color: color-mix(in srgb, var(--brand) 45%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--brand) 40%, transparent);
 }
-.link-underline:hover {
-  text-decoration-color: var(--brand);
+.link-underline:hover { text-decoration-color: var(--brand); }
+
+/* 그라데이션 텍스트·배경 */
+.text-gradient {
+  background: linear-gradient(120deg, var(--brand) 0%, #5f9a86 60%, var(--brand-mint) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.bg-brand-gradient {
+  background: linear-gradient(135deg, var(--brand-ink) 0%, var(--brand) 55%, #5f9a86 100%);
+}
+.blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(60px);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 /* 마크다운 본문 (아티클) */
-.prose-ko h1, .prose-ko h2, .prose-ko h3 { font-family: var(--font-display); color: var(--foreground); }
+.prose-ko h1, .prose-ko h2, .prose-ko h3 { font-weight: 700; letter-spacing: -0.02em; color: var(--foreground); }
 .prose-ko h2 { font-size: 1.5rem; margin: 2.2rem 0 0.9rem; }
 .prose-ko h3 { font-size: 1.2rem; margin: 1.8rem 0 0.7rem; }
 .prose-ko p { margin: 0 0 1.1rem; line-height: 1.85; color: var(--foreground); }
 .prose-ko ul, .prose-ko ol { margin: 0 0 1.1rem 1.25rem; line-height: 1.8; }
 .prose-ko ul { list-style: disc; }
 .prose-ko ol { list-style: decimal; }
-.prose-ko blockquote { margin: 1.4rem 0; padding: 0.2rem 0 0.2rem 1rem; border-left: 2px solid var(--brand); color: var(--foreground-muted); font-family: var(--font-display); }
+.prose-ko blockquote { margin: 1.4rem 0; padding: 1rem 1.2rem; border-radius: 14px; background: var(--surface); color: var(--foreground-muted); border-left: 3px solid var(--brand); }
 .prose-ko a { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
 .prose-ko hr { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
-.prose-ko code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.9em; }
-.prose-ko img { max-width: 100%; border-radius: 12px; }
+.prose-ko code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 6px; font-size: 0.9em; }
+.prose-ko img { max-width: 100%; border-radius: 14px; }
 .prose-ko table { width: 100%; border-collapse: collapse; margin: 1.2rem 0; font-size: 0.95rem; }
 .prose-ko th, .prose-ko td { border: 1px solid var(--border); padding: 0.5rem 0.7rem; text-align: left; }
 .prose-ko th { background: var(--surface); }

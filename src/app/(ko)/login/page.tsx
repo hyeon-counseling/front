@@ -39,12 +39,12 @@ function LoginForm() {
     <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center px-4 py-12 sm:px-6">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <p className="eyebrow mb-3">로그인</p>
-          <h1 className="font-display text-3xl text-[var(--brand-ink)]">다시 만나서 반가워요</h1>
+          <p className="mb-3"><span className="eyebrow">로그인</span></p>
+          <h1 className="font-display text-3xl text-[var(--foreground)]">다시 만나서 반가워요</h1>
           <p className="mt-2 text-sm text-[var(--foreground-muted)]">강의·워크북·주문 내역을 이어서 볼 수 있어요.</p>
         </div>
 
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--background)] p-8">
+        <div className="card p-8 shadow-soft">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && <Alert>{error}</Alert>}
             <Input id="email" type="email" label="이메일" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required autoComplete="email" />
@@ -69,7 +69,7 @@ function LoginForm() {
             type="button"
             variant="secondary"
             size="lg"
-            className="w-full border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--surface)]"
+            className="w-full bg-white text-[var(--foreground)] ring-1 ring-[var(--border)] hover:bg-[var(--surface)]"
             onClick={() => {
               window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
             }}
