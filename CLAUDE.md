@@ -14,23 +14,30 @@
 
 ---
 
-## 폴더 구조 원칙
+## 폴더 구조 원칙 (S1 개편 이후)
 
 ```
 src/
-├── app/                    ← Next.js App Router 페이지
-│   ├── (auth)/             ← 로그인/회원가입 (그룹 라우트)
-│   ├── (main)/             ← 메인 서비스 페이지
-│   ├── admin/              ← 관리자 페이지 (보호됨)
-│   └── api/                ← Next.js API Routes (필요 시)
+├── app/
+│   ├── layout.tsx          ← 루트: html(lang=ko)·서체·AuthProvider만
+│   ├── (ko)/               ← 한국어 사이트(기본) — layout.tsx에 한국어 헤더·푸터
+│   │   ├── page.tsx        홈 · about · counseling · courses · workbooks · articles/[id]
+│   │   ├── faq · contact · terms · privacy · refund
+│   │   ├── login · register · forgot-password · reset-password · auth/*
+│   │   ├── my/             내 학습(대시보드) · my/orders(주문·PDF)
+│   │   └── admin/          관리자 (shop/kr·shop/en = 기존 카페24·Polar 화면, users, common, 템플릿)
+│   └── en/                 ← 영어 사이트(기존 페이지 이동, 신규 개발 없음) — layout.tsx에 영어 헤더·푸터
 ├── components/
-│   ├── ui/                 ← 재사용 가능한 기본 UI 컴포넌트
-│   └── features/           ← 기능별 컴포넌트
-├── lib/
-│   ├── api.ts              ← 백엔드 API 호출 함수
-│   └── auth.ts             ← 인증 관련 유틸
-└── types/                  ← TypeScript 타입 정의
+│   ├── ui/index.tsx        ← 공용 UI 킷 (Button·Input·Card·Modal·Badge·Alert·EmptyState·Skeleton·Toast·PageHeader)
+│   ├── ko/                 ← 한국어 셸 (SiteHeader·SiteFooter·LegalPage·GoogleIcon)
+│   └── en/                 ← 영어 셸 (Header·Footer)
+├── contexts/AuthContext.tsx
+└── lib/api.ts              ← apiFetch (JWT 자동 첨부)
 ```
+
+- 새 한국어 페이지는 `app/(ko)/` 아래에 만들고, 제목은 `font-display`(고운바탕), 본문은 기본 서체(Pretendard).
+- 색상은 `globals.css`의 CSS 변수만 사용 (`--brand` #3d6b5e 유지). 라벨은 `.eyebrow`, 링크는 `.link-underline`.
+- 옛 경로 리다이렉트는 `next.config.ts`(`/shop→/en/shop`, `/mypage→/my`, `/admin/kr→/admin/shop/kr` 등).
 
 ---
 
@@ -63,21 +70,21 @@ NEXT_PUBLIC_API_URL=https://hyeon-back.onrender.com  # 프로덕션
 
 ## 주요 페이지 구조
 
-| 경로 | 역할 | 인증 필요 |
-|------|------|----------|
-| `/` | 메인/랜딩 | 불필요 |
-| `/shop` | 전자책 목록 | 불필요 |
-| `/shop/[id]` | 전자책 상세 | 불필요 |
-| `/checkout` | 결제 (Polar.sh 리다이렉트) | 로그인 |
-| `/mypage` | 구매 내역 + 다운로드 | 로그인 |
-| `/admin` | 관리자 대시보드 | 관리자 |
-| `/admin/products` | 상품 관리 | 관리자 |
+| 경로 | 역할 | 인증 |
+|------|------|------|
+| `/` | 한국어 홈 | 불필요 |
+| `/courses`, `/workbooks` | 강의·워크북 (S2·S4에서 실제 기능) | 불필요 |
+| `/counseling` | 상담 안내 (당분간 카페24 링크) | 불필요 |
+| `/articles`, `/articles/[id]` | 한국어 아티클 (`/api/contents?lang=ko`) | 불필요 |
+| `/my`, `/my/orders` | 내 학습 · 주문 내역/PDF | 로그인 |
+| `/admin/*` | 관리자 (Shop 아래 카페24·Polar) | 관리자 |
+| `/en/*` | 영어 사이트(전자책·Polar) | 페이지별 |
 
 ---
 
 ## 인증 처리 원칙
 
-- JWT 토큰은 `httpOnly` 쿠키에 저장 (localStorage 사용 금지 — 보안 취약)
+- 현재는 JWT를 localStorage에 저장(`AuthContext`). httpOnly 쿠키 전환은 카카오·네이버 로그인과 함께 진행 예정(`docs/PRD-V2.md`)
 - 로그인 필요 페이지는 미들웨어로 보호
 - 구글 소셜 로그인은 NextAuth.js 또는 백엔드 OAuth 엔드포인트 사용
 

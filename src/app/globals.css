@@ -1,32 +1,39 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────
-   Hyeon Counseling Brand Colors
-   심리상담 서비스에 어울리는 따뜻하고 차분한 팔레트
+   심리상담실 현 — 디자인 토큰
+   따뜻한 종이(크림) 위에 딥 포레스트 그린 한 가지 포인트.
+   제목은 명조(고운바탕), 본문은 Pretendard.
 ───────────────────────────────────────────── */
 :root {
-  /* 배경 계열 — 따뜻한 크림/베이지 */
+  /* 배경 — 종이 */
   --background: #faf7f2;
   --surface: #f3ede4;
   --surface-muted: #ede5d8;
 
-  /* 텍스트 계열 */
+  /* 텍스트 */
   --foreground: #2c2420;
   --foreground-muted: #6b5e57;
   --foreground-subtle: #9c8e87;
 
-  /* 브랜드 포인트 — 딥 포레스트 그린 */
+  /* 브랜드 — 딥 포레스트 그린 */
   --brand: #3d6b5e;
   --brand-hover: #2f5449;
   --brand-light: #d4e8e3;
+  --brand-ink: #1f3a33;
 
-  /* 보조 색상 */
+  /* 보조 */
   --border: #ddd5c8;
   --border-light: #ede8e0;
 
-  /* 상태 색상 */
+  /* 상태 */
   --success: #4a7c6f;
   --error: #b5534a;
+  --warning: #b07d2c;
+
+  /* 서체 */
+  --font-display: "Gowun Batang", "Nanum Myeongjo", Georgia, serif;
+  --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
 }
 
 @theme inline {
@@ -41,19 +48,99 @@
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
   --color-brand-light: var(--brand-light);
+  --color-brand-ink: var(--brand-ink);
 
   --color-border: var(--border);
   --color-border-light: var(--border-light);
 
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
   --font-mono: var(--font-geist-mono);
 }
 
-/* 기본 body 스타일 */
+/* 기본 body */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), "Georgia", serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  word-break: keep-all;           /* 한국어 단어 단위 줄바꿈 */
+  overflow-wrap: anywhere;
 }
+
+/* 제목용 명조 */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* 종이 질감 — 아주 옅은 노이즈 (한국어 셸 전용) */
+.paper::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.paper > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 등장 애니메이션 — 페이지 로드 시 순차 노출 */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rise-1 { animation-delay: 0.05s; }
+.rise-2 { animation-delay: 0.15s; }
+.rise-3 { animation-delay: 0.25s; }
+.rise-4 { animation-delay: 0.35s; }
+.rise-5 { animation-delay: 0.45s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+}
+
+/* 아이브로우(작은 라벨) */
+.eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+/* 링크 밑줄 — 얇고 브랜드색 */
+.link-underline {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: color-mix(in srgb, var(--brand) 45%, transparent);
+}
+.link-underline:hover {
+  text-decoration-color: var(--brand);
+}
+
+/* 마크다운 본문 (아티클) */
+.prose-ko h1, .prose-ko h2, .prose-ko h3 { font-family: var(--font-display); color: var(--foreground); }
+.prose-ko h2 { font-size: 1.5rem; margin: 2.2rem 0 0.9rem; }
+.prose-ko h3 { font-size: 1.2rem; margin: 1.8rem 0 0.7rem; }
+.prose-ko p { margin: 0 0 1.1rem; line-height: 1.85; color: var(--foreground); }
+.prose-ko ul, .prose-ko ol { margin: 0 0 1.1rem 1.25rem; line-height: 1.8; }
+.prose-ko ul { list-style: disc; }
+.prose-ko ol { list-style: decimal; }
+.prose-ko blockquote { margin: 1.4rem 0; padding: 0.2rem 0 0.2rem 1rem; border-left: 2px solid var(--brand); color: var(--foreground-muted); font-family: var(--font-display); }
+.prose-ko a { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
+.prose-ko hr { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
+.prose-ko code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.9em; }
+.prose-ko img { max-width: 100%; border-radius: 12px; }
+.prose-ko table { width: 100%; border-collapse: collapse; margin: 1.2rem 0; font-size: 0.95rem; }
+.prose-ko th, .prose-ko td { border: 1px solid var(--border); padding: 0.5rem 0.7rem; text-align: left; }
+.prose-ko th { background: var(--surface); }

@@ -1,0 +1,335 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiFetch } from "@/lib/api";
+
+// 백엔드 주문 데이터 타입
+// productId는 populate되어 상품 정보가 담긴 객체로 옴
+interface FileDownload {
+  fileIndex: number;
+  myPageDownloadCount: number;
+}
+
+interface Order {
+  _id: string;
+  productId: {
+    _id: string;
+    title: string;
+    price: number;
+    pdfFiles: { filename: string; r2Key: string }[];
+    isActive: boolean;
+  } | null;
+  channel: "polar" | "cafe24";
+  amount: number;
+  currency: string;
+  status: "pending" | "paid" | "failed";
+  createdAt: string;
+  // 파일별 만료일 (getMyOrders에서 서버가 계산하여 포함)
+  fileExpiryDates?: { fileIndex: number; expiryDate: string | null }[];
+  // 파일별 다운로드 횟수 추적
+  fileDownloads?: FileDownload[];
+}
+
+// 만료일 포맷 헬퍼
+function formatExpiryDate(expiryDate: string | null | undefined): string | null {
+  if (!expiryDate) return null; // null = 만료 없음
+  const date = new Date(expiryDate);
+  const now = new Date();
+  if (date < now) return "만료";
+  return `${date.toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}까지`;
+}
+
+// 구매 완료 배너 — useSearchParams 사용으로 반드시 Suspense 안에서 렌더링
+function PurchaseSuccessBanner() {
+  const searchParams = useSearchParams();
+  const [dismissed, setDismissed] = useState(false);
+
+  const isPurchaseSuccess = searchParams.get("purchase") === "success";
+  const showBanner = isPurchaseSuccess && !dismissed;
+
+  // 모바일 앱에서 접근한 경우: hyeonapp://purchase-success 딥링크로 앱 복귀
+  useEffect(() => {
+    if (isPurchaseSuccess) {
+      // 페이지가 먼저 렌더링된 후 딥링크 시도
+      // 앱이 설치되어 있으면 앱이 열리고, 없으면 그냥 웹페이지에 머무름
+      const timer = setTimeout(() => {
+        window.location.href = "hyeonapp://purchase-success";
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isPurchaseSuccess]);
+
+  if (!showBanner) return null;
+
+  return (
+    <div className="mb-6 flex items-center justify-between rounded-2xl bg-[#3d6b5e] px-5 py-4 text-white">
+      <p className="text-sm font-medium">
+        구매가 완료됐어요. 아래에서 PDF를 내려받으세요.
+      </p>
+      <button
+        onClick={() => setDismissed(true)}
+        aria-label="닫기"
+        className="ml-4 flex-shrink-0 opacity-80 hover:opacity-100 transition-opacity"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+export default function MyPage() {
+  const router = useRouter();
+  const { user, logout, loading: authLoading } = useAuth();
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // 로그인 확인 — 미로그인 시 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/login?next=/my/orders");
+    }
+  }, [authLoading, user, router]);
+
+  // 주문 목록 조회 (로그인 확인 후 실행)
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchOrders = async () => {
+      try {
+        // GET /api/orders/my — 내 주문 목록 (JWT 토큰은 apiFetch에서 자동 첨부)
+        const data = await apiFetch("/api/orders/my");
+        setOrders(data);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "구매 내역을 불러오지 못했습니다."
+        );
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [user]);
+
+  // 로그아웃 처리 후 홈으로 이동
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
+
+  // PDF 다운로드 — 백엔드에서 R2 서명 URL을 받아 새 탭에서 열기
+  const handleDownload = async (orderId: string, fileIndex: number) => {
+    try {
+      const data = await apiFetch(`/api/orders/my/${orderId}/download/${fileIndex}`);
+      // 반환된 서명 URL을 새 탭에서 열어 다운로드
+      window.open(data.url, "_blank");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "다운로드에 실패했어요. 다시 시도해 주세요.");
+    }
+  };
+
+  // 인증 로딩 중이거나 로그인 안 된 상태 → 빈 화면 (리다이렉트 처리 중)
+  if (authLoading || !user) {
+    return null;
+  }
+
+  return (
+    <div className="px-4 py-12 sm:px-6 sm:py-16">
+      <div className="mx-auto max-w-3xl">
+        {/* 구매 완료 배너 — Suspense로 감싸서 useSearchParams 빌드 오류 방지 */}
+        <Suspense fallback={null}>
+          <PurchaseSuccessBanner />
+        </Suspense>
+
+        {/* 페이지 헤더 */}
+        <div className="mb-10">
+          <p className="eyebrow mb-3">내 학습</p>
+          <h1 className="font-display mb-1 text-3xl text-[var(--brand-ink)]">
+            주문 내역
+          </h1>
+          <p className="text-sm text-[var(--foreground-muted)]">
+            결제 내역과 구매한 전자책을 확인하고 내려받을 수 있어요.{" "}
+            <Link href="/my" className="link-underline text-[var(--foreground)]">내 학습으로</Link>
+          </p>
+        </div>
+
+        {/* 구매 내역 섹션 */}
+        <section>
+          <h2 className="mb-4 text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">
+            구매 내역
+          </h2>
+
+          {/* 로딩 중 스켈레톤 */}
+          {ordersLoading && (
+            <div className="space-y-3">
+              {[1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="h-20 animate-pulse rounded-2xl bg-[var(--surface)]"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* 에러 */}
+          {!ordersLoading && error && (
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 text-center">
+              <p className="text-sm text-[var(--foreground-muted)]">{error}</p>
+            </div>
+          )}
+
+          {/* 구매 내역 없음 */}
+          {!ordersLoading && !error && orders.length === 0 && (
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-10 text-center">
+              <p className="mb-4 text-[var(--foreground-muted)]">
+                아직 주문이 없어요.
+              </p>
+              <Link
+                href="/en/shop"
+                className="inline-block rounded-full bg-[var(--brand)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
+              >
+                전자책 둘러보기
+              </Link>
+            </div>
+          )}
+
+          {/* 구매 내역 목록 */}
+          {!ordersLoading && !error && orders.length > 0 && (
+            <div className="space-y-3">
+              {orders.map((order) => (
+                <div
+                  key={order._id}
+                  className="flex flex-col gap-3 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  {/* 상품 정보 */}
+                  <div>
+                    <p className="font-medium text-[var(--foreground)]">
+                      {order.productId?.title ?? "상품 정보 없음"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-[var(--foreground-subtle)]">
+                      {new Date(order.createdAt).toLocaleDateString("ko-KR", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}{" "}
+                      &middot; {order.currency} {order.amount.toFixed(2)}
+                    </p>
+                  </div>
+
+                  {/* 상태 + 다운로드 버튼 */}
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`rounded-full px-3 py-0.5 text-xs font-medium ${
+                        order.status === "paid"
+                          ? "bg-[var(--brand-light)] text-[var(--brand)]"
+                          : order.status === "pending"
+                            ? "bg-yellow-50 text-yellow-700"
+                            : "bg-red-50 text-red-700"
+                      }`}
+                    >
+                      {order.status === "paid"
+                        ? "결제 완료"
+                        : order.status === "pending"
+                          ? "대기"
+                          : "실패"}
+                    </span>
+                    {order.status === "paid" && (
+                      <div className="flex flex-wrap gap-2">
+                        {/* 상품이 삭제된 경우 */}
+                        {order.productId && !order.productId.isActive ? (
+                          <span className="rounded-full border border-[var(--border)] px-4 py-1.5 text-xs font-medium text-[var(--foreground-subtle)] opacity-50">
+                            판매 종료
+                          </span>
+                        ) : order.productId?.pdfFiles?.length ? (
+                          order.productId.pdfFiles.map((file, idx) => {
+                            const expiryInfo = order.fileExpiryDates?.find((e) => e.fileIndex === idx);
+                            const expiryLabel = formatExpiryDate(expiryInfo?.expiryDate);
+                            const isExpired = expiryLabel === "만료";
+                            const isDownloaded =
+                              (order.fileDownloads?.find((fd) => fd.fileIndex === idx)?.myPageDownloadCount ?? 0) >= 1;
+                            const isDisabled = isExpired || isDownloaded;
+
+                            const buttonLabel = isDownloaded
+                              ? "다운로드 완료"
+                              : order.productId!.pdfFiles.length > 1
+                                ? `PDF ${idx + 1} 내려받기`
+                                : "PDF 내려받기";
+
+                            return (
+                              <div key={idx} className="flex flex-col items-start gap-0.5">
+                                <button
+                                  className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-colors ${
+                                    isDisabled
+                                      ? "cursor-not-allowed border-[var(--border)] text-[var(--foreground-subtle)] opacity-50"
+                                      : "border-[var(--brand)] text-[var(--brand)] hover:bg-[var(--brand)] hover:text-white"
+                                  }`}
+                                  onClick={() => !isDisabled && handleDownload(order._id, idx)}
+                                  disabled={isDisabled}
+                                >
+                                  {buttonLabel}
+                                </button>
+                                {expiryLabel && !isDownloaded && (
+                                  <span className={`pl-1 text-[10px] ${isExpired ? "text-red-400" : "text-[var(--foreground-subtle)]"}`}>
+                                    {expiryLabel}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <span className="text-xs text-[var(--foreground-subtle)]">PDF 준비 중</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* 계정 섹션 */}
+        <section className="mt-10">
+          <h2 className="mb-4 text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">
+            계정
+          </h2>
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5">
+            <p className="text-sm text-[var(--foreground-muted)]">
+              <span className="font-medium text-[var(--foreground)]">
+                {user.email}
+              </span>
+              {" "}로 로그인 중
+            </p>
+            <button
+              className="mt-3 text-sm text-[var(--foreground-subtle)] hover:text-[var(--foreground)] hover:underline"
+              onClick={handleLogout}
+            >
+              로그아웃
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
