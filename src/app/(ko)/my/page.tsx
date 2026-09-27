@@ -173,10 +173,14 @@ export default function MyPage() {
         </section>
 
         {/* 주문 */}
-        <section className="mt-10">
+        <section className="mt-10 grid gap-4 sm:grid-cols-2">
           <Link href="/my/orders" className="card card-hover block p-6">
             <h2 className="text-lg font-bold text-[var(--foreground)]">주문 내역</h2>
             <p className="mt-1 text-sm text-[var(--foreground-muted)]">강의·워크북 결제 내역과 구매한 전자책</p>
+          </Link>
+          <Link href="/my/coupons" className="card card-hover block p-6">
+            <h2 className="text-lg font-bold text-[var(--foreground)]">쿠폰함</h2>
+            <p className="mt-1 text-sm text-[var(--foreground-muted)]">받은 할인 쿠폰과 사용 내역</p>
           </Link>
         </section>
 
