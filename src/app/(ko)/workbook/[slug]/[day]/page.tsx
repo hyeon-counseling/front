@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
-import type { DayResponse } from "@/lib/workbook";
+import type { DayResponse, WorkbookDetail } from "@/lib/workbook";
+import { LearnShell, type LearnNavGroup } from "@/components/learn/LearnShell";
 import { Callout, Markdown } from "@/components/workbook/Markdown";
 import { ExerciseBlock } from "@/components/workbook/ExerciseBlock";
 import { Skeleton } from "@/components/ui";
 
-// 워크북 하루 수행 화면 — 본문 + 문항(자동 저장) + 완료 + 이전/다음
+// 워크북 하루 수행 화면 — 왼쪽 목차(주차·일차) + 본문 + 문항(자동 저장) + 완료 + 이전/다음
 export default function WorkbookDayPage() {
   const { slug, day } = useParams<{ slug: string; day: string }>();
   const { user, loading: authLoading } = useAuth();
@@ -18,6 +19,35 @@ export default function WorkbookDayPage() {
   const [result, setResult] = useState<{ day: string; data?: DayResponse; locked?: boolean; error?: string } | null>(null);
   const [completedMap, setCompletedMap] = useState<Record<string, boolean>>({});
   const [completing, setCompleting] = useState(false);
+  const [detail, setDetail] = useState<WorkbookDetail | null>(null);
+
+  // 목차용 커리큘럼 (완료·잠금 표시) — 워크북이 바뀔 때만 불러온다
+  useEffect(() => {
+    if (authLoading) return;
+    apiRequest<WorkbookDetail>(`/api/workbooks/${slug}`).then((res) => res.ok && res.data && setDetail(res.data));
+  }, [authLoading, slug]);
+
+  // 목차 그룹 — 이 화면에서 완료를 바꾸면 바로 반영
+  const groups = useMemo<LearnNavGroup[] | null>(
+    () =>
+      detail
+        ? detail.weeks.map((w) => ({
+            key: w.key,
+            title: w.title,
+            badge: w.free ? "무료" : undefined,
+            items: w.days.map((dd) => ({
+              key: dd.key,
+              href: `/workbook/${slug}/${dd.key}`,
+              label: dd.label,
+              title: dd.title,
+              meta: dd.estMinutes ? `${dd.estMinutes}분` : undefined,
+              completed: completedMap[dd.key] ?? dd.completed,
+              locked: dd.locked,
+            })),
+          }))
+        : null,
+    [detail, completedMap, slug]
+  );
 
   useEffect(() => {
     if (authLoading) return;
@@ -51,8 +81,22 @@ export default function WorkbookDayPage() {
     if (res.ok) setCompleted(!completed);
   };
 
+  const shell = (content: ReactNode) => (
+    <LearnShell
+      title={detail?.title ?? current?.data?.workbook.title ?? "워크북"}
+      backHref={`/workbooks/${slug}`}
+      lockedHref={`/workbooks/${slug}`}
+      groups={groups}
+      currentKey={day}
+      prevHref={data?.prev ? `/workbook/${slug}/${data.prev.key}` : null}
+      nextHref={data?.next && !data.next.locked ? `/workbook/${slug}/${data.next.key}` : null}
+    >
+      {content}
+    </LearnShell>
+  );
+
   if (locked) {
-    return (
+    return shell(
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
         <p className="text-4xl">🔒</p>
         <h1 className="font-display mt-4 text-2xl">전체 이용권이 필요한 일차예요</h1>
@@ -64,7 +108,7 @@ export default function WorkbookDayPage() {
     );
   }
   if (error) {
-    return (
+    return shell(
       <div className="px-4 py-24 text-center">
         <p className="text-[var(--foreground-muted)]">{error}</p>
         <Link href={`/workbooks/${slug}`} className="link-underline mt-4 inline-block text-sm">워크북으로</Link>
@@ -72,7 +116,7 @@ export default function WorkbookDayPage() {
     );
   }
   if (!data) {
-    return (
+    return shell(
       <div className="mx-auto max-w-2xl space-y-4 px-4 py-14">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="h-10 w-3/4" />
@@ -86,7 +130,7 @@ export default function WorkbookDayPage() {
   const pct = Math.round(((position.index + 1) / position.total) * 100);
   const canSave = !!user;
 
-  return (
+  return shell(
     <div>
       {/* 상단 진행 바 */}
       <div className="sticky top-16 z-40 border-b border-[var(--border-light)] bg-white/90 backdrop-blur">

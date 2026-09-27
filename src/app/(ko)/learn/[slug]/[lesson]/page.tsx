@@ -1,18 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
 import { formatDuration, type CourseDetail, type LessonResponse, type Playback } from "@/lib/course";
 import { Markdown } from "@/components/workbook/Markdown";
 import { LessonPlayer } from "@/components/course/LessonPlayer";
+import { LearnShell, type LearnNavGroup } from "@/components/learn/LearnShell";
 import { Skeleton } from "@/components/ui";
 
 type LessonState = { status: "ok"; data: LessonResponse } | { status: "locked"; message: string } | { status: "error"; message: string };
 
-// 강의 수강 화면 — 플레이어 · 이어보기 · 진도 저장 · 완료 · 이전/다음 · 커리큘럼
+// 강의 수강 화면 — 왼쪽 목차(섹션·차시) · 플레이어 · 이어보기 · 진도 저장 · 완료 · 이전/다음
 export default function LearnPage() {
   const { slug, lesson: lessonKey } = useParams<{ slug: string; lesson: string }>();
   const { loading: authLoading } = useAuth();
@@ -50,6 +51,40 @@ export default function LearnPage() {
   const data = current?.status === "ok" ? current.data : null;
   const isDone = completed?.key === lessonKey ? completed.value : !!data?.progress.completed;
 
+  // 목차 그룹 — 이 화면에서 완료가 바뀌면 바로 반영
+  const groups = useMemo<LearnNavGroup[] | null>(
+    () =>
+      course
+        ? course.sections.map((s) => ({
+            key: s.key,
+            title: s.title,
+            items: s.lessons.map((l) => ({
+              key: l.key,
+              href: `/learn/${slug}/${l.key}`,
+              title: l.title,
+              meta: formatDuration(l.durationSec) || undefined,
+              completed: l.key === lessonKey ? isDone : l.completed,
+              locked: l.locked,
+            })),
+          }))
+        : null,
+    [course, slug, lessonKey, isDone]
+  );
+
+  const shell = (content: ReactNode) => (
+    <LearnShell
+      title={course?.title ?? data?.course.title ?? "강의"}
+      backHref={`/courses/${slug}`}
+      lockedHref={`/courses/${slug}`}
+      groups={groups}
+      currentKey={lessonKey}
+      prevHref={data?.prev ? `/learn/${slug}/${data.prev.key}` : null}
+      nextHref={data?.next && !data.next.locked ? `/learn/${slug}/${data.next.key}` : null}
+    >
+      {content}
+    </LearnShell>
+  );
+
   const saveProgress = useCallback(
     (body: { positionSec?: number; completed?: boolean }) => {
       if (!data?.enrolled) return Promise.resolve(null);
@@ -78,7 +113,7 @@ export default function LearnPage() {
   };
 
   if (!current) {
-    return (
+    return shell(
       <div className="mx-auto max-w-6xl space-y-4 px-4 py-10">
         <Skeleton className="aspect-video w-full" />
         <Skeleton className="h-8 w-1/2" />
@@ -87,7 +122,7 @@ export default function LearnPage() {
   }
 
   if (current.status !== "ok") {
-    return (
+    return shell(
       <div className="mx-auto max-w-lg px-4 py-24 text-center">
         <p className="text-4xl">🔒</p>
         <h1 className="mt-4 text-2xl font-bold text-[var(--foreground)]">
@@ -104,8 +139,8 @@ export default function LearnPage() {
   const d = current.data;
   const pb = playback?.key === lessonKey ? playback : null;
 
-  return (
-    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[1fr_300px]">
+  return shell(
+    <div className="mx-auto max-w-4xl px-4 pb-24 pt-6 sm:px-6 sm:pt-10">
       <div className="min-w-0">
         <Link href={`/courses/${slug}`} className="text-sm text-[var(--foreground-muted)] hover:text-[var(--foreground)]">← {d.course.title}</Link>
 
@@ -171,48 +206,6 @@ export default function LearnPage() {
         </div>
       </div>
 
-      <aside className="lg:sticky lg:top-24 lg:self-start">
-        <div className="card overflow-hidden">
-          <div className="border-b border-[var(--border-light)] px-5 py-4">
-            <p className="text-sm font-bold text-[var(--foreground)]">커리큘럼</p>
-            {course?.enrollment?.active && (
-              <div className="mt-2 flex items-center gap-2">
-                <div className="h-1.5 flex-1 rounded-full bg-[var(--surface-muted)]">
-                  <div className="h-1.5 rounded-full bg-[var(--brand)]" style={{ width: `${course.enrollment.progressPct}%` }} />
-                </div>
-                <span className="text-xs font-semibold text-[var(--foreground-muted)]">{course.enrollment.progressPct}%</span>
-              </div>
-            )}
-          </div>
-          <ul className="max-h-[60vh] overflow-y-auto">
-            {course?.sections.flatMap((s) =>
-              s.lessons.map((l) => {
-                const here = l.key === lessonKey;
-                const inner = (
-                  <>
-                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold ${l.completed ? "bg-[var(--brand)] text-white" : "bg-[var(--surface)] text-[var(--foreground-subtle)]"}`}>
-                      {l.completed ? "✓" : l.locked ? "🔒" : "▶"}
-                    </span>
-                    <span className={`flex-1 text-sm ${here ? "font-bold text-[var(--brand)]" : "text-[var(--foreground)]"}`}>{l.title}</span>
-                    <span className="text-xs text-[var(--foreground-subtle)]">{formatDuration(l.durationSec)}</span>
-                  </>
-                );
-                return (
-                  <li key={l.key} className="border-b border-[var(--border-light)] last:border-b-0">
-                    {l.locked ? (
-                      <div className="flex items-center gap-3 px-5 py-3 opacity-60">{inner}</div>
-                    ) : (
-                      <Link href={`/learn/${slug}/${l.key}`} className={`flex items-center gap-3 px-5 py-3 hover:bg-[var(--surface)] ${here ? "bg-[var(--surface)]" : ""}`}>
-                        {inner}
-                      </Link>
-                    )}
-                  </li>
-                );
-              })
-            )}
-          </ul>
-        </div>
-      </aside>
     </div>
   );
 }
