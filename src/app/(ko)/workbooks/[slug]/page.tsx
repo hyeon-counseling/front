@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/api";
 import { formatPrice, type CurriculumDay, type WorkbookDetail } from "@/lib/workbook";
 import { Markdown } from "@/components/workbook/Markdown";
 import { Skeleton } from "@/components/ui";
+import { BuyButton } from "@/components/checkout/BuyButton";
 
 // 워크북 소개 + 커리큘럼 + 시작/이어하기
 export default function WorkbookDetailPage() {
@@ -193,9 +194,15 @@ export default function WorkbookDetailPage() {
                 <>
                   <p className="text-sm font-semibold text-[var(--foreground)]">전체 이용권 (8주)</p>
                   <p className="mt-1 text-sm text-[var(--foreground-muted)]">2주차부터 이어서 진행하려면 필요해요. 이후 주차도 공개되는 대로 포함돼요.</p>
-                  <button disabled className="mt-3 flex h-11 w-full cursor-not-allowed items-center justify-center rounded-xl bg-[var(--surface)] text-sm font-semibold text-[var(--foreground-subtle)]">
-                    {price ? `${price} · 결제 준비 중` : "구매 준비 중"}
-                  </button>
+                  {price ? (
+                    <div className="mt-3">
+                      <BuyButton itemType="workbook" slug={wb.slug} label={`${price} · 전체 이용권 구매`} variant={e ? "primary" : "secondary"} />
+                    </div>
+                  ) : (
+                    <button disabled className="mt-3 flex h-11 w-full cursor-not-allowed items-center justify-center rounded-xl bg-[var(--surface)] text-sm font-semibold text-[var(--foreground-subtle)]">
+                      구매 준비 중
+                    </button>
+                  )}
                 </>
               )}
             </div>

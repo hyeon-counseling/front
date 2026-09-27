@@ -70,11 +70,11 @@ export default function AdminSidebar() {
         <NavLink item={{ label: "대시보드", href: "/admin" }} />
 
         <SectionLabel>학습</SectionLabel>
-        <NavLink item={{ label: "강의 (LMS)", href: "/admin/lms/courses", soon: true }} />
+        <NavLink item={{ label: "강의 (LMS)", href: "/admin/lms/courses" }} />
         <NavLink item={{ label: "워크북", href: "/admin/workbooks" }} />
 
         <SectionLabel>운영</SectionLabel>
-        <NavLink item={{ label: "결제·주문", href: "/admin/payments", soon: true }} />
+        <NavLink item={{ label: "결제·주문", href: "/admin/payments" }} />
         <NavLink item={{ label: "회원", href: "/admin/users" }} />
         <NavLink item={{ label: "콘텐츠(아티클)", href: "/admin/common/contents" }} />
 

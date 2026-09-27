@@ -1,0 +1,397 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { apiFetch, apiRequest } from "@/lib/api";
+import { formatDuration } from "@/lib/course";
+import { Markdown } from "@/components/workbook/Markdown";
+import { Badge, Button, Input, Skeleton, Textarea, Toast } from "@/components/ui";
+
+// ─────────────────────────────────────────────────────────────────
+// 관리자 — 강의 편집기
+//   [기본 정보] 제목·소개·공개 상태·가격·수강 기간
+//   [차시 구성] 섹션 → 차시(동영상/텍스트) 편집, 순서 변경, 동영상 업로드
+// 동영상: Cloudflare Stream 직접 업로드(200MB 이하) 또는 Stream 대시보드에서 올린 동영상 ID 붙여넣기.
+//         Stream 설정 전에는 테스트용 직접 주소(https://…mp4)도 쓸 수 있다.
+// ─────────────────────────────────────────────────────────────────
+
+interface Video {
+  provider: "stream" | "url";
+  uid?: string | null;
+  url?: string | null;
+  durationSec?: number | null;
+  status?: "uploading" | "ready" | "error" | null;
+}
+interface Lesson {
+  key: string;
+  title: string;
+  summary?: string;
+  type: "video" | "text";
+  isPreview?: boolean;
+  video?: Video | null;
+  body?: string;
+}
+interface Section {
+  key: string;
+  title: string;
+  lessons: Lesson[];
+}
+interface CourseDoc {
+  _id: string;
+  slug: string;
+  title: string;
+  subtitle?: string;
+  description: string;
+  coverImageUrl?: string | null;
+  instructor?: string;
+  status: "draft" | "published" | "archived";
+  price: number | null;
+  salePrice: number | null;
+  accessDays: number | null;
+  sections: Section[];
+}
+
+const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
+const BASIC_UPLOAD_LIMIT = 200 * 1024 * 1024; // Stream 기본 업로드 한도
+
+function nextKey(used: string[], prefix: string) {
+  let i = 1;
+  while (used.includes(`${prefix}${i}`)) i++;
+  return `${prefix}${i}`;
+}
+const numOrNull = (v: string) => (v.trim() === "" ? null : Number(v));
+
+export default function AdminCourseEditor() {
+  const { id } = useParams<{ id: string }>();
+  const [doc, setDoc] = useState<CourseDoc | null>(null);
+  const [tab, setTab] = useState<"meta" | "lessons">("lessons");
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [toast, setToast] = useState<string | null>(null);
+  const [streamReady, setStreamReady] = useState<boolean | null>(null);
+  const [uploading, setUploading] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    apiFetch(`/api/admin/courses/${id}`).then(setDoc);
+    apiFetch("/api/admin/courses/stream/config").then((c) => setStreamReady(!!c.configured)).catch(() => setStreamReady(false));
+  }, [id]);
+
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => {
+      if (dirty) e.preventDefault();
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  const update = (fn: (d: CourseDoc) => void) => {
+    setDoc((prev) => {
+      if (!prev) return prev;
+      const next = clone(prev);
+      fn(next);
+      return next;
+    });
+    setDirty(true);
+  };
+  const updateLesson = (si: number, li: number, fn: (l: Lesson) => void) => update((d) => fn(d.sections[si].lessons[li]));
+
+  const save = async () => {
+    if (!doc) return;
+    setSaving(true);
+    setErrors([]);
+    const { title, subtitle, description, coverImageUrl, instructor, status, price, salePrice, accessDays, sections } = doc;
+    const res = await apiRequest<{ errors?: string[] }>(`/api/admin/courses/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ title, subtitle, description, coverImageUrl, instructor, status, price, salePrice, accessDays, sections }),
+    });
+    setSaving(false);
+    if (res.ok) {
+      setDirty(false);
+      setToast("저장했어요.");
+    } else setErrors(res.data?.errors ?? [res.message]);
+  };
+
+  const addSection = () =>
+    update((d) => d.sections.push({ key: nextKey(d.sections.map((s) => s.key), "s"), title: `${d.sections.length + 1}부`, lessons: [] }));
+  const addLesson = (si: number) =>
+    update((d) =>
+      d.sections[si].lessons.push({
+        key: nextKey(d.sections.flatMap((s) => s.lessons.map((l) => l.key)), "l"),
+        title: "새 차시",
+        summary: "",
+        type: "video",
+        isPreview: false,
+        video: { provider: "stream", uid: null, durationSec: null, status: null },
+        body: "",
+      })
+    );
+  const move = <T,>(arr: T[], i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= arr.length) return;
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  };
+
+  /** 동영상 상태·길이 확인 → 차시에 반영 */
+  const checkStatus = async (si: number, li: number, uid: string) => {
+    const res = await apiRequest<{ status: Video["status"]; durationSec: number | null }>(`/api/admin/courses/stream/${uid}`);
+    if (!res.ok || !res.data) {
+      setToast(res.message || "상태를 확인하지 못했어요.");
+      return;
+    }
+    const { status, durationSec } = res.data;
+    updateLesson(si, li, (l) => {
+      l.video = { ...(l.video ?? { provider: "stream" }), provider: "stream", uid, status, durationSec };
+    });
+    setToast(status === "ready" ? "재생 준비 완료! 저장을 눌러 주세요." : status === "error" ? "인코딩 오류가 났어요. 다시 올려 주세요." : "아직 처리 중이에요. 잠시 후 다시 확인해 주세요.");
+  };
+
+  const upload = async (si: number, li: number, lesson: Lesson, file: File) => {
+    if (file.size > BASIC_UPLOAD_LIMIT) {
+      setToast("200MB가 넘는 파일은 Cloudflare Stream 대시보드에서 올린 뒤 동영상 ID를 붙여넣어 주세요.");
+      return;
+    }
+    const res = await apiRequest<{ uploadURL: string; uid: string }>("/api/admin/courses/stream/direct-upload", {
+      method: "POST",
+      body: JSON.stringify({ name: `${doc?.slug}/${lesson.key} ${lesson.title}` }),
+    });
+    if (!res.ok || !res.data) {
+      setToast(res.message || "업로드 주소를 받지 못했어요.");
+      return;
+    }
+    const { uploadURL, uid } = res.data;
+    updateLesson(si, li, (l) => {
+      l.video = { provider: "stream", uid, status: "uploading", durationSec: null };
+    });
+    // 진행률을 보려고 XMLHttpRequest 사용 (fetch는 업로드 진행률을 주지 않음)
+    const form = new FormData();
+    form.append("file", file);
+    await new Promise<void>((resolve) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", uploadURL);
+      xhr.upload.onprogress = (e) => e.lengthComputable && setUploading((u) => ({ ...u, [lesson.key]: Math.round((e.loaded / e.total) * 100) }));
+      xhr.onload = () => {
+        setUploading((u) => {
+          const n = { ...u };
+          delete n[lesson.key];
+          return n;
+        });
+        setToast(xhr.status < 300 ? "업로드 완료! 인코딩에 몇 분 걸려요. 저장한 뒤 '상태 확인'을 눌러 주세요." : "업로드에 실패했어요.");
+        resolve();
+      };
+      xhr.onerror = () => {
+        setToast("업로드 중 연결이 끊겼어요.");
+        resolve();
+      };
+      xhr.send(form);
+    });
+  };
+
+  if (!doc) return <div className="p-10"><Skeleton className="h-96" /></div>;
+
+  return (
+    <div className="px-4 py-8">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <Link href="/admin/lms/courses" className="text-sm text-[var(--foreground-subtle)]">← 강의 목록</Link>
+          <h1 className="font-display mt-1 text-2xl">{doc.title}</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          {dirty && <span className="text-xs font-semibold text-amber-600">저장하지 않은 변경</span>}
+          <Link href={`/courses/${doc.slug}`} target="_blank" className="inline-flex h-10 items-center rounded-xl bg-[var(--surface)] px-4 text-sm font-semibold">
+            미리보기
+          </Link>
+          <Button onClick={save} loading={saving}>저장</Button>
+        </div>
+      </div>
+
+      {errors.length > 0 && (
+        <div className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+          {errors.map((e) => <p key={e}>{e}</p>)}
+        </div>
+      )}
+
+      <div className="mb-6 flex gap-2">
+        {([["lessons", "차시 구성"], ["meta", "기본 정보·판매"]] as const).map(([k, label]) => (
+          <button key={k} onClick={() => setTab(k)} className={`h-10 cursor-pointer rounded-xl px-4 text-sm font-semibold ${tab === k ? "bg-[var(--brand)] text-white" : "bg-[var(--surface)]"}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "meta" ? (
+        <div className="grid max-w-5xl gap-6 lg:grid-cols-2">
+          <div className="space-y-4">
+            <Input id="t" label="제목" value={doc.title} onChange={(e) => update((d) => { d.title = e.target.value; })} />
+            <Input id="st" label="부제" value={doc.subtitle ?? ""} onChange={(e) => update((d) => { d.subtitle = e.target.value; })} />
+            <Input id="ins" label="강사" value={doc.instructor ?? ""} onChange={(e) => update((d) => { d.instructor = e.target.value; })} />
+            <Input id="cv" label="표지 이미지 주소 (선택)" value={doc.coverImageUrl ?? ""} onChange={(e) => update((d) => { d.coverImageUrl = e.target.value || null; })} />
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">공개 상태</label>
+              <div className="flex gap-2">
+                {([["draft", "작성 중"], ["published", "공개"], ["archived", "보관"]] as const).map(([v, label]) => (
+                  <button key={v} onClick={() => update((d) => { d.status = v; })} className={`h-10 flex-1 cursor-pointer rounded-xl text-sm font-semibold ${doc.status === v ? "bg-[var(--brand)] text-white" : "bg-[var(--surface)]"}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <Input id="p" label="정가 (원)" inputMode="numeric" value={doc.price ?? ""} onChange={(e) => update((d) => { d.price = numOrNull(e.target.value); })} />
+              <Input id="sp" label="할인가 (원)" inputMode="numeric" value={doc.salePrice ?? ""} onChange={(e) => update((d) => { d.salePrice = numOrNull(e.target.value); })} />
+              <Input id="ad" label="수강 기간 (일)" inputMode="numeric" value={doc.accessDays ?? ""} onChange={(e) => update((d) => { d.accessDays = numOrNull(e.target.value); })} hint="비우면 무제한" />
+            </div>
+            <Textarea id="desc" label="소개 (마크다운)" className="min-h-[320px] font-mono text-sm" value={doc.description} onChange={(e) => update((d) => { d.description = e.target.value; })} />
+          </div>
+          <div className="card p-6">
+            <p className="mb-3 text-xs font-semibold text-[var(--foreground-subtle)]">소개 미리보기</p>
+            <Markdown md={doc.description} />
+          </div>
+        </div>
+      ) : (
+        <div className="max-w-4xl space-y-6">
+          {streamReady === false && (
+            <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Cloudflare Stream이 아직 설정되지 않았어요(서버 환경변수 CF_STREAM_*). 그 전까지는 차시마다 &lsquo;직접 주소&rsquo;로 테스트 영상을 넣을 수 있어요.
+            </div>
+          )}
+
+          {doc.sections.map((s, si) => (
+            <div key={s.key} className="card p-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  value={s.title}
+                  onChange={(e) => update((d) => { d.sections[si].title = e.target.value; })}
+                  className="min-w-0 flex-1 rounded-xl border border-[var(--border)] px-3 py-2 text-lg font-bold"
+                />
+                <Button size="sm" variant="ghost" onClick={() => update((d) => move(d.sections, si, -1))}>↑</Button>
+                <Button size="sm" variant="ghost" onClick={() => update((d) => move(d.sections, si, 1))}>↓</Button>
+                <Button size="sm" variant="danger" onClick={() => confirm("섹션과 그 안의 차시를 모두 지울까요?") && update((d) => { d.sections.splice(si, 1); })}>
+                  섹션 삭제
+                </Button>
+              </div>
+
+              <div className="mt-4 space-y-4">
+                {s.lessons.map((l, li) => {
+                  const v = l.video ?? { provider: "stream" as const };
+                  const pct = uploading[l.key];
+                  return (
+                    <div key={l.key} className="rounded-2xl border border-[var(--border)] p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-lg bg-[var(--surface)] px-2 py-1 text-xs font-bold text-[var(--foreground-subtle)]">{l.key}</span>
+                        <input
+                          value={l.title}
+                          onChange={(e) => updateLesson(si, li, (x) => { x.title = e.target.value; })}
+                          className="min-w-0 flex-1 rounded-xl border border-[var(--border)] px-3 py-2 font-semibold"
+                        />
+                        <Button size="sm" variant="ghost" onClick={() => update((d) => move(d.sections[si].lessons, li, -1))}>↑</Button>
+                        <Button size="sm" variant="ghost" onClick={() => update((d) => move(d.sections[si].lessons, li, 1))}>↓</Button>
+                        <Button size="sm" variant="danger" onClick={() => confirm("차시를 지울까요?") && update((d) => { d.sections[si].lessons.splice(li, 1); })}>삭제</Button>
+                      </div>
+                      <input
+                        value={l.summary ?? ""}
+                        placeholder="한 줄 설명"
+                        onChange={(e) => updateLesson(si, li, (x) => { x.summary = e.target.value; })}
+                        className="mt-2 w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm"
+                      />
+                      <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
+                        <label className="flex items-center gap-2">
+                          종류
+                          <select value={l.type} onChange={(e) => updateLesson(si, li, (x) => { x.type = e.target.value as Lesson["type"]; })} className="rounded-lg border border-[var(--border)] px-2 py-1">
+                            <option value="video">동영상</option>
+                            <option value="text">텍스트</option>
+                          </select>
+                        </label>
+                        <label className="flex cursor-pointer items-center gap-2">
+                          <input type="checkbox" checked={!!l.isPreview} onChange={(e) => updateLesson(si, li, (x) => { x.isPreview = e.target.checked; })} className="accent-[var(--brand)]" />
+                          미리보기 (누구나 시청)
+                        </label>
+                      </div>
+
+                      {l.type === "video" && (
+                        <div className="mt-3 rounded-xl bg-[var(--surface)] p-3 text-sm">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <label className="flex items-center gap-2">
+                              <input type="radio" checked={v.provider === "stream"} onChange={() => updateLesson(si, li, (x) => { x.video = { ...v, provider: "stream" }; })} />
+                              Cloudflare Stream
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input type="radio" checked={v.provider === "url"} onChange={() => updateLesson(si, li, (x) => { x.video = { ...v, provider: "url" }; })} />
+                              직접 주소 (테스트용)
+                            </label>
+                            {v.durationSec ? <Badge tone="neutral">{formatDuration(v.durationSec, true)}</Badge> : null}
+                            {v.provider === "stream" && v.status && (
+                              <Badge tone={v.status === "ready" ? "brand" : v.status === "error" ? "error" : "warning"}>
+                                {v.status === "ready" ? "재생 준비됨" : v.status === "error" ? "오류" : "처리 중"}
+                              </Badge>
+                            )}
+                          </div>
+
+                          {v.provider === "stream" ? (
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                              <input
+                                value={v.uid ?? ""}
+                                placeholder="동영상 ID (32자리)"
+                                onChange={(e) => updateLesson(si, li, (x) => { x.video = { ...v, provider: "stream", uid: e.target.value.trim() || null }; })}
+                                className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 font-mono text-xs"
+                              />
+                              <label className={`inline-flex h-9 items-center rounded-lg px-3 text-xs font-semibold ${streamReady ? "cursor-pointer bg-[var(--brand)] text-white" : "cursor-not-allowed bg-[var(--surface-muted)] text-[var(--foreground-subtle)]"}`}>
+                                {pct !== undefined ? `업로드 ${pct}%` : "영상 올리기"}
+                                <input
+                                  type="file"
+                                  accept="video/*"
+                                  className="hidden"
+                                  disabled={!streamReady || pct !== undefined}
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    e.target.value = "";
+                                    if (f) upload(si, li, l, f);
+                                  }}
+                                />
+                              </label>
+                              {v.uid && streamReady && (
+                                <Button size="sm" variant="secondary" onClick={() => checkStatus(si, li, v.uid!)}>상태 확인</Button>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_140px]">
+                              <input
+                                value={v.url ?? ""}
+                                placeholder="https://…/video.mp4"
+                                onChange={(e) => updateLesson(si, li, (x) => { x.video = { ...v, provider: "url", url: e.target.value.trim() || null }; })}
+                                className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs"
+                              />
+                              <input
+                                inputMode="numeric"
+                                value={v.durationSec ?? ""}
+                                placeholder="길이(초)"
+                                onChange={(e) => updateLesson(si, li, (x) => { x.video = { ...v, provider: "url", durationSec: numOrNull(e.target.value) }; })}
+                                className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <textarea
+                        value={l.body ?? ""}
+                        placeholder={l.type === "text" ? "본문 (마크다운)" : "영상 아래 설명·자료 (선택, 마크다운)"}
+                        onChange={(e) => updateLesson(si, li, (x) => { x.body = e.target.value; })}
+                        className="mt-3 min-h-[80px] w-full rounded-xl border border-[var(--border)] px-3 py-2 font-mono text-xs"
+                      />
+                    </div>
+                  );
+                })}
+                <Button variant="secondary" onClick={() => addLesson(si)}>+ 차시 추가</Button>
+              </div>
+            </div>
+          ))}
+          <Button variant="secondary" onClick={addSection}>+ 섹션 추가</Button>
+        </div>
+      )}
+
+      <Toast message={toast} onClose={() => setToast(null)} />
+    </div>
+  );
+}

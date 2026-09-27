@@ -5,6 +5,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
+import { MyPaymentOrders } from "@/components/checkout/MyPaymentOrders";
 
 // 백엔드 주문 데이터 타입
 // productId는 populate되어 상품 정보가 담긴 객체로 옴
@@ -174,10 +175,18 @@ export default function MyPage() {
           </p>
         </div>
 
+        {/* 강의·워크북 결제 (사이트 결제) */}
+        <section className="mb-10">
+          <h2 className="mb-4 text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">
+            강의 · 워크북
+          </h2>
+          <MyPaymentOrders />
+        </section>
+
         {/* 구매 내역 섹션 */}
         <section>
           <h2 className="mb-4 text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">
-            구매 내역
+            전자책
           </h2>
 
           {/* 로딩 중 스켈레톤 */}
