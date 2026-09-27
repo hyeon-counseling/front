@@ -57,7 +57,7 @@ export function AudioEditor({ value, onChange, onToast }: { value: AudioValue; o
     const form = new FormData();
     form.append("file", file);
     setPct(0);
-    const res = await new Promise<{ ok: boolean; data?: { key: string }; message?: string }>((resolve) => {
+    const res = await new Promise<{ ok: boolean; data?: { key: string; durationSec?: number | null }; message?: string }>((resolve) => {
       const xhr = new XMLHttpRequest();
       xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL}/api/admin/courses/audio-upload`);
       if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
@@ -78,7 +78,7 @@ export function AudioEditor({ value, onChange, onToast }: { value: AudioValue; o
       onToast(res.message || "업로드하지 못했어요.");
       return;
     }
-    onChange({ provider: "r2", key: res.data.key, durationSec: durationSec ?? value.durationSec ?? null });
+    onChange({ provider: "r2", key: res.data.key, durationSec: durationSec ?? res.data.durationSec ?? value.durationSec ?? null });
     onToast("업로드 완료! 저장을 눌러 주세요.");
   };
 
@@ -99,10 +99,10 @@ export function AudioEditor({ value, onChange, onToast }: { value: AudioValue; o
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="min-w-0 flex-1 truncate font-mono text-xs text-[var(--foreground-muted)]">{value.key || "아직 올린 파일이 없어요."}</span>
           <label className={`inline-flex h-9 items-center rounded-lg px-3 text-xs font-semibold ${pct === null ? "cursor-pointer bg-[var(--brand)] text-white" : "bg-[var(--surface-muted)] text-[var(--foreground-subtle)]"}`}>
-            {pct !== null ? `업로드 ${pct}%` : value.key ? "파일 바꾸기" : "mp3 올리기"}
+            {pct !== null ? `업로드 ${pct}%` : value.key ? "파일 바꾸기" : "오디오 올리기 (mp3·m4a·aac)"}
             <input
               type="file"
-              accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,.mp3,.m4a"
+              accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,.mp3,.m4a,.aac"
               className="hidden"
               disabled={pct !== null}
               onChange={(e) => {
