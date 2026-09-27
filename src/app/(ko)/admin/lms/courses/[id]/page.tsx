@@ -54,6 +54,7 @@ interface CourseDoc {
   status: "draft" | "published" | "archived";
   visibility?: "public" | "private";
   seriesLabel?: string;
+  completionRule?: { progressPct: number; quizAvg: number | null };
   price: number | null;
   salePrice: number | null;
   accessDays: number | null;
@@ -109,10 +110,10 @@ export default function AdminCourseEditor() {
     if (!doc) return;
     setSaving(true);
     setErrors([]);
-    const { title, subtitle, description, coverImageUrl, instructor, status, visibility, seriesLabel, price, salePrice, accessDays, sections } = doc;
+    const { title, subtitle, description, coverImageUrl, instructor, status, visibility, seriesLabel, completionRule, price, salePrice, accessDays, sections } = doc;
     const res = await apiRequest<{ errors?: string[] }>(`/api/admin/courses/${id}`, {
       method: "PUT",
-      body: JSON.stringify({ title, subtitle, description, coverImageUrl, instructor, status, visibility: visibility ?? "public", seriesLabel: seriesLabel ?? "", price, salePrice, accessDays, sections }),
+      body: JSON.stringify({ title, subtitle, description, coverImageUrl, instructor, status, visibility: visibility ?? "public", seriesLabel: seriesLabel ?? "", completionRule: completionRule ?? { progressPct: 100, quizAvg: null }, price, salePrice, accessDays, sections }),
     });
     setSaving(false);
     if (res.ok) {
@@ -268,6 +269,25 @@ export default function AdminCourseEditor() {
               <Input id="sp" label="할인가 (원)" inputMode="numeric" value={doc.salePrice ?? ""} onChange={(e) => update((d) => { d.salePrice = numOrNull(e.target.value); })} />
               <Input id="ad" label="수강 기간 (일)" inputMode="numeric" value={doc.accessDays ?? ""} onChange={(e) => update((d) => { d.accessDays = numOrNull(e.target.value); })} hint="비우면 무제한" />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                id="crp"
+                label="수료 기준: 진도율 (%)"
+                inputMode="numeric"
+                value={doc.completionRule?.progressPct ?? 100}
+                onChange={(e) => update((d) => { d.completionRule = { progressPct: Math.max(1, Math.min(100, Number(e.target.value) || 1)), quizAvg: d.completionRule?.quizAvg ?? null }; })}
+              />
+              <Input
+                id="crq"
+                label="수료 기준: 퀴즈 평균 (점)"
+                inputMode="numeric"
+                value={doc.completionRule?.quizAvg ?? ""}
+                placeholder="없음"
+                hint="퀴즈 차시 최고점 평균. 비우면 보지 않아요."
+                onChange={(e) => update((d) => { const v = e.target.value.trim(); d.completionRule = { progressPct: d.completionRule?.progressPct ?? 100, quizAvg: v === "" ? null : Math.max(1, Math.min(100, Number(v) || 1)) }; })}
+              />
+            </div>
+            <p className="-mt-2 text-xs text-[var(--foreground-subtle)]">수료 기준을 채우면 수료증이 자동으로 발급돼요.</p>
             <Textarea id="desc" label="소개 (마크다운)" className="min-h-[320px] font-mono text-sm" value={doc.description} onChange={(e) => update((d) => { d.description = e.target.value; })} />
           </div>
           <div className="card p-6">
