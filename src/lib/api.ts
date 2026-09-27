@@ -32,3 +32,28 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   // 성공 시 data.data 반환 (백엔드 응답 형식: { success: true, data: ... })
   return data.data;
 }
+
+/**
+ * apiRequest — 실패해도 throw하지 않고 상태코드·본문을 그대로 돌려준다.
+ * 403(잠금)처럼 실패 응답에 담긴 data가 필요한 화면에서 사용한다.
+ */
+export async function apiRequest<T = unknown>(
+  path: string,
+  options: RequestInit = {}
+): Promise<{ ok: boolean; status: number; data: T | null; message: string }> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+    const body = await res.json().catch(() => ({}));
+    return { ok: res.ok && body.success !== false, status: res.status, data: (body.data ?? null) as T | null, message: body.message ?? '' };
+  } catch {
+    return { ok: false, status: 0, data: null, message: '서버와 연결할 수 없어요. 잠시 후 다시 시도해 주세요.' };
+  }
+}
