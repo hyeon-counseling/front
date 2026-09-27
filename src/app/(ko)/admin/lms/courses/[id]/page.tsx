@@ -7,11 +7,13 @@ import { apiFetch, apiRequest } from "@/lib/api";
 import { formatDuration, parseDuration, parseYoutubeId } from "@/lib/course";
 import { Markdown } from "@/components/workbook/Markdown";
 import { Badge, Button, Input, Skeleton, Textarea, Toast } from "@/components/ui";
+import { AudioEditor, CardsEditor, QuizEditor, type AudioValue, type QuizValue } from "@/components/course/LessonContentEditors";
+import type { TextCard } from "@/lib/lessonText";
 
 // ─────────────────────────────────────────────────────────────────
 // 관리자 — 강의 편집기
-//   [기본 정보] 제목·소개·공개 상태·가격·수강 기간
-//   [차시 구성] 섹션 → 차시(동영상/텍스트) 편집, 순서 변경, 동영상 업로드
+//   [기본 정보] 제목·소개·공개 상태·공개 범위(비공개=초대한 회원만)·시리즈·가격·수강 기간
+//   [차시 구성] 섹션 → 차시(동영상/텍스트/오디오/퀴즈/요약카드) 편집, 순서 변경, 동영상·오디오 업로드
 // 동영상: Cloudflare Stream 직접 업로드(200MB 이하) 또는 Stream 대시보드에서 올린 동영상 ID 붙여넣기.
 //         Stream 도입 전 임시로 유튜브 '일부공개' 영상, 테스트용 직접 주소(https://…mp4)도 쓸 수 있다.
 // ─────────────────────────────────────────────────────────────────
@@ -28,9 +30,12 @@ interface Lesson {
   key: string;
   title: string;
   summary?: string;
-  type: "video" | "text";
+  type: "video" | "text" | "audio" | "quiz" | "cards";
   isPreview?: boolean;
   video?: Video | null;
+  audio?: AudioValue | null;
+  quiz?: QuizValue | null;
+  cards?: TextCard[] | null;
   body?: string;
 }
 interface Section {
@@ -47,6 +52,8 @@ interface CourseDoc {
   coverImageUrl?: string | null;
   instructor?: string;
   status: "draft" | "published" | "archived";
+  visibility?: "public" | "private";
+  seriesLabel?: string;
   price: number | null;
   salePrice: number | null;
   accessDays: number | null;
@@ -102,10 +109,10 @@ export default function AdminCourseEditor() {
     if (!doc) return;
     setSaving(true);
     setErrors([]);
-    const { title, subtitle, description, coverImageUrl, instructor, status, price, salePrice, accessDays, sections } = doc;
+    const { title, subtitle, description, coverImageUrl, instructor, status, visibility, seriesLabel, price, salePrice, accessDays, sections } = doc;
     const res = await apiRequest<{ errors?: string[] }>(`/api/admin/courses/${id}`, {
       method: "PUT",
-      body: JSON.stringify({ title, subtitle, description, coverImageUrl, instructor, status, price, salePrice, accessDays, sections }),
+      body: JSON.stringify({ title, subtitle, description, coverImageUrl, instructor, status, visibility: visibility ?? "public", seriesLabel: seriesLabel ?? "", price, salePrice, accessDays, sections }),
     });
     setSaving(false);
     if (res.ok) {
@@ -238,6 +245,24 @@ export default function AdminCourseEditor() {
                 ))}
               </div>
             </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">공개 범위</label>
+              <div className="flex gap-2">
+                {([["public", "모두에게 보임"], ["private", "비공개 (초대한 회원만)"]] as const).map(([v, label]) => (
+                  <button key={v} onClick={() => update((d) => { d.visibility = v; })} className={`h-10 flex-1 cursor-pointer rounded-xl text-sm font-semibold ${(doc.visibility ?? "public") === v ? "bg-[var(--brand)] text-white" : "bg-[var(--surface)]"}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {doc.visibility === "private" && (
+                <p className="mt-2 text-xs text-[var(--foreground-muted)]">
+                  강의 목록·검색에 나오지 않고, 주소를 알아도 초대받지 않은 사람에게는 &lsquo;없는 강의&rsquo;로 보여요. 초대는{" "}
+                  <Link href={`/admin/lms/courses/${doc._id}/enrollments`} className="font-semibold text-[var(--brand)] underline">수강생 관리</Link>
+                  에서 이메일로 수강권을 주면 돼요.
+                </p>
+              )}
+            </div>
+            <Input id="series" label="시리즈 이름 (선택)" placeholder="예: 한양사이버 2026-2학기" value={doc.seriesLabel ?? ""} onChange={(e) => update((d) => { d.seriesLabel = e.target.value; })} />
             <div className="grid grid-cols-3 gap-3">
               <Input id="p" label="정가 (원)" inputMode="numeric" value={doc.price ?? ""} onChange={(e) => update((d) => { d.price = numOrNull(e.target.value); })} />
               <Input id="sp" label="할인가 (원)" inputMode="numeric" value={doc.salePrice ?? ""} onChange={(e) => update((d) => { d.salePrice = numOrNull(e.target.value); })} />
@@ -299,9 +324,23 @@ export default function AdminCourseEditor() {
                       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
                         <label className="flex items-center gap-2">
                           종류
-                          <select value={l.type} onChange={(e) => updateLesson(si, li, (x) => { x.type = e.target.value as Lesson["type"]; })} className="rounded-lg border border-[var(--border)] px-2 py-1">
+                          <select
+                            value={l.type}
+                            onChange={(e) =>
+                              updateLesson(si, li, (x) => {
+                                x.type = e.target.value as Lesson["type"];
+                                if (x.type === "audio" && !x.audio) x.audio = { provider: "r2", key: null, durationSec: null };
+                                if (x.type === "quiz" && !x.quiz) x.quiz = { passScore: 60, questions: [] };
+                                if (x.type === "cards" && !x.cards) x.cards = [];
+                              })
+                            }
+                            className="rounded-lg border border-[var(--border)] px-2 py-1"
+                          >
                             <option value="video">동영상</option>
                             <option value="text">텍스트</option>
+                            <option value="audio">오디오 (팟캐스트)</option>
+                            <option value="quiz">퀴즈 (예상문제)</option>
+                            <option value="cards">요약카드</option>
                           </select>
                         </label>
                         <label className="flex cursor-pointer items-center gap-2">
@@ -415,9 +454,32 @@ export default function AdminCourseEditor() {
                         </div>
                       )}
 
+                      {l.type === "audio" && (
+                        <AudioEditor
+                          key={`${l.key}-audio`}
+                          value={l.audio ?? { provider: "r2" }}
+                          onChange={(a) => updateLesson(si, li, (x) => { x.audio = a; })}
+                          onToast={setToast}
+                        />
+                      )}
+                      {l.type === "quiz" && (
+                        <QuizEditor key={`${l.key}-quiz`} value={l.quiz ?? { passScore: 60, questions: [] }} onChange={(q) => updateLesson(si, li, (x) => { x.quiz = q; })} />
+                      )}
+                      {l.type === "cards" && (
+                        <CardsEditor key={`${l.key}-cards`} value={l.cards ?? []} onChange={(c) => updateLesson(si, li, (x) => { x.cards = c; })} />
+                      )}
+
                       <textarea
                         value={l.body ?? ""}
-                        placeholder={l.type === "text" ? "본문 (마크다운)" : "영상 아래 설명·자료 (선택, 마크다운)"}
+                        placeholder={
+                          l.type === "text"
+                            ? "본문 (마크다운)"
+                            : l.type === "video"
+                              ? "영상 아래 설명·자료 (선택, 마크다운)"
+                              : l.type === "audio"
+                                ? "오디오 아래 설명·요점 (선택, 마크다운)"
+                                : "시작 전 안내 (선택, 마크다운)"
+                        }
                         onChange={(e) => updateLesson(si, li, (x) => { x.body = e.target.value; })}
                         className="mt-3 min-h-[80px] w-full rounded-xl border border-[var(--border)] px-3 py-2 font-mono text-xs"
                       />

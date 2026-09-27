@@ -5,15 +5,18 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
-import { formatDuration, type CourseDetail, type LessonResponse, type Playback } from "@/lib/course";
+import { formatDuration, LESSON_TYPE_LABEL, type CourseDetail, type LessonResponse, type Playback } from "@/lib/course";
 import { Markdown } from "@/components/workbook/Markdown";
 import { LessonPlayer } from "@/components/course/LessonPlayer";
+import { AudioPlayer } from "@/components/course/AudioPlayer";
+import { QuizLesson } from "@/components/course/QuizLesson";
+import { CardsLesson } from "@/components/course/CardsLesson";
 import { LearnShell, type LearnNavGroup } from "@/components/learn/LearnShell";
 import { Skeleton } from "@/components/ui";
 
 type LessonState = { status: "ok"; data: LessonResponse } | { status: "locked"; message: string } | { status: "error"; message: string };
 
-// 강의 수강 화면 — 왼쪽 목차(섹션·차시) · 플레이어 · 이어보기 · 진도 저장 · 완료 · 이전/다음
+// 강의 수강 화면 — 왼쪽 목차(섹션·차시) · 영상/오디오 플레이어 · 퀴즈 · 요약카드 · 이어보기 · 진도 저장 · 완료 · 이전/다음
 export default function LearnPage() {
   const { slug, lesson: lessonKey } = useParams<{ slug: string; lesson: string }>();
   const { loading: authLoading } = useAuth();
@@ -22,6 +25,13 @@ export default function LearnPage() {
   const [playback, setPlayback] = useState<{ key: string; value: Playback | null; error: string } | null>(null);
   const [completed, setCompleted] = useState<{ key: string; value: boolean } | null>(null);
   const [savingDone, setSavingDone] = useState(false);
+
+  // 재생 주소 (오디오 서명 주소가 만료되면 다시 호출)
+  const loadPlayback = useCallback(() => {
+    apiRequest<Playback>(`/api/courses/${slug}/lessons/${lessonKey}/playback`).then((p) =>
+      setPlayback({ key: lessonKey, value: p.ok ? p.data : null, error: p.ok ? "" : p.message || "재생 주소를 불러오지 못했어요." })
+    );
+  }, [slug, lessonKey]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -32,13 +42,9 @@ export default function LearnPage() {
           ? { status: "locked", message: res.message }
           : { status: "error", message: res.message || "차시를 불러오지 못했어요." };
       setState({ key: lessonKey, value });
-      if (value.status === "ok" && value.data.lesson.hasVideo) {
-        apiRequest<Playback>(`/api/courses/${slug}/lessons/${lessonKey}/playback`).then((p) =>
-          setPlayback({ key: lessonKey, value: p.ok ? p.data : null, error: p.ok ? "" : p.message || "영상을 불러오지 못했어요." })
-        );
-      }
+      if (value.status === "ok" && (value.data.lesson.hasVideo || value.data.lesson.hasAudio)) loadPlayback();
     });
-  }, [authLoading, slug, lessonKey]);
+  }, [authLoading, slug, lessonKey, loadPlayback]);
 
   const reloadCourse = useCallback(() => {
     apiRequest<CourseDetail>(`/api/courses/${slug}`).then((res) => res.ok && res.data && setCourse(res.data));
@@ -62,7 +68,7 @@ export default function LearnPage() {
               key: l.key,
               href: `/learn/${slug}/${l.key}`,
               title: l.title,
-              meta: formatDuration(l.durationSec) || undefined,
+              meta: formatDuration(l.durationSec) || (l.type === "quiz" || l.type === "cards" ? LESSON_TYPE_LABEL[l.type] : undefined),
               completed: l.key === lessonKey ? isDone : l.completed,
               locked: l.locked,
             })),
@@ -104,6 +110,14 @@ export default function LearnPage() {
   const onEnded = useCallback(() => {
     saveProgress({ completed: true }).then(reloadCourse);
   }, [saveProgress, reloadCourse]);
+  // 퀴즈 합격·카드 완료 → 완료 표시와 목차 갱신
+  const onLessonSaved = useCallback(
+    (done: boolean) => {
+      if (done) setCompleted({ key: lessonKey, value: true });
+      reloadCourse();
+    },
+    [lessonKey, reloadCourse]
+  );
 
   const toggleDone = async () => {
     setSavingDone(true);
@@ -155,6 +169,25 @@ export default function LearnPage() {
             ) : (
               <div className="flex aspect-video items-center justify-center rounded-2xl bg-[var(--surface)] px-6 text-center text-sm text-[var(--foreground-muted)]">{pb.error}</div>
             ))}
+          {d.lesson.type === "audio" &&
+            (!d.lesson.hasAudio ? (
+              <div className="rounded-2xl bg-[var(--surface)] px-6 py-10 text-center text-sm text-[var(--foreground-muted)]">오디오 준비 중이에요.</div>
+            ) : !pb ? (
+              <Skeleton className="h-56 w-full" />
+            ) : pb.value?.kind === "audio" ? (
+              <AudioPlayer
+                src={pb.value.url}
+                title={d.lesson.title}
+                subtitle={`${d.course.title} · ${d.section.title}`}
+                startAt={d.progress.positionSec}
+                durationHint={d.lesson.durationSec}
+                onProgress={onProgress}
+                onEnded={onEnded}
+                onReload={loadPlayback}
+              />
+            ) : (
+              <div className="rounded-2xl bg-[var(--surface)] px-6 py-10 text-center text-sm text-[var(--foreground-muted)]">{pb.error || "오디오를 불러오지 못했어요."}</div>
+            ))}
         </div>
 
         <p className="mt-6 text-sm font-semibold text-[var(--brand)]">
@@ -176,8 +209,40 @@ export default function LearnPage() {
           </div>
         )}
 
+        {d.lesson.type === "quiz" && d.lesson.quiz && (
+          <div className="mt-8">
+            <QuizLesson
+              key={lessonKey}
+              endpoint={`/api/courses/${slug}/lessons/${lessonKey}/quiz`}
+              quiz={d.lesson.quiz}
+              enrolled={d.enrolled}
+              best={d.progress.quizBest ?? null}
+              attempts={d.progress.quizAttempts ?? 0}
+              onGraded={(r) => r.saved && onLessonSaved(r.passed)}
+            />
+          </div>
+        )}
+
+        {d.lesson.type === "cards" && d.lesson.cards && (
+          <div className="mt-8">
+            <CardsLesson
+              key={lessonKey}
+              endpoint={`/api/courses/${slug}/lessons/${lessonKey}/cards`}
+              cards={d.lesson.cards}
+              enrolled={d.enrolled}
+              initialKnown={d.progress.cardsKnown ?? []}
+              onSaved={onLessonSaved}
+            />
+          </div>
+        )}
+
         <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-[var(--border-light)] pt-6">
-          {d.enrolled && (
+          {d.enrolled && d.lesson.type === "quiz" && (
+            <span className={`inline-flex h-11 items-center rounded-xl px-5 text-sm font-semibold ${isDone ? "bg-[var(--brand-light)] text-[var(--brand)]" : "bg-[var(--surface)] text-[var(--foreground-muted)]"}`}>
+              {isDone ? "✓ 합격·완료" : `합격(${d.lesson.quiz?.passScore ?? 60}점 이상)하면 완료돼요`}
+            </span>
+          )}
+          {d.enrolled && d.lesson.type !== "quiz" && (
             <button
               onClick={toggleDone}
               disabled={savingDone}

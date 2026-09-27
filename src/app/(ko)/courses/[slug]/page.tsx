@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
-import { formatDuration, type CourseDetail } from "@/lib/course";
+import { formatDuration, LESSON_TYPE_LABEL, type CourseDetail } from "@/lib/course";
 import { formatPrice } from "@/lib/workbook";
 import { Markdown } from "@/components/workbook/Markdown";
 import { BuyButton } from "@/components/checkout/BuyButton";
@@ -57,12 +57,13 @@ export default function CourseDetailPage() {
       <section className="bg-brand-gradient px-4 pb-14 pt-12 text-white sm:px-6 sm:pb-20 sm:pt-16">
         <div className="mx-auto max-w-5xl">
           <Link href="/courses" className="text-sm text-white/70 hover:text-white">← 강의</Link>
-          <p className="mt-6 text-sm font-semibold text-white/70">{course.instructor}</p>
+          <p className="mt-6 text-sm font-semibold text-white/70">{[course.seriesLabel, course.instructor].filter(Boolean).join(" · ")}</p>
           <h1 className="font-display-tight mt-2 text-3xl sm:text-5xl">{course.title}</h1>
           {course.subtitle && <p className="mt-4 max-w-2xl text-lg text-white/85">{course.subtitle}</p>}
           <div className="mt-6 flex flex-wrap gap-2 text-sm">
             {[
-              `영상 ${course.lessonCount}편`,
+              course.visibility === "private" ? "초대 전용 과정" : "",
+              allLessons.every((l) => l.type === "video") ? `영상 ${course.lessonCount}편` : `${course.lessonCount}차시`,
               course.totalMinutes ? `총 ${course.totalMinutes}분` : "",
               course.accessDays ? `${course.accessDays}일 수강` : "기간 제한 없음",
               firstPreview ? "1편 미리보기" : "",
@@ -98,7 +99,9 @@ export default function CourseDetailPage() {
                         {l.isPreview && !active && (
                           <span className="shrink-0 rounded-full bg-[var(--brand-light)] px-2 py-0.5 text-xs font-semibold text-[var(--brand)]">미리보기</span>
                         )}
-                        <span className="shrink-0 text-xs text-[var(--foreground-subtle)]">{formatDuration(l.durationSec)}</span>
+                        <span className="shrink-0 text-xs text-[var(--foreground-subtle)]">
+                          {[l.type !== "video" ? LESSON_TYPE_LABEL[l.type] : "", formatDuration(l.durationSec)].filter(Boolean).join(" · ")}
+                        </span>
                       </>
                     );
                     return (
