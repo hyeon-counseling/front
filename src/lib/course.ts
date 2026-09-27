@@ -64,7 +64,28 @@ export interface LessonResponse {
   next: { key: string; title: string; locked: boolean } | null;
 }
 
-export type Playback = { kind: "url"; url: string } | { kind: "stream"; iframeUrl: string; expiresAt: string };
+export type Playback =
+  | { kind: "url"; url: string }
+  | { kind: "stream"; iframeUrl: string; expiresAt: string }
+  | { kind: "youtube"; videoId: string };
+
+/** 유튜브 주소(watch·youtu.be·shorts·embed) 또는 ID → 11자리 영상 ID. 못 찾으면 null */
+export function parseYoutubeId(input: string): string | null {
+  const s = input.trim();
+  const bare = s.match(/^([A-Za-z0-9_-]{11})(?:[?&#]|$)/); // ID 뒤에 &t=30s 등이 붙은 경우
+  if (bare) return bare[1];
+  const m = s.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+/** "9:30" · "570" → 초. 형식이 아니면 null */
+export function parseDuration(input: string): number | null {
+  const s = input.trim();
+  if (!s) return null;
+  if (/^\d+$/.test(s)) return Number(s);
+  const m = s.match(/^(\d+):([0-5]?\d)$/);
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+}
 
 export interface MyCourse extends CourseListItem {
   enrollment: CourseEnrollmentSummary;

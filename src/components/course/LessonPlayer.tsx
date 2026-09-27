@@ -7,6 +7,7 @@ import type { Playback } from "@/lib/course";
  * 강의 동영상 플레이어
  *  - url   : 일반 <video> (Stream 설정 전 테스트용 직접 주소)
  *  - stream: Cloudflare Stream iframe + Stream Player SDK (재생 위치를 읽고 쓰기 위해)
+ *  - youtube: 유튜브 일부공개 영상 (Stream 도입 전 임시) — IFrame Player API, 쿠키 덜 쓰는 youtube-nocookie 도메인
  *
  * onProgress(초)   : 재생 중 10초마다 · 일시정지 · 페이지 이탈 시
  * onEnded()        : 끝까지 재생
@@ -14,6 +15,7 @@ import type { Playback } from "@/lib/course";
 
 const SAVE_EVERY_SEC = 10;
 const STREAM_SDK = "https://embed.cloudflarestream.com/embed/sdk.latest.js";
+const YOUTUBE_API = "https://www.youtube.com/iframe_api";
 
 interface StreamPlayer {
   currentTime: number;
@@ -21,10 +23,46 @@ interface StreamPlayer {
   addEventListener(ev: string, fn: () => void): void;
   removeEventListener(ev: string, fn: () => void): void;
 }
+interface YtPlayer {
+  getCurrentTime(): number;
+  destroy(): void;
+}
+interface YtNamespace {
+  Player: new (
+    el: HTMLElement,
+    opts: {
+      host?: string;
+      videoId: string;
+      playerVars?: Record<string, string | number>;
+      events?: { onStateChange?: (e: { data: number }) => void };
+    }
+  ) => YtPlayer;
+  PlayerState: { PLAYING: number; PAUSED: number; ENDED: number };
+}
 declare global {
   interface Window {
     Stream?: (el: HTMLIFrameElement) => StreamPlayer;
+    YT?: YtNamespace;
+    onYouTubeIframeAPIReady?: () => void;
   }
+}
+
+function loadYoutubeApi(): Promise<YtNamespace> {
+  if (window.YT?.Player) return Promise.resolve(window.YT);
+  return new Promise((resolve, reject) => {
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      prev?.();
+      if (window.YT) resolve(window.YT);
+    };
+    if (!document.querySelector(`script[src="${YOUTUBE_API}"]`)) {
+      const s = document.createElement("script");
+      s.src = YOUTUBE_API;
+      s.async = true;
+      s.onerror = () => reject(new Error("youtube"));
+      document.head.appendChild(s);
+    }
+  });
 }
 
 function loadStreamSdk(): Promise<void> {
@@ -131,6 +169,10 @@ export function LessonPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playback]);
 
+  if (playback.kind === "youtube") {
+    return <YoutubePlayer videoId={playback.videoId} startAt={startAt} onProgress={onProgress} onEnded={onEnded} />;
+  }
+
   if (playback.kind === "stream") {
     return (
       <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
@@ -167,6 +209,88 @@ export function LessonPlayer({
           endedRef.current();
         }}
       />
+    </div>
+  );
+}
+
+/** 유튜브 일부공개 영상 — 재생 중 1초마다 위치 확인(저장은 10초 간격), 일시정지·종료·이탈 시 저장 */
+function YoutubePlayer({
+  videoId,
+  startAt,
+  onProgress,
+  onEnded,
+}: {
+  videoId: string;
+  startAt: number;
+  onProgress: (sec: number) => void;
+  onEnded: () => void;
+}) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const tracker = useTracker(onProgress);
+  const endedRef = useRef(onEnded);
+  useEffect(() => {
+    endedRef.current = onEnded;
+  }, [onEnded]);
+
+  useEffect(() => {
+    let player: YtPlayer | null = null;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    let cancelled = false;
+    const stop = () => {
+      if (timer) clearInterval(timer);
+      timer = null;
+    };
+    loadYoutubeApi()
+      .then((YT) => {
+        if (cancelled || !boxRef.current) return;
+        const mount = document.createElement("div");
+        boxRef.current.appendChild(mount);
+        player = new YT.Player(mount, {
+          host: "https://www.youtube-nocookie.com",
+          videoId,
+          playerVars: {
+            rel: 0, // 끝난 뒤 추천 영상은 같은 채널 영상만
+            playsinline: 1,
+            modestbranding: 1,
+            start: startAt > 5 ? Math.floor(startAt) : 0, // 이어보기
+          },
+          events: {
+            onStateChange: (e) => {
+              if (!player) return;
+              if (e.data === YT.PlayerState.PLAYING) {
+                stop();
+                timer = setInterval(() => player && tracker.tick(player.getCurrentTime()), 1000);
+              } else if (e.data === YT.PlayerState.PAUSED) {
+                stop();
+                tracker.flush(player.getCurrentTime());
+              } else if (e.data === YT.PlayerState.ENDED) {
+                stop();
+                tracker.flush(player.getCurrentTime());
+                endedRef.current();
+              }
+            },
+          },
+        });
+      })
+      .catch(() => null);
+    return () => {
+      cancelled = true;
+      stop();
+      if (player) {
+        try {
+          tracker.flush(player.getCurrentTime());
+        } catch {
+          // 플레이어가 아직 준비 전이면 무시
+        }
+        player.destroy();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoId]);
+
+  return (
+    <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
+      <div ref={boxRef} className="absolute inset-0 [&>iframe]:h-full [&>iframe]:w-full" />
     </div>
   );
 }

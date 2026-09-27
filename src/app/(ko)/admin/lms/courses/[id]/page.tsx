@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { apiFetch, apiRequest } from "@/lib/api";
-import { formatDuration } from "@/lib/course";
+import { formatDuration, parseDuration, parseYoutubeId } from "@/lib/course";
 import { Markdown } from "@/components/workbook/Markdown";
 import { Badge, Button, Input, Skeleton, Textarea, Toast } from "@/components/ui";
 
@@ -13,13 +13,14 @@ import { Badge, Button, Input, Skeleton, Textarea, Toast } from "@/components/ui
 //   [기본 정보] 제목·소개·공개 상태·가격·수강 기간
 //   [차시 구성] 섹션 → 차시(동영상/텍스트) 편집, 순서 변경, 동영상 업로드
 // 동영상: Cloudflare Stream 직접 업로드(200MB 이하) 또는 Stream 대시보드에서 올린 동영상 ID 붙여넣기.
-//         Stream 설정 전에는 테스트용 직접 주소(https://…mp4)도 쓸 수 있다.
+//         Stream 도입 전 임시로 유튜브 '일부공개' 영상, 테스트용 직접 주소(https://…mp4)도 쓸 수 있다.
 // ─────────────────────────────────────────────────────────────────
 
 interface Video {
-  provider: "stream" | "url";
+  provider: "stream" | "url" | "youtube";
   uid?: string | null;
   url?: string | null;
+  youtubeId?: string | null;
   durationSec?: number | null;
   status?: "uploading" | "ready" | "error" | null;
 }
@@ -253,7 +254,7 @@ export default function AdminCourseEditor() {
         <div className="max-w-4xl space-y-6">
           {streamReady === false && (
             <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Cloudflare Stream이 아직 설정되지 않았어요(서버 환경변수 CF_STREAM_*). 그 전까지는 차시마다 &lsquo;직접 주소&rsquo;로 테스트 영상을 넣을 수 있어요.
+              Cloudflare Stream이 아직 설정되지 않았어요(서버 환경변수 CF_STREAM_*). 그 전까지는 차시마다 &lsquo;YouTube 일부공개(임시)&rsquo;나 &lsquo;직접 주소&rsquo;로 영상을 연결할 수 있어요.
             </div>
           )}
 
@@ -317,6 +318,10 @@ export default function AdminCourseEditor() {
                               Cloudflare Stream
                             </label>
                             <label className="flex items-center gap-2">
+                              <input type="radio" checked={v.provider === "youtube"} onChange={() => updateLesson(si, li, (x) => { x.video = { ...v, provider: "youtube" }; })} />
+                              YouTube 일부공개 (임시)
+                            </label>
+                            <label className="flex items-center gap-2">
                               <input type="radio" checked={v.provider === "url"} onChange={() => updateLesson(si, li, (x) => { x.video = { ...v, provider: "url" }; })} />
                               직접 주소 (테스트용)
                             </label>
@@ -353,6 +358,42 @@ export default function AdminCourseEditor() {
                               {v.uid && streamReady && (
                                 <Button size="sm" variant="secondary" onClick={() => checkStatus(si, li, v.uid!)}>상태 확인</Button>
                               )}
+                            </div>
+                          ) : v.provider === "youtube" ? (
+                            <div className="mt-3">
+                              <div className="grid gap-2 sm:grid-cols-[1fr_140px]">
+                                <input
+                                  value={v.youtubeId ?? ""}
+                                  placeholder="유튜브 주소 붙여넣기 (https://youtu.be/…)"
+                                  onChange={(e) => {
+                                    const raw = e.target.value.trim();
+                                    updateLesson(si, li, (x) => { x.video = { ...v, provider: "youtube", youtubeId: parseYoutubeId(raw) ?? (raw || null) }; });
+                                  }}
+                                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 font-mono text-xs"
+                                />
+                                <input
+                                  key={`${l.key}-yt-dur-${v.durationSec ?? ""}`}
+                                  defaultValue={v.durationSec ? formatDuration(v.durationSec, true) : ""}
+                                  placeholder="길이 예: 10:25"
+                                  onBlur={(e) => {
+                                    const sec = parseDuration(e.target.value);
+                                    updateLesson(si, li, (x) => { x.video = { ...v, provider: "youtube", durationSec: sec }; });
+                                  }}
+                                  className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs"
+                                />
+                              </div>
+                              {v.youtubeId && parseYoutubeId(v.youtubeId) ? (
+                                <div className="mt-2 flex items-center gap-3">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={`https://i.ytimg.com/vi/${v.youtubeId}/mqdefault.jpg`} alt="" className="h-14 w-24 rounded-lg object-cover" />
+                                  <span className="text-xs text-[var(--foreground-muted)]">영상 ID {v.youtubeId} · 길이를 넣어야 90% 시청 시 자동 완료돼요.</span>
+                                </div>
+                              ) : v.youtubeId ? (
+                                <p className="mt-2 text-xs text-[var(--error)]">유튜브 주소를 알아보지 못했어요. 영상의 [공유] 주소를 그대로 붙여넣어 주세요.</p>
+                              ) : null}
+                              <p className="mt-2 text-xs text-amber-700">
+                                유튜브에 <strong>일부공개</strong>로 올려 주세요(비공개는 재생 안 됨). 주소를 아는 사람은 볼 수 있어서 정식 판매 전에 Stream으로 바꾸는 걸 권해요.
+                              </p>
                             </div>
                           ) : (
                             <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_140px]">
