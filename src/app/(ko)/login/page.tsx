@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { Alert, Button, Input } from "@/components/ui";
-import { GoogleIcon } from "@/components/ko/GoogleIcon";
+import { SocialLoginButtons, socialErrorMessage } from "@/components/ko/SocialLoginButtons";
 
 function LoginForm() {
   const router = useRouter();
@@ -17,7 +17,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(oauthError === "google_failed" ? "구글 로그인에 실패했어요. 다시 시도해 주세요." : "");
+  const [error, setError] = useState(socialErrorMessage(oauthError));
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,19 +67,7 @@ function LoginForm() {
             <div className="h-px flex-1 bg-[var(--border)]" />
           </div>
 
-          <Button
-            type="button"
-            variant="secondary"
-            size="lg"
-            className="w-full bg-white text-[var(--foreground)] ring-1 ring-[var(--border)] hover:bg-[var(--surface)]"
-            onClick={() => {
-              window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
-            }}
-            disabled={loading}
-          >
-            <GoogleIcon />
-            구글로 계속하기
-          </Button>
+          <SocialLoginButtons disabled={loading} />
         </div>
 
         <p className="mt-6 text-center text-sm text-[var(--foreground-muted)]">

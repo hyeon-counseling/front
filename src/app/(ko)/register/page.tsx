@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { Alert, Button, Input } from "@/components/ui";
-import { GoogleIcon } from "@/components/ko/GoogleIcon";
+import { SocialLoginButtons } from "@/components/ko/SocialLoginButtons";
 import { AgreementChecks, ProfileFields, type Gender } from "@/components/ko/ProfileFields";
 
 export default function RegisterPage() {
@@ -97,19 +97,7 @@ export default function RegisterPage() {
             <div className="h-px flex-1 bg-[var(--border)]" />
           </div>
 
-          <Button
-            type="button"
-            variant="secondary"
-            size="lg"
-            className="w-full bg-white text-[var(--foreground)] ring-1 ring-[var(--border)] hover:bg-[var(--surface)]"
-            onClick={() => {
-              window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
-            }}
-            disabled={loading}
-          >
-            <GoogleIcon />
-            구글로 계속하기
-          </Button>
+          <SocialLoginButtons disabled={loading} />
         </div>
 
         <p className="mt-6 text-center text-sm text-[var(--foreground-muted)]">
