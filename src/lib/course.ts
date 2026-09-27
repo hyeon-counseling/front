@@ -12,6 +12,8 @@ export interface CourseListItem {
   accessDays: number | null;
   lessonCount: number;
   totalMinutes: number;
+  visibility?: "public" | "private";
+  seriesLabel?: string;
 }
 
 export interface CourseEnrollmentSummary {
@@ -26,11 +28,45 @@ export interface CourseEnrollmentSummary {
   resume: { key: string; title: string } | null;
 }
 
+export type LessonType = "video" | "text" | "audio" | "quiz" | "cards";
+
+export const LESSON_TYPE_LABEL: Record<LessonType, string> = {
+  video: "영상",
+  text: "글",
+  audio: "오디오",
+  quiz: "퀴즈",
+  cards: "카드",
+};
+
+/** 회원에게 오는 퀴즈 — 정답·해설 없음 */
+export interface PublicQuiz {
+  passScore: number;
+  questions: { key: string; kind: "choice" | "ox" | "essay"; stem: string; options: string[]; multiple: boolean }[];
+}
+
+export interface QuizResult {
+  score: number;
+  correctCount: number;
+  gradable: number;
+  passed: boolean;
+  best: number;
+  saved: boolean;
+  progressPct: number | null;
+  courseCompleted: boolean;
+  results: { key: string; kind: string; correct: boolean | null; chosen: number[]; answers: number[]; ground: string; where: string; explanation: string; modelAnswer: string }[];
+}
+
+export interface LessonCard {
+  front: string;
+  back: string;
+  group?: string;
+}
+
 export interface CurriculumLesson {
   key: string;
   title: string;
   summary: string;
-  type: "video" | "text";
+  type: LessonType;
   isPreview: boolean;
   durationSec: number | null;
   completed: boolean;
@@ -51,14 +87,17 @@ export interface LessonResponse {
     key: string;
     title: string;
     summary: string;
-    type: "video" | "text";
+    type: LessonType;
     body: string;
     isPreview: boolean;
     durationSec: number | null;
     hasVideo: boolean;
+    hasAudio?: boolean;
+    quiz?: PublicQuiz | null;
+    cards?: LessonCard[] | null;
   };
   position: { index: number; total: number };
-  progress: { positionSec: number; completed: boolean };
+  progress: { positionSec: number; completed: boolean; quizBest?: number | null; quizAttempts?: number; cardsKnown?: number[] };
   enrolled: boolean;
   prev: { key: string; title: string; locked: boolean } | null;
   next: { key: string; title: string; locked: boolean } | null;
@@ -67,7 +106,8 @@ export interface LessonResponse {
 export type Playback =
   | { kind: "url"; url: string }
   | { kind: "stream"; iframeUrl: string; expiresAt: string }
-  | { kind: "youtube"; videoId: string };
+  | { kind: "youtube"; videoId: string }
+  | { kind: "audio"; url: string };
 
 /** 유튜브 주소(watch·youtu.be·shorts·embed) 또는 ID → 11자리 영상 ID. 못 찾으면 null */
 export function parseYoutubeId(input: string): string | null {

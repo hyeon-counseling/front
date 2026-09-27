@@ -200,3 +200,21 @@ body {
 .prose-ko table { width: 100%; border-collapse: collapse; margin: 1.2rem 0; font-size: 0.95rem; }
 .prose-ko th, .prose-ko td { border: 1px solid var(--border); padding: 0.5rem 0.7rem; text-align: left; }
 .prose-ko th { background: var(--surface); }
+
+/* 오디오 플레이어 구간 이동 막대 손잡이 */
+.audio-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.3);
+}
+.audio-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 9999px;
+  background: #fff;
+}
