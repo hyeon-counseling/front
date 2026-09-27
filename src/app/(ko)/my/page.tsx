@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
 import type { MyWorkbook } from "@/lib/workbook";
 import type { MyCourse } from "@/lib/course";
+import type { MyTestItem } from "@/lib/psychTest";
 import { Skeleton } from "@/components/ui";
 
 // ─────────────────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ export default function MyPage() {
   const { user, logout, loading } = useAuth();
   const [workbooks, setWorkbooks] = useState<MyWorkbook[] | null>(null);
   const [courses, setCourses] = useState<MyCourse[] | null>(null);
+  const [tests, setTests] = useState<MyTestItem[] | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -26,6 +28,7 @@ export default function MyPage() {
     }
     apiRequest<MyWorkbook[]>("/api/my/workbooks").then((res) => setWorkbooks(res.ok && res.data ? res.data : []));
     apiRequest<MyCourse[]>("/api/my/courses").then((res) => setCourses(res.ok && res.data ? res.data : []));
+    apiRequest<MyTestItem[]>("/api/my/tests").then((res) => setTests(res.ok && res.data ? res.data : []));
   }, [loading, user, router]);
 
   if (loading || !user) return null;
@@ -131,6 +134,41 @@ export default function MyPage() {
                 </div>
               ))}
             </div>
+          )}
+        </section>
+
+        {/* 심리검사 기록 */}
+        <section className="mt-10">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-[var(--foreground)]">내 심리검사 기록</h2>
+            <Link href="/tests" className="text-sm font-semibold text-[var(--brand)]">검사 하러 가기 →</Link>
+          </div>
+          {tests === null ? (
+            <Skeleton className="h-20" />
+          ) : tests.length === 0 ? (
+            <div className="card p-6">
+              <p className="font-semibold text-[var(--foreground)]">아직 해 본 검사가 없어요</p>
+              <p className="mt-1 text-sm text-[var(--foreground-muted)]">3분이면 지금의 마음을 살펴볼 수 있어요.</p>
+            </div>
+          ) : (
+            <ul className="card divide-y divide-[var(--border-light)] overflow-hidden">
+              {tests.slice(0, 8).map((t) => (
+                <li key={t.id}>
+                  <Link href={`/tests/result/${t.id}`} className="flex items-center gap-3 px-5 py-4 hover:bg-[var(--surface)]">
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold text-[var(--foreground)]">{t.testTitle}</span>
+                      <span className="block text-xs text-[var(--foreground-subtle)]">{new Date(t.createdAt).toLocaleDateString("ko-KR")}</span>
+                    </span>
+                    <span className="text-right text-sm">
+                      <span className="block font-bold text-[var(--foreground)]">{t.bandLabel}</span>
+                      <span className="block text-xs text-[var(--foreground-subtle)]">
+                        {t.scaleScores.length ? t.scaleScores.map((s) => `${s.label} ${s.score}`).join(" · ") : `${Number.isInteger(t.score) ? t.score : t.score.toFixed(2)} / ${t.maxScore}`}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
 

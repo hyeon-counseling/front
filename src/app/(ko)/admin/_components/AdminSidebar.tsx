@@ -75,6 +75,8 @@ export default function AdminSidebar() {
 
         <SectionLabel>운영</SectionLabel>
         <NavLink item={{ label: "결제·주문", href: "/admin/payments" }} />
+        <NavLink item={{ label: "심리검사", href: "/admin/tests" }} />
+        <NavLink item={{ label: "검사 결과", href: "/admin/test-results" }} />
         <NavLink item={{ label: "회원", href: "/admin/users" }} />
         <NavLink item={{ label: "콘텐츠(아티클)", href: "/admin/common/contents" }} />
 

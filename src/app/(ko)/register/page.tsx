@@ -5,12 +5,16 @@ import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { Alert, Button, Input } from "@/components/ui";
 import { GoogleIcon } from "@/components/ko/GoogleIcon";
+import { AgreementChecks, ProfileFields, type Gender } from "@/components/ko/ProfileFields";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [agree, setAgree] = useState(false);
+  const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState<Gender | "">("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -18,13 +22,17 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!agree) {
-      setError("이용약관과 개인정보처리방침에 동의해 주세요.");
+    if (!birthDate || !gender) {
+      setError("생년월일과 성별을 입력해 주세요.");
+      return;
+    }
+    if (!agreeTerms || !agreePrivacy) {
+      setError("필수 약관에 동의해 주세요.");
       return;
     }
     setLoading(true);
     try {
-      await apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify({ name, email, password }) });
+      await apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify({ name, email, password, birthDate, gender, agreeTerms, agreePrivacy }) });
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "회원가입에 실패했어요.");
@@ -76,19 +84,8 @@ export default function RegisterPage() {
               autoComplete="new-password"
               hint="8자 이상, 영문과 숫자를 함께 써 주세요."
             />
-            <label className="flex cursor-pointer items-start gap-2.5 text-sm text-[var(--foreground-muted)]">
-              <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 accent-[var(--brand)]" />
-              <span>
-                <Link href="/terms" className="link-underline text-[var(--foreground)]" target="_blank">
-                  이용약관
-                </Link>
-                과{" "}
-                <Link href="/privacy" className="link-underline text-[var(--foreground)]" target="_blank">
-                  개인정보처리방침
-                </Link>
-                에 동의합니다.
-              </span>
-            </label>
+            <ProfileFields birthDate={birthDate} gender={gender} onBirthDate={setBirthDate} onGender={setGender} />
+            <AgreementChecks terms={agreeTerms} privacy={agreePrivacy} onTerms={setAgreeTerms} onPrivacy={setAgreePrivacy} />
             <Button type="submit" loading={loading} className="w-full" size="lg">
               가입하기
             </Button>

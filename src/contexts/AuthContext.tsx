@@ -26,7 +26,12 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'counselor' | 'admin';
+  // 추가 회원정보 (심리검사 결과 해석·통계용)
+  birthDate?: string | null;
+  gender?: 'male' | 'female' | 'other' | null;
+  profileComplete?: boolean;   // 생년월일·성별 입력 여부 (없으면 추가 정보 입력 화면으로)
+  sensitiveAgreed?: boolean;   // 심리검사 응답(민감정보) 수집·이용 동의 여부
 }
 
 // Context가 제공하는 값들의 타입 정의
@@ -35,6 +40,7 @@ interface AuthContextType {
   token: string | null;
   login: (token: string, user: AuthUser) => void;
   logout: () => void;
+  updateUser: (patch: Partial<AuthUser>) => void; // 추가 정보 입력·동의 후 저장된 사용자 정보 갱신
   loading: boolean; // 초기 localStorage 복원 완료 전 true
 }
 
@@ -83,8 +89,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user');
   }, []);
 
+  const updateUser = useCallback((patch: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      localStorage.setItem('user', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

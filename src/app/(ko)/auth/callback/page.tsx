@@ -47,8 +47,8 @@ function CallbackHandler() {
       // 전역 로그인 상태 + localStorage에 저장
       login(token, user);
 
-      // 마이페이지로 이동
-      router.replace("/my");
+      // 생년월일·성별이 없으면(구글 첫 가입 등) 추가 정보 입력 화면으로
+      router.replace(user.profileComplete === false ? "/onboarding?next=/my" : "/my");
     } catch {
       setError(
         "사용자 정보를 처리하는 중 오류가 발생했습니다. 다시 시도해 주세요."

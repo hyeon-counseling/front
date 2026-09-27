@@ -27,7 +27,9 @@ function LoginForm() {
     try {
       const data = await apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
       login(data.token, data.user);
-      router.push(next.startsWith("/") ? next : "/my");
+      const dest = next.startsWith("/") ? next : "/my";
+      // 추가 정보가 없는 기존 회원은 입력 화면을 먼저 거친다
+      router.push(data.user?.profileComplete === false ? `/onboarding?next=${encodeURIComponent(dest)}` : dest);
     } catch (err) {
       setError(err instanceof Error ? err.message : "로그인에 실패했어요.");
     } finally {
