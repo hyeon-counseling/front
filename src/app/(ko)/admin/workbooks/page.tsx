@@ -21,7 +21,7 @@ interface Row {
 }
 
 const STATUS: Record<Row["status"], { label: string; tone: "brand" | "neutral" | "warning" }> = {
-  published: { label: "공개", tone: "brand" },
+  published: { label: "운영 중", tone: "brand" },
   draft: { label: "작성 중", tone: "warning" },
   archived: { label: "보관", tone: "neutral" },
 };

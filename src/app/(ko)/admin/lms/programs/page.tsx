@@ -20,7 +20,7 @@ interface Row {
 }
 
 const STATUS: Record<Row["status"], { label: string; tone: "brand" | "neutral" | "warning" }> = {
-  published: { label: "공개", tone: "brand" },
+  published: { label: "운영 중", tone: "brand" },
   draft: { label: "작성 중", tone: "warning" },
   archived: { label: "보관", tone: "neutral" },
 };
@@ -78,7 +78,7 @@ export default function AdminProgramsPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-lg font-bold">{r.title}</h2>
                   <Badge tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Badge>
-                  {r.visibility === "private" && <Badge>비공개</Badge>}
+                  {r.visibility === "private" && <Badge>비공개 · 초대 전용</Badge>}
                 </div>
                 <p className="mt-1 text-sm text-[var(--foreground-muted)]">
                   /programs/{r.slug} · 과목 {r.courseCount}개 · 가격 {price(r)}

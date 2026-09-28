@@ -12,6 +12,7 @@ import { Button, cx } from "@/components/ui";
  * - 목록 보기: 앞·뒷면을 한 번에 펼쳐 보기
  * - 아는 카드 번호를 저장(수강생만), 모두 알면 차시 완료
  * 키보드: 스페이스/엔터 뒤집기, ← 다시 볼게요, → 알아요
+ * 다음 카드로 넘어가면 카드 번호·카드가 보이는 위치로 화면을 올린다 (긴 뒷면을 읽느라 내려가 있을 때)
  */
 type Mode = "deck" | "list";
 
@@ -35,6 +36,8 @@ export function CardsLesson({
   const [pos, setPos] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const deckTop = useRef<HTMLDivElement>(null);
+  const mounted = useRef(false);
   const pending = useRef<number[] | null>(null);
 
   // 이번 회차에 볼 카드 (모르는 카드만 보기면 시작 시점 기준으로 고정)
@@ -109,6 +112,21 @@ export function CardsLesson({
     });
   };
 
+  // 다음 카드(또는 다시 시작)로 바뀌면: 카드 번호 줄이 화면 위로 가려졌거나 너무 아래에 있을 때만 그 위치로 올린다
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    const el = deckTop.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top;
+    if (top < 80 || top > window.innerHeight * 0.5) {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    }
+  }, [pos, deck]);
+
   // 키보드
   useEffect(() => {
     if (mode !== "deck" || finished) return;
@@ -161,7 +179,7 @@ export function CardsLesson({
       {!enrolled && <p className="mt-3 text-sm text-[var(--foreground-muted)]">수강 신청하면 &lsquo;알아요&rsquo; 표시가 저장돼요.</p>}
 
       {mode === "deck" ? (
-        <div className="mt-6">
+        <div ref={deckTop} className="mt-6 scroll-mt-24">
           {finished || !card ? (
             <div className="rounded-2xl bg-[var(--surface)] px-6 py-12 text-center">
               <p className="text-3xl">{unknownLeft === 0 ? "🎉" : "👏"}</p>

@@ -207,11 +207,15 @@ function NavPanel({
   const isOpen = (key: string) => manual[key] ?? key === currentGroup;
   const toggle = (key: string) => setManual((m) => ({ ...m, [key]: !isOpen(key) }));
 
-  // 지금 항목이 목차 안에서 보이도록 스크롤
+  // 지금 항목이 목차 안에서 보이도록 — 목차 영역만 스크롤한다
+  // (scrollIntoView는 본문 페이지까지 움직여서, 저장할 때마다 화면이 맨 위로 튀었다)
   const listRef = useRef<HTMLDivElement>(null);
   const scrollToCurrent = useCallback(() => {
-    const el = listRef.current?.querySelector<HTMLElement>('[data-current="true"]');
-    el?.scrollIntoView({ block: "center" });
+    const list = listRef.current;
+    const el = list?.querySelector<HTMLElement>('[data-current="true"]');
+    if (!list || !el) return;
+    const offset = el.getBoundingClientRect().top - list.getBoundingClientRect().top;
+    list.scrollTop += offset - (list.clientHeight - el.offsetHeight) / 2;
   }, []);
   useEffect(() => {
     scrollToCurrent();

@@ -30,6 +30,10 @@ export interface CourseEnrollmentSummary {
   viaProgram?: boolean;
 }
 
+/** 운영 상태 이름 — '공개 범위(공개/비공개)'와 헷갈리지 않게 '운영 중'이라고 부른다 */
+export const STATUS_LABEL = { draft: "작성 중", published: "운영 중", archived: "보관" } as const;
+export const STATUS_TONE = { draft: "warning", published: "brand", archived: "neutral" } as const;
+
 export type LessonType = "video" | "text" | "audio" | "quiz" | "cards";
 
 export const LESSON_TYPE_LABEL: Record<LessonType, string> = {
