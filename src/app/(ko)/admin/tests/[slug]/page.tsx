@@ -114,7 +114,7 @@ export default function AdminTestEditor() {
         <div className="max-w-3xl space-y-4">
           <p className="text-sm text-[var(--foreground-muted)]">
             결과 화면 아래에 보여줄 추천이에요. 맨 위 추천이 &lsquo;맞춤 추천&rsquo;으로 강조돼요. 결과 구간을 하나도 고르지 않으면 모든 결과에 보여요.
-            주소는 <code>https://…</code>(외부) 또는 <code>/workbooks/…</code>(사이트 안)로 적어 주세요.
+            주소는 <code>https://…</code>(외부) 또는 <code>/courses/…</code>(사이트 안)로 적어 주세요.
           </p>
           {doc.recommendations.map((r, i) => (
             <div key={i} className="card space-y-3 p-5">
@@ -131,7 +131,7 @@ export default function AdminTestEditor() {
                 <Input id={`t${i}`} label="제목" value={r.title} onChange={(e) => update((d) => { d.recommendations[i].title = e.target.value; })} />
               </div>
               <Input id={`d${i}`} label="설명" value={r.desc} onChange={(e) => update((d) => { d.recommendations[i].desc = e.target.value; })} />
-              <Input id={`u${i}`} label="링크 주소" value={r.url} placeholder="https://… 또는 /workbooks/anxiety-cbt-60" onChange={(e) => update((d) => { d.recommendations[i].url = e.target.value.trim(); })} />
+              <Input id={`u${i}`} label="링크 주소" value={r.url} placeholder="https://… 또는 /courses/anxiety-cbt-60" onChange={(e) => update((d) => { d.recommendations[i].url = e.target.value.trim(); })} />
               <div className="grid gap-3 sm:grid-cols-2">
                 <Input id={`g${i}`} label="작은 라벨 (선택)" value={r.tag ?? ""} placeholder="예: 무료 · 4주 과정" onChange={(e) => update((d) => { d.recommendations[i].tag = e.target.value; })} />
                 <Input id={`c${i}`} label="버튼 문구" value={r.cta ?? ""} onChange={(e) => update((d) => { d.recommendations[i].cta = e.target.value; })} />

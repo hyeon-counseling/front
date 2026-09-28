@@ -4,7 +4,7 @@ import { apiRequest } from "./api";
 export type ItemType = "course" | "workbook" | "program";
 
 /** 상품 종류 이름 — 결제·주문·쿠폰 화면 공통 */
-export const ITEM_TYPE_LABEL: Record<ItemType, string> = { course: "강의", workbook: "워크북", program: "과정" };
+export const ITEM_TYPE_LABEL: Record<ItemType, string> = { course: "강의", workbook: "워크북", program: "과정" }; // workbook: 예전 주문·쿠폰 표시용
 
 export interface OrderSummary {
   orderId: string;

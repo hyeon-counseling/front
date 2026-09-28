@@ -117,7 +117,7 @@ export function StampCard() {
                 <Link href={c.href} className="min-w-0 truncate hover:underline">{c.title}</Link>
                 <span className="shrink-0 text-[var(--foreground-muted)]">
                   {c.attendedDays}일{c.periodDays ? ` / ${c.periodDays}일` : ""}
-                  {c.finished && <span className="ml-2 font-semibold text-[var(--brand)]">{c.type === "workbook" ? "완주" : "수료"}</span>}
+                  {c.finished && <span className="ml-2 font-semibold text-[var(--brand)]">수료</span>}
                 </span>
               </li>
             ))}
