@@ -12,6 +12,9 @@ export interface OrderSummary {
   itemSlug: string;
   itemPath: string;
   amount: number;
+  originalAmount?: number;
+  discountAmount?: number;
+  coupon?: { code: string } | null;
   currency: string;
   createdAt: string;
   paidAt: string | null;
@@ -28,6 +31,7 @@ export const METHOD_LABEL: Record<string, string> = {
   transfer: "계좌이체",
   easy: "간편결제",
   simulator: "관리자 시뮬레이터",
+  coupon: "쿠폰(0원)",
 };
 
 export const ORDER_STATUS_LABEL: Record<OrderSummary["status"], string> = {
@@ -53,4 +57,43 @@ export async function startPurchase(itemType: ItemType, slug: string): Promise<{
 
 export function won(n: number | null | undefined): string {
   return typeof n === "number" ? `${n.toLocaleString("ko-KR")}원` : "";
+}
+
+// ── 쿠폰 ──
+export interface CouponView {
+  id: string;
+  code: string;
+  name: string;
+  discountType: "percent" | "amount";
+  discountValue: number;
+  maxDiscount: number | null;
+  minAmount: number;
+  itemTypes: ItemType[];
+  validUntil: string | null;
+  personal: boolean;
+}
+
+export interface OrderCoupon extends CouponView {
+  usable: boolean;
+  discount: number;
+  reason: string | null;
+}
+
+export interface MyCoupon extends CouponView {
+  state: "available" | "used" | "expired" | "disabled";
+}
+
+/** "10% 할인 (최대 5,000원)" · "5,000원 할인" */
+export function couponBenefit(c: Pick<CouponView, "discountType" | "discountValue" | "maxDiscount">): string {
+  if (c.discountType === "amount") return `${won(c.discountValue)} 할인`;
+  return `${c.discountValue}% 할인${c.maxDiscount ? ` (최대 ${won(c.maxDiscount)})` : ""}`;
+}
+
+/** 쿠폰 조건 한 줄 — 대상·최소 금액·기한 */
+export function couponConditions(c: Pick<CouponView, "itemTypes" | "minAmount" | "validUntil">): string {
+  const parts: string[] = [];
+  if (c.itemTypes.length === 1) parts.push(c.itemTypes[0] === "workbook" ? "워크북 전용" : "강의 전용");
+  if (c.minAmount) parts.push(`${won(c.minAmount)} 이상`);
+  if (c.validUntil) parts.push(`${new Date(c.validUntil).toLocaleDateString("ko-KR")}까지`);
+  return parts.join(" · ");
 }

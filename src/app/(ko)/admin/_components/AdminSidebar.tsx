@@ -72,9 +72,11 @@ export default function AdminSidebar() {
         <SectionLabel>학습</SectionLabel>
         <NavLink item={{ label: "강의 (LMS)", href: "/admin/lms/courses" }} />
         <NavLink item={{ label: "워크북", href: "/admin/workbooks" }} />
+        <NavLink item={{ label: "질문 답변", href: "/admin/questions" }} />
 
         <SectionLabel>운영</SectionLabel>
         <NavLink item={{ label: "결제·주문", href: "/admin/payments" }} />
+        <NavLink item={{ label: "쿠폰", href: "/admin/coupons" }} />
         <NavLink item={{ label: "심리검사", href: "/admin/tests" }} />
         <NavLink item={{ label: "검사 결과", href: "/admin/test-results" }} />
         <NavLink item={{ label: "회원", href: "/admin/users" }} />

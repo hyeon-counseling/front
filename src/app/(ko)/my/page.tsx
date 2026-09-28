@@ -9,6 +9,7 @@ import type { MyWorkbook } from "@/lib/workbook";
 import type { MyCourse } from "@/lib/course";
 import type { MyTestItem } from "@/lib/psychTest";
 import { Skeleton } from "@/components/ui";
+import { StampCard } from "@/components/my/StampCard";
 
 // ─────────────────────────────────────────────────────────────────
 // 내 학습(마이페이지) — 진행 중인 워크북(이어하기) · 수강 중인 강의(이어보기) · 주문 내역
@@ -39,6 +40,8 @@ export default function MyPage() {
         <p className="mb-3"><span className="eyebrow">내 학습</span></p>
         <h1 className="font-display text-3xl text-[var(--foreground)] sm:text-4xl">{user.name}님, 오늘도 10분.</h1>
         <p className="mt-2 text-sm text-[var(--foreground-muted)]">{user.email}</p>
+
+        <StampCard />
 
         {/* 워크북 */}
         <section className="mt-10">
@@ -173,10 +176,18 @@ export default function MyPage() {
         </section>
 
         {/* 주문 */}
-        <section className="mt-10">
+        <section className="mt-10 grid gap-4 sm:grid-cols-3">
           <Link href="/my/orders" className="card card-hover block p-6">
             <h2 className="text-lg font-bold text-[var(--foreground)]">주문 내역</h2>
             <p className="mt-1 text-sm text-[var(--foreground-muted)]">강의·워크북 결제 내역과 구매한 전자책</p>
+          </Link>
+          <Link href="/my/coupons" className="card card-hover block p-6">
+            <h2 className="text-lg font-bold text-[var(--foreground)]">쿠폰함</h2>
+            <p className="mt-1 text-sm text-[var(--foreground-muted)]">받은 할인 쿠폰과 사용 내역</p>
+          </Link>
+          <Link href="/my/certificates" className="card card-hover block p-6">
+            <h2 className="text-lg font-bold text-[var(--foreground)]">수료증</h2>
+            <p className="mt-1 text-sm text-[var(--foreground-muted)]">수료·완주하면 자동 발급</p>
           </Link>
         </section>
 

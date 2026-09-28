@@ -11,6 +11,7 @@ import { LessonPlayer } from "@/components/course/LessonPlayer";
 import { AudioPlayer } from "@/components/course/AudioPlayer";
 import { QuizLesson } from "@/components/course/QuizLesson";
 import { CardsLesson } from "@/components/course/CardsLesson";
+import { LessonQA } from "@/components/course/LessonQA";
 import { LearnShell, type LearnNavGroup } from "@/components/learn/LearnShell";
 import { Skeleton } from "@/components/ui";
 
@@ -269,6 +270,8 @@ export default function LearnPage() {
               ))}
           </div>
         </div>
+
+        {d.enrolled && <LessonQA key={lessonKey} slug={slug} lessonKey={lessonKey} />}
       </div>
 
     </div>

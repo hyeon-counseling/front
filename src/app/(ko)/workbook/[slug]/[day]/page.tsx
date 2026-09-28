@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
+import { couponBenefit, type CouponView } from "@/lib/payment";
 import type { DayResponse, WorkbookDetail } from "@/lib/workbook";
 import { LearnShell, type LearnNavGroup } from "@/components/learn/LearnShell";
 import { Callout, Markdown } from "@/components/workbook/Markdown";
@@ -19,6 +20,7 @@ export default function WorkbookDayPage() {
   const [result, setResult] = useState<{ day: string; data?: DayResponse; locked?: boolean; error?: string } | null>(null);
   const [completedMap, setCompletedMap] = useState<Record<string, boolean>>({});
   const [completing, setCompleting] = useState(false);
+  const [reward, setReward] = useState<CouponView | null>(null); // 95% 완주 쿠폰
   const [detail, setDetail] = useState<WorkbookDetail | null>(null);
 
   // 목차용 커리큘럼 (완료·잠금 표시) — 워크북이 바뀔 때만 불러온다
@@ -78,8 +80,34 @@ export default function WorkbookDayPage() {
       body: JSON.stringify({ completed: !completed }),
     });
     setCompleting(false);
-    if (res.ok) setCompleted(!completed);
+    if (res.ok) {
+      setCompleted(!completed);
+      const got = (res.data as { reward?: { coupon: CouponView } | null } | null)?.reward?.coupon;
+      if (got) setReward(got);
+    }
   };
+
+  const rewardModal = reward && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true" aria-label="완주 축하 쿠폰">
+      <div className="w-full max-w-sm rounded-3xl bg-white p-7 text-center shadow-xl">
+        <p className="text-5xl">🎉</p>
+        <h2 className="mt-4 text-xl font-bold text-[var(--foreground)]">95% 완주를 축하해요!</h2>
+        <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
+          꾸준히 해낸 나에게 주는 선물이에요.
+          <br />
+          다음 워크북을 <strong className="text-[var(--brand)]">{couponBenefit(reward)}</strong>받을 수 있는 쿠폰을 드려요.
+        </p>
+        <div className="mt-5 rounded-2xl border border-dashed border-[var(--brand)] bg-[var(--brand-light)] px-4 py-3">
+          <p className="font-mono text-sm font-bold text-[var(--brand-ink)]">{reward.code}</p>
+          {reward.validUntil && <p className="mt-0.5 text-xs text-[var(--foreground-muted)]">{new Date(reward.validUntil).toLocaleDateString("ko-KR")}까지</p>}
+        </div>
+        <div className="mt-6 flex gap-2">
+          <button onClick={() => setReward(null)} className="h-11 flex-1 cursor-pointer rounded-xl bg-[var(--surface)] text-sm font-semibold">닫기</button>
+          <Link href="/my/coupons" className="inline-flex h-11 flex-1 items-center justify-center rounded-xl bg-[var(--brand)] text-sm font-semibold text-white">쿠폰함 보기</Link>
+        </div>
+      </div>
+    </div>
+  );
 
   const shell = (content: ReactNode) => (
     <LearnShell
@@ -92,6 +120,7 @@ export default function WorkbookDayPage() {
       nextHref={data?.next && !data.next.locked ? `/workbook/${slug}/${data.next.key}` : null}
     >
       {content}
+      {rewardModal}
     </LearnShell>
   );
 

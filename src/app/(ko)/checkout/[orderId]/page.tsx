@@ -7,10 +7,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
 import { METHOD_LABEL, won, type CheckoutOrder } from "@/lib/payment";
 import { Skeleton } from "@/components/ui";
+import { CouponPicker } from "@/components/checkout/CouponPicker";
 
 /**
  * 결제 페이지 — 토스 결제위젯이 들어갈 자리.
  * 지금(mock)은 결제수단 선택 → [결제하기] → 서버가 결제키 발급 → 토스와 같은 successUrl 로 이동.
+ * 쿠폰을 적용하면 서버가 금액을 다시 계산하고, 0원이 되면 [무료로 받기] → success?free=1 에서 완료 처리.
  */
 export default function CheckoutPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -51,6 +53,11 @@ export default function CheckoutPage() {
     router.push(`/checkout/success?${q}`);
   };
 
+  const claimFree = () => {
+    if (!order) return;
+    router.push(`/checkout/success?${new URLSearchParams({ free: "1", orderId: order.orderId })}`);
+  };
+
   const simulateFail = () => {
     if (!order) return;
     const q = new URLSearchParams({ code: "PAY_PROCESS_CANCELED", message: "결제를 취소했어요.", orderId: order.orderId });
@@ -89,6 +96,7 @@ export default function CheckoutPage() {
   }
 
   const isMock = order.checkout.mode === "mock";
+  const free = order.amount === 0 && !!order.coupon;
   const methods = order.checkout.mode === "mock" ? order.checkout.methods : [];
 
   return (
@@ -105,6 +113,18 @@ export default function CheckoutPage() {
         <div className="card mt-6 p-6">
           <p className="text-xs font-semibold text-[var(--foreground-subtle)]">{order.itemType === "course" ? "강의" : "셀프 워크북 · 전체 이용권"}</p>
           <p className="mt-1 text-lg font-bold text-[var(--foreground)]">{order.itemTitle}</p>
+          {(order.discountAmount ?? 0) > 0 && (
+            <div className="mt-5 space-y-1.5 border-t border-[var(--border-light)] pt-4 text-sm">
+              <div className="flex justify-between text-[var(--foreground-muted)]">
+                <span>상품 금액</span>
+                <span>{won(order.originalAmount)}</span>
+              </div>
+              <div className="flex justify-between font-semibold text-[var(--brand)]">
+                <span>쿠폰 할인</span>
+                <span>-{won(order.discountAmount)}</span>
+              </div>
+            </div>
+          )}
           <div className="mt-5 flex items-center justify-between border-t border-[var(--border-light)] pt-4">
             <span className="text-[var(--foreground-muted)]">결제 금액</span>
             <span className="text-2xl font-extrabold text-[var(--foreground)]">{won(order.amount)}</span>
@@ -112,7 +132,9 @@ export default function CheckoutPage() {
           <p className="mt-2 text-right text-xs text-[var(--foreground-subtle)]">주문번호 {order.orderId}</p>
         </div>
 
-        {isMock ? (
+        <CouponPicker order={order} onChange={setOrder} />
+
+        {free ? null : isMock ? (
           <>
             <h2 className="mt-8 text-sm font-bold text-[var(--foreground)]">결제 수단</h2>
             <div className="mt-3 grid grid-cols-3 gap-2">
@@ -144,14 +166,14 @@ export default function CheckoutPage() {
         {error && <p className="mt-4 text-sm text-[var(--error)]">{error}</p>}
 
         <button
-          onClick={pay}
-          disabled={!agree || busy || !isMock}
+          onClick={free ? claimFree : pay}
+          disabled={!agree || busy || (!isMock && !free)}
           className="mt-6 flex h-14 w-full cursor-pointer items-center justify-center rounded-xl bg-[var(--brand)] text-lg font-bold text-white hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {busy ? "결제 중…" : `${won(order.amount)} 결제하기`}
+          {busy ? "결제 중…" : free ? "쿠폰으로 무료로 받기" : `${won(order.amount)} 결제하기`}
         </button>
 
-        {isMock && (
+        {isMock && !free && (
           <button onClick={simulateFail} className="mt-3 w-full cursor-pointer text-center text-sm text-[var(--foreground-subtle)] hover:text-[var(--foreground)]">
             실패로 처리해 보기 (테스트)
           </button>
