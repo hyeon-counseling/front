@@ -6,7 +6,7 @@ export interface AttendanceSettings {
 }
 
 export interface AttendanceCourse {
-  type: "course" | "workbook";
+  type: "course";
   title: string;
   href: string;
   attendedDays: number;

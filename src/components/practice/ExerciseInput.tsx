@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * 워크북 문항 입력 — 6종 (text · scale · choice · form · table · assessment)
- * 값 형태는 백엔드 workbookService.sanitizeValue 와 동일하게 맞춘다.
+ * 쓰기 실습 문항 입력 — 6종 (text · scale · choice · form · table · assessment)
+ * 값 형태는 백엔드 practiceService.sanitizeValue 와 동일하게 맞춘다.
  *   text       string
  *   scale      number | null
  *   choice     { selected: string[], other?: string }
