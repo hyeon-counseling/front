@@ -9,7 +9,7 @@ import { Badge, Button, Input, Skeleton, Toast } from "@/components/ui";
 interface Row {
   _id: string;
   user: { _id: string; name: string; email: string } | null;
-  source: "payment" | "manual" | "free";
+  source: "payment" | "manual" | "free" | "program";
   status: "active" | "revoked";
   active: boolean;
   startedAt: string;
@@ -20,7 +20,7 @@ interface Row {
   lastActivityAt: string | null;
 }
 
-const SOURCE: Record<Row["source"], string> = { payment: "결제", manual: "관리자 부여", free: "무료" };
+const SOURCE: Record<Row["source"], string> = { payment: "결제", manual: "관리자 부여", free: "무료", program: "과정으로 받음" };
 
 // 관리자 — 강의 수강생·진도·수강권 부여/회수
 export default function CourseEnrollmentsPage() {

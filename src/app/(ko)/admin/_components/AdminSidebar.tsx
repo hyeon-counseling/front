@@ -71,6 +71,7 @@ export default function AdminSidebar() {
 
         <SectionLabel>학습</SectionLabel>
         <NavLink item={{ label: "강의 (LMS)", href: "/admin/lms/courses" }} />
+        <NavLink item={{ label: "과정 (과목 묶음)", href: "/admin/lms/programs" }} />
         <NavLink item={{ label: "워크북", href: "/admin/workbooks" }} />
         <NavLink item={{ label: "질문 답변", href: "/admin/questions" }} />
 

@@ -138,6 +138,7 @@ export default function CourseDetailPage() {
                   </Link>
                 )}
                 <p className="mt-3 text-center text-xs text-[var(--foreground-subtle)]">
+                  {e!.viaProgram ? "과정 수강권으로 듣고 있어요 · " : ""}
                   {e!.expiresAt ? `${new Date(e!.expiresAt).toLocaleDateString("ko-KR")}까지 수강할 수 있어요` : "기간 제한 없이 수강할 수 있어요"}
                 </p>
               </>
@@ -169,6 +170,21 @@ export default function CourseDetailPage() {
               </>
             )}
           </div>
+          {!!course.programs?.length && (
+            <div className="card mt-4 p-5">
+              <p className="text-sm font-semibold text-[var(--foreground-muted)]">이 과목이 들어 있는 과정</p>
+              <ul className="mt-2 space-y-1">
+                {course.programs.map((p) => (
+                  <li key={p.slug}>
+                    <Link href={`/programs/${p.slug}`} className="flex items-center justify-between gap-2 rounded-lg py-1.5 text-[0.95rem] font-semibold text-[var(--foreground)] hover:text-[var(--brand)]">
+                      <span className="min-w-0 truncate">{p.title}</span>
+                      <span className="shrink-0 text-xs font-semibold text-[var(--brand)]">{p.enrolled ? "수강 중" : "과정 보기 →"}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </aside>
       </div>
     </div>

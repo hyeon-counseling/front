@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, apiRequest } from "@/lib/api";
-import { couponBenefit, won } from "@/lib/payment";
+import { couponBenefit, ITEM_TYPE_LABEL, won, type ItemType } from "@/lib/payment";
 import { Alert, Badge, Button, EmptyState, Input, Modal, PageHeader, Skeleton, Textarea, Toast, cx } from "@/components/ui";
 
 // ─────────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ interface CouponRow {
   discountValue: number;
   maxDiscount: number | null;
   minAmount: number;
-  itemTypes: ("course" | "workbook")[];
+  itemTypes: ItemType[];
   itemIds: string[];
   excludeItemIds: string[];
   validFrom: string | null;
@@ -35,7 +35,7 @@ interface CouponRow {
 }
 interface Item {
   id: string;
-  type: "course" | "workbook";
+  type: ItemType;
   title: string;
 }
 interface UsedOrder {
@@ -60,7 +60,7 @@ const emptyForm = {
   discountValue: "10",
   maxDiscount: "",
   minAmount: "",
-  itemTypes: [] as ("course" | "workbook")[],
+  itemTypes: [] as ItemType[],
   itemIds: [] as string[],
   validFrom: "",
   validUntil: "",
@@ -164,7 +164,7 @@ export default function AdminCouponsPage() {
 
   const target = (c: CouponRow) => {
     if (c.itemIds.length) return c.itemIds.map((id) => items.find((i) => i.id === id)?.title ?? "(삭제된 상품)").join(", ");
-    const t = c.itemTypes.length === 1 ? (c.itemTypes[0] === "course" ? "강의 전체" : "워크북 전체") : "강의·워크북 전체";
+    const t = c.itemTypes.length && c.itemTypes.length < 3 ? `${c.itemTypes.map((x) => ITEM_TYPE_LABEL[x]).join("·")} 전체` : "모든 상품";
     return c.excludeItemIds.length ? `${t} (${c.excludeItemIds.length}개 제외)` : t;
   };
 
@@ -275,7 +275,7 @@ export default function AdminCouponsPage() {
           <div>
             <label className="mb-1.5 block text-sm font-medium">대상</label>
             <div className="flex gap-2">
-              {([["course", "강의"], ["workbook", "워크북"]] as const).map(([v, l]) => (
+              {([["course", "강의"], ["workbook", "워크북"], ["program", "과정"]] as const).map(([v, l]) => (
                 <label key={v} className="flex cursor-pointer items-center gap-2 rounded-xl bg-[var(--surface)] px-3 py-2 text-sm">
                   <input
                     type="checkbox"

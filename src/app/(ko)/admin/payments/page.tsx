@@ -13,7 +13,7 @@ interface OrderRow {
   _id: string;
   userId: { _id: string; name: string; email: string } | null;
   provider: "mock" | "toss";
-  itemType: "course" | "workbook";
+  itemType: "course" | "workbook" | "program";
   itemTitle: string;
   amount: number;
   status: Status;
@@ -148,7 +148,7 @@ export default function AdminPaymentsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-semibold">{r.itemTitle}</p>
-                      <p className="text-xs text-[var(--foreground-subtle)]">{r.itemType === "course" ? "강의" : "워크북 전체 이용권"}</p>
+                      <p className="text-xs text-[var(--foreground-subtle)]">{r.itemType === "course" ? "강의" : r.itemType === "program" ? "과정(과목 묶음)" : "워크북 전체 이용권"}</p>
                     </td>
                     <td className="px-4 py-3 text-right font-semibold">{won(r.amount)}</td>
                     <td className="px-4 py-3">
