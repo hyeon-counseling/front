@@ -6,8 +6,9 @@ import { useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
 import { formatDuration, LESSON_TYPE_LABEL, type CourseDetail } from "@/lib/course";
-import { formatPrice } from "@/lib/workbook";
-import { Markdown } from "@/components/workbook/Markdown";
+import { formatPrice } from "@/lib/practice";
+import { totalTimeLabel } from "@/lib/program";
+import { Markdown } from "@/components/practice/Markdown";
 import { BuyButton } from "@/components/checkout/BuyButton";
 import { Skeleton } from "@/components/ui";
 
@@ -46,6 +47,9 @@ export default function CourseDetailPage() {
 
   const e = course.enrollment;
   const active = !!e?.active;
+  const trial = !!e?.trial;
+  const previewLessons = course.sections.flatMap((s) => s.lessons).filter((l) => l.isPreview);
+  const hasPractice = course.sections.some((s) => s.lessons.some((l) => l.type === "practice"));
   const allLessons = course.sections.flatMap((s) => s.lessons);
   const firstPreview = allLessons.find((l) => l.isPreview);
   const start = e?.resume?.key ?? allLessons[0]?.key;
@@ -63,10 +67,11 @@ export default function CourseDetailPage() {
           <div className="mt-6 flex flex-wrap gap-2 text-sm">
             {[
               course.visibility === "private" ? "초대 전용 과정" : "",
+              course.durationLabel ?? "",
               allLessons.every((l) => l.type === "video") ? `영상 ${course.lessonCount}편` : `${course.lessonCount}차시`,
-              course.totalMinutes ? `총 ${course.totalMinutes}분` : "",
+              totalTimeLabel(course.totalMinutes),
               course.accessDays ? `${course.accessDays}일 수강` : "기간 제한 없음",
-              firstPreview ? "1편 미리보기" : "",
+              previewLessons.length ? `무료 체험 ${previewLessons.length}차시` : "",
             ]
               .filter(Boolean)
               .map((t) => (
@@ -93,11 +98,14 @@ export default function CourseDetailPage() {
                           {l.completed ? "✓" : l.locked ? "🔒" : i + 1}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block text-[0.95rem] font-semibold text-[var(--foreground)]">{l.title}</span>
+                          <span className="block text-[0.95rem] font-semibold text-[var(--foreground)]">
+                            {l.label && <span className="mr-2 text-xs font-bold text-[var(--brand)]">{l.label}</span>}
+                            {l.title}
+                          </span>
                           {l.summary && <span className="mt-0.5 block text-sm text-[var(--foreground-muted)]">{l.summary}</span>}
                         </span>
                         {l.isPreview && !active && (
-                          <span className="shrink-0 rounded-full bg-[var(--brand-light)] px-2 py-0.5 text-xs font-semibold text-[var(--brand)]">미리보기</span>
+                          <span className="shrink-0 rounded-full bg-[var(--brand-light)] px-2 py-0.5 text-xs font-semibold text-[var(--brand)]">무료</span>
                         )}
                         <span className="shrink-0 text-xs text-[var(--foreground-subtle)]">
                           {[l.type !== "video" ? LESSON_TYPE_LABEL[l.type] : "", formatDuration(l.durationSec)].filter(Boolean).join(" · ")}
@@ -137,6 +145,11 @@ export default function CourseDetailPage() {
                     {e!.progressPct > 0 ? "이어보기" : "수강 시작하기"}
                   </Link>
                 )}
+                {hasPractice && (
+                  <Link href={`/my/courses/${course.slug}/records`} className="mt-2 flex h-11 w-full items-center justify-center rounded-xl bg-[var(--surface)] text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--surface-muted)]">
+                    내 기록 모아보기
+                  </Link>
+                )}
                 <p className="mt-3 text-center text-xs text-[var(--foreground-subtle)]">
                   {e!.viaProgram ? "과정 수강권으로 듣고 있어요 · " : ""}
                   {e!.expiresAt ? `${new Date(e!.expiresAt).toLocaleDateString("ko-KR")}까지 수강할 수 있어요` : "기간 제한 없이 수강할 수 있어요"}
@@ -159,13 +172,21 @@ export default function CourseDetailPage() {
                   )}
                 </div>
                 {firstPreview && (
-                  <Link href={`/learn/${course.slug}/${firstPreview.key}`} className="mt-2 flex h-11 w-full items-center justify-center rounded-xl bg-[var(--surface)] text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--surface-muted)]">
-                    1편 미리보기
+                  <Link
+                    href={`/learn/${course.slug}/${trial && e?.resume && previewLessons.some((l) => l.key === e.resume!.key) ? e.resume.key : firstPreview.key}`}
+                    className="mt-2 flex h-11 w-full items-center justify-center rounded-xl bg-[var(--surface)] text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
+                  >
+                    {trial ? `무료 체험 이어하기 · ${e!.progressPct}%` : `무료 체험 시작 (${previewLessons.length}차시)`}
+                  </Link>
+                )}
+                {trial && hasPractice && (
+                  <Link href={`/my/courses/${course.slug}/records`} className="mt-2 block text-center text-xs font-semibold text-[var(--brand)]">
+                    체험하며 적은 기록 보기 →
                   </Link>
                 )}
                 {e?.status === "revoked" && <p className="mt-3 text-center text-xs text-[var(--foreground-subtle)]">환불 등으로 수강권이 종료되었어요.</p>}
                 <p className="mt-4 text-xs leading-relaxed text-[var(--foreground-subtle)]">
-                  결제 후 바로 수강할 수 있어요. 환불 기준은 <Link href="/refund" className="underline">환불 규정</Link>을 확인해 주세요.
+                  결제 후 바로 수강할 수 있어요.{trial ? " 무료 체험 때 적은 기록과 진도는 그대로 이어져요." : ""} 환불 기준은 <Link href="/refund" className="underline">환불 규정</Link>을 확인해 주세요.
                 </p>
               </>
             )}

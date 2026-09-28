@@ -6,8 +6,8 @@ import { useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
 import { totalTimeLabel, type ProgramDetail } from "@/lib/program";
-import { formatPrice } from "@/lib/workbook";
-import { Markdown } from "@/components/workbook/Markdown";
+import { formatPrice } from "@/lib/practice";
+import { Markdown } from "@/components/practice/Markdown";
 import { BuyButton } from "@/components/checkout/BuyButton";
 import { Skeleton } from "@/components/ui";
 

@@ -1,4 +1,5 @@
 // 강의(LMS) 타입 — 백엔드 courseController 응답과 같은 모양
+import type { Block } from "./practice";
 
 export interface CourseListItem {
   slug: string;
@@ -14,6 +15,11 @@ export interface CourseListItem {
   totalMinutes: number;
   visibility?: "public" | "private";
   seriesLabel?: string;
+  durationLabel?: string;
+  /** 구성 요소 — 들어 있는 차시 종류 (목록 필터) */
+  components?: LessonType[];
+  /** 무료 체험 차시 수 */
+  previewCount?: number;
 }
 
 export interface CourseEnrollmentSummary {
@@ -28,13 +34,15 @@ export interface CourseEnrollmentSummary {
   resume: { key: string; title: string } | null;
   /** 과정으로만 받은 수강권 (과목을 따로 사지 않음) */
   viaProgram?: boolean;
+  /** 무료 체험 중 (미리보기 차시만) */
+  trial?: boolean;
 }
 
 /** 운영 상태 이름 — '공개 범위(공개/비공개)'와 헷갈리지 않게 '운영 중'이라고 부른다 */
 export const STATUS_LABEL = { draft: "작성 중", published: "운영 중", archived: "보관" } as const;
 export const STATUS_TONE = { draft: "warning", published: "brand", archived: "neutral" } as const;
 
-export type LessonType = "video" | "text" | "audio" | "quiz" | "cards";
+export type LessonType = "video" | "text" | "audio" | "quiz" | "cards" | "practice";
 
 export const LESSON_TYPE_LABEL: Record<LessonType, string> = {
   video: "영상",
@@ -42,7 +50,18 @@ export const LESSON_TYPE_LABEL: Record<LessonType, string> = {
   audio: "오디오",
   quiz: "퀴즈",
   cards: "카드",
+  practice: "쓰기 실습",
 };
+
+/** 목록 필터용 구성 요소 이름·순서 */
+export const COMPONENT_FILTERS: { type: LessonType; label: string; icon: string }[] = [
+  { type: "video", label: "영상", icon: "🎬" },
+  { type: "audio", label: "오디오", icon: "🎧" },
+  { type: "text", label: "글", icon: "📖" },
+  { type: "quiz", label: "퀴즈", icon: "✅" },
+  { type: "cards", label: "카드", icon: "🗂" },
+  { type: "practice", label: "쓰기 실습", icon: "✍️" },
+];
 
 /** 회원에게 오는 퀴즈 — 정답·해설 없음 */
 export interface PublicQuiz {
@@ -72,6 +91,7 @@ export interface CurriculumLesson {
   key: string;
   title: string;
   summary: string;
+  label?: string;
   type: LessonType;
   isPreview: boolean;
   durationSec: number | null;
@@ -103,10 +123,15 @@ export interface LessonResponse {
     hasAudio?: boolean;
     quiz?: PublicQuiz | null;
     cards?: LessonCard[] | null;
+    label?: string;
+    blocks?: Block[] | null;
   };
   position: { index: number; total: number };
   progress: { positionSec: number; completed: boolean; quizBest?: number | null; quizAttempts?: number; cardsKnown?: number[] };
   enrolled: boolean;
+  /** 쓰기 실습 차시의 내 답 (블록 key → 값) */
+  entries?: Record<string, unknown>;
+  trial?: boolean;
   prev: { key: string; title: string; locked: boolean } | null;
   next: { key: string; title: string; locked: boolean } | null;
 }

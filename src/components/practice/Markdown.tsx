@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { Block } from "@/lib/workbook";
+import type { Block } from "@/lib/practice";
 
 // 워크북 본문 마크다운
 export function Markdown({ md, className = "" }: { md: string; className?: string }) {

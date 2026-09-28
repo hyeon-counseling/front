@@ -9,7 +9,7 @@ import { Alert, Badge, Button, EmptyState, Input, Modal, PageHeader, Skeleton, T
 // 관리자 — 쿠폰
 //   목록(검색·상태·종류) · 새 쿠폰(공용 코드 / 특정 회원 개인 쿠폰) · 켜기/끄기
 //   개인 발급(이메일 여러 개 → 회원별 개인 쿠폰) · 사용 내역
-//   워크북 95% 완주 쿠폰은 자동 발급(종류: 완주 보상)
+//   수료 쿠폰이 설정된 강의를 수료하면 자동 발급(종류: 수료 보상)
 // ─────────────────────────────────────────────────────────────────
 
 interface CouponRow {
@@ -29,7 +29,7 @@ interface CouponRow {
   usedCount: number;
   perUserLimit: number;
   status: "active" | "disabled";
-  source: "manual" | "issued" | "workbook-complete";
+  source: "manual" | "issued" | "course-complete" | "workbook-complete";
   user: { email: string; name: string } | null;
   createdAt: string;
 }
@@ -50,7 +50,7 @@ interface UsedOrder {
   userId: { email: string; name: string } | null;
 }
 
-const SOURCE_LABEL: Record<CouponRow["source"], string> = { manual: "직접 만듦", issued: "개인 발급", "workbook-complete": "완주 보상" };
+const SOURCE_LABEL: Record<CouponRow["source"], string> = { manual: "직접 만듦", issued: "개인 발급", "course-complete": "수료 보상", "workbook-complete": "완주 보상(예전)" };
 const date = (v: string | null) => (v ? new Date(v).toLocaleDateString("ko-KR") : "");
 
 const emptyForm = {
@@ -168,7 +168,7 @@ export default function AdminCouponsPage() {
     const t = c.itemTypes.length && c.itemTypes.length < 3 ? `${c.itemTypes.map((x) => ITEM_TYPE_LABEL[x]).join("·")} 전체` : "모든 상품";
     return c.excludeItemIds.length ? `${t} (${c.excludeItemIds.length}개 제외)` : t;
   };
-  /** 쿠폰 대상 배지 — 강의 전용 · 과정 전용 · 워크북 전용 · 모든 상품 */
+  /** 쿠폰 대상 배지 — 강의 전용 · 과정 전용 · 모든 상품 */
   const targetBadge = (c: CouponRow) =>
     c.itemTypes.length === 1 ? `${ITEM_TYPE_LABEL[c.itemTypes[0]]} 전용` : c.itemTypes.length && c.itemTypes.length < 3 ? `${c.itemTypes.map((x) => ITEM_TYPE_LABEL[x]).join("·")}용` : "모든 상품";
   const shown = rows?.filter((c) =>
@@ -177,7 +177,7 @@ export default function AdminCouponsPage() {
 
   return (
     <div className="px-4 py-8">
-      <PageHeader title="쿠폰" description="할인 쿠폰을 만들고 회원에게 발급해요. 워크북을 95% 이상 완주하면 다음 워크북 10% 쿠폰이 자동으로 발급돼요.">
+      <PageHeader title="쿠폰" description="할인 쿠폰을 만들고 회원에게 발급해요. 수료 쿠폰을 켠 강의를 수료하면 다른 강의 할인 쿠폰이 자동으로 발급돼요.">
         <div className="mt-5">
           <Button onClick={() => setCreating(true)}>새 쿠폰</Button>
         </div>
@@ -199,13 +199,12 @@ export default function AdminCouponsPage() {
           <option value="">종류 전체</option>
           <option value="manual">직접 만듦</option>
           <option value="issued">개인 발급</option>
-          <option value="workbook-complete">완주 보상</option>
+          <option value="course-complete">수료 보상</option>
         </select>
         <select value={targetFilter} onChange={(e) => setTargetFilter(e.target.value as typeof targetFilter)} className="h-10 rounded-xl border border-[var(--border)] px-2 text-sm">
           <option value="">대상 전체</option>
           <option value="course">강의 전용</option>
           <option value="program">과정 전용</option>
-          <option value="workbook">워크북 전용</option>
           <option value="all">모든 상품</option>
         </select>
       </div>
@@ -289,8 +288,8 @@ export default function AdminCouponsPage() {
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium">쿠폰 대상</label>
-            <div className="grid grid-cols-2 gap-2">
-              {([["course", "강의 전용"], ["program", "과정 전용"], ["workbook", "워크북 전용"], ["", "모든 상품"]] as const).map(([v, l]) => {
+            <div className="grid grid-cols-3 gap-2">
+              {([["course", "강의 전용"], ["program", "과정 전용"], ["", "모든 상품"]] as const).map(([v, l]) => {
                 const on = v ? form.itemTypes.length === 1 && form.itemTypes[0] === v : form.itemTypes.length === 0;
                 return (
                   <button
@@ -305,7 +304,7 @@ export default function AdminCouponsPage() {
               })}
             </div>
             <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
-              {form.itemTypes.length === 1 && form.itemTypes[0] === "course" ? "과목을 하나씩 살 때만 쓸 수 있어요. (과정 결제에는 안 돼요)" : form.itemTypes.length === 1 && form.itemTypes[0] === "program" ? "과정(과목 묶음)을 살 때만 쓸 수 있어요." : form.itemTypes.length === 1 ? "워크북을 살 때만 쓸 수 있어요." : "강의·과정·워크북 어디에나 쓸 수 있어요."}
+              {form.itemTypes.length === 1 && form.itemTypes[0] === "course" ? "과목을 하나씩 살 때만 쓸 수 있어요. (과정 결제에는 안 돼요)" : form.itemTypes.length === 1 && form.itemTypes[0] === "program" ? "과정(과목 묶음)을 살 때만 쓸 수 있어요." : "강의·과정 어디에나 쓸 수 있어요."}
             </p>
           </div>
           <div>

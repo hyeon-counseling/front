@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { CourseListItem } from "@/lib/course";
+import { COMPONENT_FILTERS, type CourseListItem, type LessonType } from "@/lib/course";
 import { totalTimeLabel, type ProgramListItem } from "@/lib/program";
-import { formatPrice } from "@/lib/workbook";
+import { formatPrice } from "@/lib/practice";
 
 export const metadata: Metadata = {
   title: "강의",
-  description: "심리상담가 현의 온라인 강의. 10분씩, 한 편씩.",
+  description: "심리상담가 현의 온라인 강의. 영상·오디오·글·퀴즈·카드·쓰기 실습으로 10분씩.",
 };
 
 async function getCourses(): Promise<CourseListItem[] | null> {
@@ -29,8 +29,14 @@ async function getPrograms(): Promise<ProgramListItem[]> {
   }
 }
 
-export default async function CoursesPage() {
-  const [list, programs] = await Promise.all([getCourses(), getPrograms()]);
+// 강의 목록 — 과정(묶음) + 강의. 구성 요소(영상·오디오·글·퀴즈·카드·쓰기 실습)로 거를 수 있다 (?has=practice)
+export default async function CoursesPage({ searchParams }: { searchParams: Promise<{ has?: string }> }) {
+  const [all, programs, sp] = await Promise.all([getCourses(), getPrograms(), searchParams]);
+  const has = COMPONENT_FILTERS.find((f) => f.type === sp.has)?.type ?? null;
+  const list = all && has ? all.filter((c) => c.components?.includes(has)) : all;
+  // 목록에 실제로 있는 구성 요소만 필터로 보여준다
+  const present = new Set<LessonType>((all ?? []).flatMap((c) => c.components ?? []));
+  const filters = COMPONENT_FILTERS.filter((f) => present.has(f.type));
 
   return (
     <div className="px-4 py-14 sm:px-6 sm:py-20">
@@ -39,11 +45,31 @@ export default async function CoursesPage() {
           <span className="eyebrow">강의</span>
           <h1 className="font-display mt-4 text-4xl leading-tight text-[var(--foreground)] sm:text-5xl">10분씩, 한 편씩.</h1>
           <p className="mt-4 text-lg leading-relaxed text-[var(--foreground-muted)]">
-            심리상담가가 직접 설명하는 짧은 강의예요. 이어보기와 진도가 저장돼서 틈틈이 들을 수 있어요.
+            심리상담가가 직접 만든 강의예요. 보고 듣는 강의도, 매일 직접 써 보는 강의도 있어요. 진도와 기록이 저장돼서 틈틈이 이어 할 수 있어요.
           </p>
         </div>
 
-        {programs.length > 0 && (
+        {filters.length > 1 && (
+          <nav aria-label="구성 요소로 거르기" className="mt-8 flex flex-wrap gap-2">
+            <Link
+              href="/courses"
+              className={`rounded-full px-4 py-2 text-sm font-semibold ${!has ? "bg-[var(--brand)] text-white" : "bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-muted)]"}`}
+            >
+              전체
+            </Link>
+            {filters.map((f) => (
+              <Link
+                key={f.type}
+                href={`/courses?has=${f.type}`}
+                className={`rounded-full px-4 py-2 text-sm font-semibold ${has === f.type ? "bg-[var(--brand)] text-white" : "bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-muted)]"}`}
+              >
+                {f.icon} {f.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+
+        {programs.length > 0 && !has && (
           <section className="mt-12">
             <h2 className="text-lg font-bold text-[var(--foreground)]">과정 · 여러 과목을 한 번에</h2>
             <div className="mt-4 grid gap-6 md:grid-cols-2">
@@ -81,21 +107,24 @@ export default async function CoursesPage() {
           </section>
         )}
 
-        <div className={`${programs.length > 0 ? "mt-4" : "mt-12"} grid gap-6 md:grid-cols-2`}>
+        <div className={`${programs.length > 0 && !has ? "mt-4" : "mt-10"} grid gap-6 md:grid-cols-2`}>
           {list === null && (
             <div className="card p-8 text-sm text-[var(--foreground-muted)] md:col-span-2">
               강의 목록을 불러오지 못했어요. 잠시 후 새로고침해 주세요.
             </div>
           )}
-          {list?.length === 0 && programs.length === 0 && (
+          {list?.length === 0 && has && (
+            <p className="text-sm text-[var(--foreground-muted)] md:col-span-2">이 구성의 강의가 아직 없어요.</p>
+          )}
+          {list?.length === 0 && !has && programs.length === 0 && (
             <div className="rounded-3xl border border-dashed border-[var(--border)] p-10 text-center md:col-span-2">
               <p className="text-xl font-bold text-[var(--foreground)]">곧 공개됩니다</p>
               <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-                첫 강의는 <strong className="text-[var(--foreground)]">고기능 우울증</strong>을 다뤄요. 그동안 무료 아티클과 워크북 1주차를 먼저 만나 보세요.
+                첫 강의는 <strong className="text-[var(--foreground)]">고기능 우울증</strong>을 다뤄요. 그동안 무료 아티클과 심리검사를 먼저 만나 보세요.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <Link href="/workbooks" className="inline-flex items-center rounded-xl bg-[var(--brand)] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-hover)]">
-                  워크북 1주차 무료로 시작
+                <Link href="/tests" className="inline-flex items-center rounded-xl bg-[var(--brand)] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-hover)]">
+                  무료 심리검사 해 보기
                 </Link>
                 <Link href="/articles" className="inline-flex items-center rounded-xl bg-[var(--surface)] px-6 py-2.5 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--surface-muted)]">
                   아티클 읽기
@@ -113,13 +142,25 @@ export default async function CoursesPage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.coverImageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
                   )}
-                  <span className="relative rounded-lg bg-black/25 px-2.5 py-1 text-xs font-semibold backdrop-blur-sm">
-                    영상 {c.lessonCount}편{c.totalMinutes ? ` · 총 ${c.totalMinutes}분` : ""}
+                  <span className="relative flex flex-wrap gap-1.5">
+                    <span className="rounded-lg bg-black/25 px-2.5 py-1 text-xs font-semibold backdrop-blur-sm">
+                      {[c.durationLabel, `${c.lessonCount}차시`, c.totalMinutes ? totalTimeLabel(c.totalMinutes) : ""].filter(Boolean).join(" · ")}
+                    </span>
+                    {!!c.previewCount && <span className="rounded-lg bg-white/90 px-2.5 py-1 text-xs font-bold text-[var(--brand)]">무료 체험</span>}
                   </span>
                 </div>
                 <div className="flex flex-1 flex-col p-6">
                   <h2 className="text-xl font-bold leading-snug text-[var(--foreground)] group-hover:text-[var(--brand)]">{c.title}</h2>
                   {c.subtitle && <p className="mt-2 text-[var(--foreground-muted)]">{c.subtitle}</p>}
+                  {!!c.components?.length && (
+                    <p className="mt-3 flex flex-wrap gap-1.5">
+                      {COMPONENT_FILTERS.filter((f) => c.components!.includes(f.type)).map((f) => (
+                        <span key={f.type} className="rounded-full bg-[var(--surface)] px-2.5 py-0.5 text-xs font-medium text-[var(--foreground-muted)]">
+                          {f.icon} {f.label}
+                        </span>
+                      ))}
+                    </p>
+                  )}
                   <div className="mt-auto flex items-end justify-between pt-6">
                     <span className="text-sm text-[var(--foreground-subtle)]">{c.instructor}</span>
                     <span className="text-right">

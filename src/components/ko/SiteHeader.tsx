@@ -11,7 +11,6 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const NAV = [
   { href: "/courses", label: "강의" },
-  { href: "/workbooks", label: "워크북" },
   { href: "/tests", label: "심리검사" },
   { href: "/counseling", label: "상담" },
   { href: "/articles", label: "아티클" },

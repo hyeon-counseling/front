@@ -27,10 +27,10 @@ const SERVICES = [
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
     ),
-    title: "셀프 워크북",
+    title: "직접 써 보는 강의",
     tag: "1주차 무료",
-    desc: "매일 10분, 질문에 답하고 기록합니다. 인지행동치료(CBT)를 60일 일차로 나눈 '불안과 함께 살기'부터.",
-    href: "/workbooks",
+    desc: "매일 10분, 질문에 답하고 기록합니다. 인지행동치료(CBT)를 60일로 나눈 '불안과 함께 살기'부터.",
+    href: "/courses?has=practice",
     cta: "무료로 시작",
   },
   {

@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
 import { isExternal, scoreText, TONE_STYLE, type TestResult } from "@/lib/psychTest";
-import { Markdown } from "@/components/workbook/Markdown";
+import { Markdown } from "@/components/practice/Markdown";
 import { CrisisBox } from "@/components/tests/TestParts";
 import { Skeleton, Toast } from "@/components/ui";
 

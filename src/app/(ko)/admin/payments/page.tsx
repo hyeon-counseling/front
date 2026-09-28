@@ -86,7 +86,7 @@ export default function AdminPaymentsPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="font-display text-2xl text-[var(--foreground)]">결제·주문</h1>
-      <p className="mt-1 text-sm text-[var(--foreground-muted)]">강의·워크북 결제 내역이에요. 카페24·Polar 주문은 Shop 메뉴에서 볼 수 있어요.</p>
+      <p className="mt-1 text-sm text-[var(--foreground-muted)]">강의·과정 결제 내역이에요. 카페24·Polar 주문은 Shop 메뉴에서 볼 수 있어요.</p>
 
       {config && (
         <div className={`mt-5 rounded-2xl px-5 py-4 text-sm ${config.provider === "mock" ? "bg-amber-50 text-amber-800" : "bg-[var(--brand-light)] text-[var(--brand-ink)]"}`}>
@@ -148,7 +148,7 @@ export default function AdminPaymentsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-semibold">{r.itemTitle}</p>
-                      <p className="text-xs text-[var(--foreground-subtle)]">{r.itemType === "course" ? "강의" : r.itemType === "program" ? "과정(과목 묶음)" : "워크북 전체 이용권"}</p>
+                      <p className="text-xs text-[var(--foreground-subtle)]">{r.itemType === "course" ? "강의" : r.itemType === "program" ? "과정(과목 묶음)" : "워크북 전체 이용권(예전)"}</p>
                     </td>
                     <td className="px-4 py-3 text-right font-semibold">{won(r.amount)}</td>
                     <td className="px-4 py-3">
@@ -212,7 +212,7 @@ export default function AdminPaymentsPage() {
               <div className="rounded-2xl border border-[var(--border)] p-4">
                 <p className="font-semibold">전액 환불</p>
                 <p className="mt-1 text-xs text-[var(--foreground-muted)]">
-                  환불하면 이 주문으로 생긴 이용권이 회수되고(워크북은 무료 주차로 되돌림) 회원에게 안내 메일이 가요.
+                  환불하면 이 주문으로 생긴 이용권이 회수되고(무료 체험 기록은 남아요) 회원에게 안내 메일이 가요.
                 </p>
                 <div className="mt-3 flex gap-2">
                   <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="환불 사유" className="min-w-0 flex-1 rounded-xl border border-[var(--border)] px-3 py-2" />

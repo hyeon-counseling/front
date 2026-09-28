@@ -81,10 +81,10 @@ export default function ArticleDetailPage() {
         </div>
         <footer className="mt-14 rounded-2xl bg-[var(--surface)] p-6">
           <p className="font-display text-lg text-[var(--foreground)]">더 깊이 가고 싶다면</p>
-          <p className="mt-1 text-sm text-[var(--foreground-muted)]">워크북으로 매일 10분씩 직접 해보거나, 강의로 원리를 배워 보세요.</p>
+          <p className="mt-1 text-sm text-[var(--foreground-muted)]">매일 10분씩 직접 써 보는 강의로 해 보거나, 영상·오디오 강의로 원리를 배워 보세요.</p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link href="/workbooks" className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">워크북</Link>
-            <Link href="/courses" className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[var(--brand)] hover:text-[var(--brand)]">강의</Link>
+            <Link href="/courses?has=practice" className="rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">직접 써 보는 강의</Link>
+            <Link href="/courses" className="rounded-xl border border-[var(--border)] px-5 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[var(--brand)] hover:text-[var(--brand)]">강의 전체</Link>
           </div>
         </footer>
       </div>
