@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiFetch, apiRequest } from "@/lib/api";
 import { Alert, Badge, Button, Input, Skeleton, Textarea, Toast } from "@/components/ui";
+import { STATUS_LABEL } from "@/lib/course";
+import { CoverImageField } from "@/components/admin/CoverImageField";
 
 interface CourseRow {
   _id: string;
@@ -31,7 +33,6 @@ interface ProgramForm {
 }
 
 const toNum = (s: string) => (s.trim() === "" ? null : Number(s.replace(/[^\d]/g, "")));
-const STATUS_LABEL = { published: "공개", draft: "작성 중", archived: "보관" } as const;
 
 // 관리자 — 과정 편집 (정보·판매·과목 구성)
 export default function AdminProgramEditPage() {
@@ -188,16 +189,14 @@ export default function AdminProgramEditPage() {
         <Input id="title" label="과정 이름" value={form.title} onChange={(e) => set("title", e.target.value)} />
         <Input id="subtitle" label="한 줄 소개" value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} />
         <Textarea id="desc" label="소개 (마크다운)" className="min-h-[180px]" value={form.description} onChange={(e) => set("description", e.target.value)} />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input id="instructor" label="강사·운영" value={form.instructor} onChange={(e) => set("instructor", e.target.value)} />
-          <Input id="cover" label="표지 이미지 주소 (선택)" value={form.coverImageUrl} onChange={(e) => set("coverImageUrl", e.target.value)} placeholder="https://..." />
-        </div>
+        <Input id="instructor" label="강사·운영" value={form.instructor} onChange={(e) => set("instructor", e.target.value)} />
+        <CoverImageField value={form.coverImageUrl} onChange={(url) => set("coverImageUrl", url ?? "")} />
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm font-medium">상태</label>
+            <label className="mb-1.5 block text-sm font-medium">운영 상태</label>
             <select value={form.status} onChange={(e) => set("status", e.target.value as ProgramForm["status"])} className="h-11 w-full rounded-xl border border-[var(--border)] bg-white px-3">
               <option value="draft">작성 중 (관리자만 보임)</option>
-              <option value="published">공개</option>
+              <option value="published">운영 중</option>
               <option value="archived">보관 (새 판매·노출 중지)</option>
             </select>
           </div>

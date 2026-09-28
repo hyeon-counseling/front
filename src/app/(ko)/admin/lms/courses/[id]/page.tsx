@@ -1,5 +1,6 @@
 "use client";
 
+import { CoverImageField } from "@/components/admin/CoverImageField";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -12,7 +13,7 @@ import type { TextCard } from "@/lib/lessonText";
 
 // ─────────────────────────────────────────────────────────────────
 // 관리자 — 강의 편집기
-//   [기본 정보] 제목·소개·공개 상태·공개 범위(비공개=초대한 회원만)·시리즈·가격·수강 기간
+//   [기본 정보] (먼저 열림) 제목·소개·운영 상태·공개 범위(비공개=초대한 회원만)·시리즈·가격·수강 기간
 //   [차시 구성] 섹션 → 차시(동영상/텍스트/오디오/퀴즈/요약카드) 편집, 순서 변경, 동영상·오디오 업로드
 // 동영상: Cloudflare Stream 직접 업로드(200MB 이하) 또는 Stream 대시보드에서 올린 동영상 ID 붙여넣기.
 //         Stream 도입 전 임시로 유튜브 '일부공개' 영상, 테스트용 직접 주소(https://…mp4)도 쓸 수 있다.
@@ -74,7 +75,7 @@ const numOrNull = (v: string) => (v.trim() === "" ? null : Number(v));
 export default function AdminCourseEditor() {
   const { id } = useParams<{ id: string }>();
   const [doc, setDoc] = useState<CourseDoc | null>(null);
-  const [tab, setTab] = useState<"meta" | "lessons">("lessons");
+  const [tab, setTab] = useState<"meta" | "lessons">("meta");
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -222,7 +223,7 @@ export default function AdminCourseEditor() {
       )}
 
       <div className="mb-6 flex gap-2">
-        {([["lessons", "차시 구성"], ["meta", "기본 정보·판매"]] as const).map(([k, label]) => (
+        {([["meta", "기본 정보·판매"], ["lessons", "차시 구성"]] as const).map(([k, label]) => (
           <button key={k} onClick={() => setTab(k)} className={`h-10 cursor-pointer rounded-xl px-4 text-sm font-semibold ${tab === k ? "bg-[var(--brand)] text-white" : "bg-[var(--surface)]"}`}>
             {label}
           </button>
@@ -235,11 +236,11 @@ export default function AdminCourseEditor() {
             <Input id="t" label="제목" value={doc.title} onChange={(e) => update((d) => { d.title = e.target.value; })} />
             <Input id="st" label="부제" value={doc.subtitle ?? ""} onChange={(e) => update((d) => { d.subtitle = e.target.value; })} />
             <Input id="ins" label="강사" value={doc.instructor ?? ""} onChange={(e) => update((d) => { d.instructor = e.target.value; })} />
-            <Input id="cv" label="표지 이미지 주소 (선택)" value={doc.coverImageUrl ?? ""} onChange={(e) => update((d) => { d.coverImageUrl = e.target.value || null; })} />
+            <CoverImageField value={doc.coverImageUrl} onChange={(url) => update((d) => { d.coverImageUrl = url; })} />
             <div>
-              <label className="mb-1.5 block text-sm font-medium">공개 상태</label>
+              <label className="mb-1.5 block text-sm font-medium">운영 상태</label>
               <div className="flex gap-2">
-                {([["draft", "작성 중"], ["published", "공개"], ["archived", "보관"]] as const).map(([v, label]) => (
+                {([["draft", "작성 중"], ["published", "운영 중"], ["archived", "보관"]] as const).map(([v, label]) => (
                   <button key={v} onClick={() => update((d) => { d.status = v; })} className={`h-10 flex-1 cursor-pointer rounded-xl text-sm font-semibold ${doc.status === v ? "bg-[var(--brand)] text-white" : "bg-[var(--surface)]"}`}>
                     {label}
                   </button>

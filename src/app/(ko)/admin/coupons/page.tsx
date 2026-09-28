@@ -75,6 +75,7 @@ export default function AdminCouponsPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [source, setSource] = useState("");
+  const [targetFilter, setTargetFilter] = useState<"" | "all" | ItemType>("");
   const [toast, setToast] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -167,6 +168,12 @@ export default function AdminCouponsPage() {
     const t = c.itemTypes.length && c.itemTypes.length < 3 ? `${c.itemTypes.map((x) => ITEM_TYPE_LABEL[x]).join("·")} 전체` : "모든 상품";
     return c.excludeItemIds.length ? `${t} (${c.excludeItemIds.length}개 제외)` : t;
   };
+  /** 쿠폰 대상 배지 — 강의 전용 · 과정 전용 · 워크북 전용 · 모든 상품 */
+  const targetBadge = (c: CouponRow) =>
+    c.itemTypes.length === 1 ? `${ITEM_TYPE_LABEL[c.itemTypes[0]]} 전용` : c.itemTypes.length && c.itemTypes.length < 3 ? `${c.itemTypes.map((x) => ITEM_TYPE_LABEL[x]).join("·")}용` : "모든 상품";
+  const shown = rows?.filter((c) =>
+    !targetFilter ? true : targetFilter === "all" ? c.itemTypes.length === 0 || c.itemTypes.length === 3 : c.itemTypes.length === 1 && c.itemTypes[0] === targetFilter
+  );
 
   return (
     <div className="px-4 py-8">
@@ -194,20 +201,28 @@ export default function AdminCouponsPage() {
           <option value="issued">개인 발급</option>
           <option value="workbook-complete">완주 보상</option>
         </select>
+        <select value={targetFilter} onChange={(e) => setTargetFilter(e.target.value as typeof targetFilter)} className="h-10 rounded-xl border border-[var(--border)] px-2 text-sm">
+          <option value="">대상 전체</option>
+          <option value="course">강의 전용</option>
+          <option value="program">과정 전용</option>
+          <option value="workbook">워크북 전용</option>
+          <option value="all">모든 상품</option>
+        </select>
       </div>
 
-      {!rows ? (
+      {!shown ? (
         <Skeleton className="h-64" />
-      ) : rows.length === 0 ? (
-        <EmptyState title="쿠폰이 없어요" description="[새 쿠폰]으로 첫 쿠폰을 만들어 보세요." />
+      ) : shown.length === 0 ? (
+        <EmptyState title="쿠폰이 없어요" description={targetFilter ? "이 대상의 쿠폰이 없어요." : "[새 쿠폰]으로 첫 쿠폰을 만들어 보세요."} />
       ) : (
         <div className="space-y-3">
-          {rows.map((c) => (
+          {shown.map((c) => (
             <div key={c._id} className={cx("card flex flex-wrap items-center gap-x-6 gap-y-3 p-5", c.status === "disabled" && "opacity-60")}>
               <div className="min-w-0 flex-1 basis-64">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono text-sm font-bold">{c.code}</span>
                   <Badge tone={c.status === "active" ? "brand" : "neutral"}>{c.status === "active" ? "사용 중" : "멈춤"}</Badge>
+                  <Badge tone="brand">{targetBadge(c)}</Badge>
                   <Badge>{SOURCE_LABEL[c.source]}</Badge>
                 </div>
                 <p className="mt-1 font-semibold">{c.name}</p>
@@ -273,21 +288,25 @@ export default function AdminCouponsPage() {
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium">대상</label>
-            <div className="flex gap-2">
-              {([["course", "강의"], ["workbook", "워크북"], ["program", "과정"]] as const).map(([v, l]) => (
-                <label key={v} className="flex cursor-pointer items-center gap-2 rounded-xl bg-[var(--surface)] px-3 py-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="accent-[var(--brand)]"
-                    checked={form.itemTypes.includes(v)}
-                    onChange={(e) => set("itemTypes", e.target.checked ? [...form.itemTypes, v] : form.itemTypes.filter((x) => x !== v))}
-                  />
-                  {l}
-                </label>
-              ))}
+            <label className="mb-1.5 block text-sm font-medium">쿠폰 대상</label>
+            <div className="grid grid-cols-2 gap-2">
+              {([["course", "강의 전용"], ["program", "과정 전용"], ["workbook", "워크북 전용"], ["", "모든 상품"]] as const).map(([v, l]) => {
+                const on = v ? form.itemTypes.length === 1 && form.itemTypes[0] === v : form.itemTypes.length === 0;
+                return (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, itemTypes: v ? [v] : [], itemIds: [] }))}
+                    className={cx("h-10 cursor-pointer rounded-xl text-sm font-semibold", on ? "bg-[var(--brand)] text-white" : "bg-[var(--surface)]")}
+                  >
+                    {l}
+                  </button>
+                );
+              })}
             </div>
-            <p className="mt-1 text-xs text-[var(--foreground-subtle)]">둘 다 비우면 강의·워크북 모두</p>
+            <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
+              {form.itemTypes.length === 1 && form.itemTypes[0] === "course" ? "과목을 하나씩 살 때만 쓸 수 있어요. (과정 결제에는 안 돼요)" : form.itemTypes.length === 1 && form.itemTypes[0] === "program" ? "과정(과목 묶음)을 살 때만 쓸 수 있어요." : form.itemTypes.length === 1 ? "워크북을 살 때만 쓸 수 있어요." : "강의·과정·워크북 어디에나 쓸 수 있어요."}
+            </p>
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium">특정 상품만 (선택)</label>
@@ -301,7 +320,7 @@ export default function AdminCouponsPage() {
                 .filter((i) => !form.itemTypes.length || form.itemTypes.includes(i.type))
                 .map((i) => (
                   <option key={i.id} value={i.id}>
-                    [{i.type === "course" ? "강의" : "워크북"}] {i.title}
+                    [{ITEM_TYPE_LABEL[i.type]}] {i.title}
                   </option>
                 ))}
             </select>

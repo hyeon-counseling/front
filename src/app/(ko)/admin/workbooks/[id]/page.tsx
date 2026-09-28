@@ -267,12 +267,12 @@ function MetaEditor({ doc, update }: { doc: WorkbookDoc; update: (fn: (d: Workbo
         />
       </div>
       <div className="card h-fit space-y-4 p-6">
-        <h2 className="font-bold">공개·판매</h2>
+        <h2 className="font-bold">운영·판매</h2>
         <label className="block">
-          <span className="mb-1.5 block text-sm font-medium">공개 상태</span>
+          <span className="mb-1.5 block text-sm font-medium">운영 상태</span>
           <select value={doc.status} onChange={(e) => update((d) => { d.status = e.target.value as WorkbookDoc["status"]; })} className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm">
             <option value="draft">작성 중 (관리자만 보임)</option>
-            <option value="published">공개</option>
+            <option value="published">운영 중</option>
             <option value="archived">보관 (목록에서 숨김)</option>
           </select>
         </label>
