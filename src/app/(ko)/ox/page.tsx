@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
-import { Markdown } from "@/components/workbook/Markdown";
+import { Markdown } from "@/components/practice/Markdown";
 import { Button, cx } from "@/components/ui";
 
 /**

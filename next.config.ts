@@ -19,6 +19,12 @@ const nextConfig: NextConfig = {
       { source: "/mypage", destination: "/my", permanent: true },
       { source: "/admin/kr/:path*", destination: "/admin/shop/kr/:path*", permanent: true },
       { source: "/admin/en/:path*", destination: "/admin/shop/en/:path*", permanent: true },
+      // 강의·워크북 통합 (워크북 → 쓰기 실습이 있는 강의, 주소 slug·차시 key 그대로)
+      { source: "/workbooks", destination: "/courses?has=practice", permanent: false },
+      { source: "/workbooks/:slug", destination: "/courses/:slug", permanent: false },
+      { source: "/workbook/:slug/:day", destination: "/learn/:slug/:day", permanent: false },
+      { source: "/my/workbooks/:slug", destination: "/my/courses/:slug/records", permanent: false },
+      { source: "/admin/workbooks/:path*", destination: "/admin/lms/courses", permanent: false },
     ];
   },
 };

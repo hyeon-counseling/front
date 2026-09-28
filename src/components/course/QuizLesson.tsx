@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { apiRequest } from "@/lib/api";
 import type { PublicQuiz, QuizResult } from "@/lib/course";
-import { Markdown } from "@/components/workbook/Markdown";
+import { Markdown } from "@/components/practice/Markdown";
 import { Alert, Badge, Button, cx } from "@/components/ui";
 
 /**

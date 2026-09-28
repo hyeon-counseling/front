@@ -2,23 +2,24 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "@/lib/api";
-import type { Block } from "@/lib/workbook";
+import type { Block } from "@/lib/practice";
 import { ExerciseInput } from "./ExerciseInput";
 
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
 
 /**
- * 문항 카드 + 자동 저장
- * 입력이 멈추고 0.8초 뒤 저장한다. 저장 실패 시 다시 시도 버튼을 보여준다.
+ * 문항 카드 + 자동 저장 (강의의 쓰기 실습 차시)
+ * 입력이 멈추고 0.8초 뒤 saveUrl 로 저장한다. 저장 실패 시 다시 시도 버튼을 보여준다.
  */
 export function ExerciseBlock({
-  slug,
+  saveUrl,
   block,
   initial,
   canSave,
   onSaved,
 }: {
-  slug: string;
+  /** 이 문항의 저장 주소 (PUT { value }) */
+  saveUrl: string;
   block: Block;
   initial: unknown;
   canSave: boolean;
@@ -34,7 +35,7 @@ export function ExerciseBlock({
 
   const save = useCallback(async () => {
     setState("saving");
-    const res = await apiRequest<{ value: unknown; savedAt: string }>(`/api/workbooks/${slug}/entries/${block.key}`, {
+    const res = await apiRequest<{ value: unknown; savedAt: string }>(saveUrl, {
       method: "PUT",
       body: JSON.stringify({ value: latest.current }),
     });
@@ -49,7 +50,7 @@ export function ExerciseBlock({
       setState("error");
       setError(res.message || "저장하지 못했어요.");
     }
-  }, [slug, block.key, onSaved]);
+  }, [saveUrl, onSaved]);
 
   const handleChange = (v: unknown) => {
     setValue(v);
@@ -68,10 +69,10 @@ export function ExerciseBlock({
     return () => {
       if (timer.current) {
         clearTimeout(timer.current);
-        void apiRequest(`/api/workbooks/${slug}/entries/${block.key}`, { method: "PUT", body: JSON.stringify({ value: latest.current }), keepalive: true });
+        void apiRequest(saveUrl, { method: "PUT", body: JSON.stringify({ value: latest.current }), keepalive: true });
       }
     };
-  }, [slug, block.key]);
+  }, [saveUrl]);
 
   return (
     <section className="card p-5 sm:p-7" aria-labelledby={`q-${block.key}`}>

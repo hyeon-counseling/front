@@ -1,4 +1,4 @@
-import type { AssessmentConfig, Exercise, FormField, TableColumn } from "@/lib/workbook";
+import type { AssessmentConfig, Exercise, FormField, TableColumn } from "@/lib/practice";
 import { scoreBand } from "./ExerciseInput";
 
 // 내 기록 모아보기 — 문항 답을 읽기 전용으로 보여준다

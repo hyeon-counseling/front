@@ -5,7 +5,7 @@ const COLS = [
     title: "서비스",
     links: [
       { href: "/courses", label: "강의" },
-      { href: "/workbooks", label: "셀프 워크북" },
+      { href: "/courses?has=practice", label: "쓰기 실습 강의" },
       { href: "/counseling", label: "상담·심리검사" },
       { href: "/articles", label: "아티클" },
     ],
@@ -41,7 +41,7 @@ export default function SiteFooter() {
               <span className="font-bold tracking-tight text-[var(--foreground)]">심리상담실 현</span>
             </div>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-[var(--foreground-muted)]">
-              나를 이해하는 공부를, 편안한 속도로. 심리상담가 현이 만드는 강의·워크북·상담.
+              나를 이해하는 공부를, 편안한 속도로. 심리상담가 현이 만드는 강의·상담.
             </p>
           </div>
           {COLS.map((c) => (

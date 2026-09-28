@@ -6,9 +6,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { apiFetch, apiRequest } from "@/lib/api";
 import { formatDuration, parseDuration, parseYoutubeId } from "@/lib/course";
-import { Markdown } from "@/components/workbook/Markdown";
+import { Markdown } from "@/components/practice/Markdown";
 import { Badge, Button, Input, Skeleton, Textarea, Toast } from "@/components/ui";
 import { AudioEditor, CardsEditor, QuizEditor, type AudioValue, type QuizValue } from "@/components/course/LessonContentEditors";
+import { PracticeBlocksEditor } from "@/components/admin/PracticeBlocksEditor";
+import type { Block } from "@/lib/practice";
 import type { TextCard } from "@/lib/lessonText";
 
 // ─────────────────────────────────────────────────────────────────
@@ -31,8 +33,11 @@ interface Lesson {
   key: string;
   title: string;
   summary?: string;
-  type: "video" | "text" | "audio" | "quiz" | "cards";
+  type: "video" | "text" | "audio" | "quiz" | "cards" | "practice";
   isPreview?: boolean;
+  label?: string;
+  estMinutes?: number | null;
+  blocks?: Block[];
   video?: Video | null;
   audio?: AudioValue | null;
   quiz?: QuizValue | null;
@@ -56,6 +61,8 @@ interface CourseDoc {
   visibility?: "public" | "private";
   seriesLabel?: string;
   completionRule?: { progressPct: number; quizAvg: number | null };
+  completionCoupon?: { percent: number; validDays: number } | null;
+  durationLabel?: string;
   price: number | null;
   salePrice: number | null;
   accessDays: number | null;
@@ -82,6 +89,7 @@ export default function AdminCourseEditor() {
   const [toast, setToast] = useState<string | null>(null);
   const [streamReady, setStreamReady] = useState<boolean | null>(null);
   const [uploading, setUploading] = useState<Record<string, number>>({});
+  const [openPractice, setOpenPractice] = useState<Record<string, boolean>>({}); // 쓰기 실습 내용 펼침
 
   useEffect(() => {
     apiFetch(`/api/admin/courses/${id}`).then(setDoc);
@@ -111,10 +119,18 @@ export default function AdminCourseEditor() {
     if (!doc) return;
     setSaving(true);
     setErrors([]);
-    const { title, subtitle, description, coverImageUrl, instructor, status, visibility, seriesLabel, completionRule, price, salePrice, accessDays, sections } = doc;
+    const { title, subtitle, description, coverImageUrl, instructor, status, visibility, seriesLabel, completionRule, completionCoupon, durationLabel, price, salePrice, accessDays, sections } = doc;
     const res = await apiRequest<{ errors?: string[] }>(`/api/admin/courses/${id}`, {
       method: "PUT",
-      body: JSON.stringify({ title, subtitle, description, coverImageUrl, instructor, status, visibility: visibility ?? "public", seriesLabel: seriesLabel ?? "", completionRule: completionRule ?? { progressPct: 100, quizAvg: null }, price, salePrice, accessDays, sections }),
+      body: JSON.stringify({
+        title, subtitle, description, coverImageUrl, instructor, status,
+        visibility: visibility ?? "public",
+        seriesLabel: seriesLabel ?? "",
+        durationLabel: durationLabel ?? "",
+        completionRule: completionRule ?? { progressPct: 100, quizAvg: null },
+        completionCoupon: completionCoupon ?? null,
+        price, salePrice, accessDays, sections,
+      }),
     });
     setSaving(false);
     if (res.ok) {
@@ -289,6 +305,25 @@ export default function AdminCourseEditor() {
               />
             </div>
             <p className="-mt-2 text-xs text-[var(--foreground-subtle)]">수료 기준을 채우면 수료증이 자동으로 발급돼요.</p>
+            <div className="rounded-xl bg-[var(--surface)] p-4">
+              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                <input
+                  type="checkbox"
+                  className="accent-[var(--brand)]"
+                  checked={!!doc.completionCoupon}
+                  onChange={(e) => update((d) => { d.completionCoupon = e.target.checked ? { percent: 10, validDays: 90 } : null; })}
+                />
+                수료하면 다른 강의 할인 쿠폰 주기
+              </label>
+              {doc.completionCoupon && (
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <Input id="ccp" label="할인율 (%)" inputMode="numeric" value={doc.completionCoupon.percent} onChange={(e) => update((d) => { d.completionCoupon = { ...d.completionCoupon!, percent: Math.max(1, Math.min(100, Number(e.target.value) || 1)) }; })} />
+                  <Input id="ccd" label="사용 기간 (일)" inputMode="numeric" value={doc.completionCoupon.validDays} onChange={(e) => update((d) => { d.completionCoupon = { ...d.completionCoupon!, validDays: Math.max(1, Number(e.target.value) || 1) }; })} />
+                </div>
+              )}
+              <p className="mt-2 text-xs text-[var(--foreground-subtle)]">처음 수료한 회원에게 한 번, 이 강의를 뺀 강의에 쓸 수 있는 개인 쿠폰이 자동 발급돼요.</p>
+            </div>
+            <Input id="dl" label="기간 표시 (선택)" placeholder="예: 8주 과정" value={doc.durationLabel ?? ""} onChange={(e) => update((d) => { d.durationLabel = e.target.value; })} />
             <Textarea id="desc" label="소개 (마크다운)" className="min-h-[320px] font-mono text-sm" value={doc.description} onChange={(e) => update((d) => { d.description = e.target.value; })} />
           </div>
           <div className="card p-6">
@@ -353,6 +388,7 @@ export default function AdminCourseEditor() {
                                 if (x.type === "audio" && !x.audio) x.audio = { provider: "r2", key: null, durationSec: null };
                                 if (x.type === "quiz" && !x.quiz) x.quiz = { passScore: 60, questions: [] };
                                 if (x.type === "cards" && !x.cards) x.cards = [];
+                                if (x.type === "practice" && !x.blocks) x.blocks = [];
                               })
                             }
                             className="rounded-lg border border-[var(--border)] px-2 py-1"
@@ -362,11 +398,12 @@ export default function AdminCourseEditor() {
                             <option value="audio">오디오 (팟캐스트)</option>
                             <option value="quiz">퀴즈 (예상문제)</option>
                             <option value="cards">요약카드</option>
+                            <option value="practice">쓰기 실습</option>
                           </select>
                         </label>
                         <label className="flex cursor-pointer items-center gap-2">
                           <input type="checkbox" checked={!!l.isPreview} onChange={(e) => updateLesson(si, li, (x) => { x.isPreview = e.target.checked; })} className="accent-[var(--brand)]" />
-                          미리보기 (누구나 시청)
+                          무료 체험 (누구나 보기 · 로그인하면 기록 저장)
                         </label>
                       </div>
 
@@ -489,8 +526,34 @@ export default function AdminCourseEditor() {
                       {l.type === "cards" && (
                         <CardsEditor key={`${l.key}-cards`} value={l.cards ?? []} onChange={(c) => updateLesson(si, li, (x) => { x.cards = c; })} />
                       )}
+                      {l.type === "practice" && (
+                        <div className="mt-3 rounded-xl bg-[var(--surface)] p-3 text-sm">
+                          <div className="flex flex-wrap items-end gap-3">
+                            <div className="w-32">
+                              <Input id={`${l.key}-label`} label="머리표" placeholder="예: Day 1" value={l.label ?? ""} onChange={(e) => updateLesson(si, li, (x) => { x.label = e.target.value; })} />
+                            </div>
+                            <div className="w-28">
+                              <Input id={`${l.key}-min`} label="예상(분)" inputMode="numeric" value={l.estMinutes ?? ""} onChange={(e) => updateLesson(si, li, (x) => { x.estMinutes = numOrNull(e.target.value); })} />
+                            </div>
+                            <Button size="sm" variant="secondary" onClick={() => setOpenPractice((o) => ({ ...o, [l.key]: !o[l.key] }))}>
+                              {openPractice[l.key] ? "내용 접기" : `내용 편집 (블록 ${l.blocks?.length ?? 0}개)`}
+                            </Button>
+                            <Link href={`/learn/${doc.slug}/${l.key}`} target="_blank" className="inline-flex h-9 items-center rounded-lg bg-white px-3 text-xs font-semibold">회원 화면 ↗</Link>
+                          </div>
+                          {openPractice[l.key] && (
+                            <div className="mt-4">
+                              <PracticeBlocksEditor
+                                blocks={l.blocks ?? []}
+                                keyBase={l.key}
+                                usedKeys={new Set(doc.sections.flatMap((ss) => ss.lessons.flatMap((ll) => (ll.blocks ?? []).map((b) => b.key))))}
+                                onChange={(next) => updateLesson(si, li, (x) => { x.blocks = next; })}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                      <textarea
+                      {l.type !== "practice" && <textarea
                         value={l.body ?? ""}
                         placeholder={
                           l.type === "text"
@@ -503,7 +566,7 @@ export default function AdminCourseEditor() {
                         }
                         onChange={(e) => updateLesson(si, li, (x) => { x.body = e.target.value; })}
                         className="mt-3 min-h-[80px] w-full rounded-xl border border-[var(--border)] px-3 py-2 font-mono text-xs"
-                      />
+                      />}
                     </div>
                   );
                 })}

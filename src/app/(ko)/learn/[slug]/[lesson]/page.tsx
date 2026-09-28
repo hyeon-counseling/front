@@ -6,26 +6,32 @@ import { useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
 import { formatDuration, LESSON_TYPE_LABEL, type CourseDetail, type LessonResponse, type Playback } from "@/lib/course";
-import { Markdown } from "@/components/workbook/Markdown";
+import { Markdown } from "@/components/practice/Markdown";
 import { LessonPlayer } from "@/components/course/LessonPlayer";
 import { AudioPlayer } from "@/components/course/AudioPlayer";
 import { QuizLesson } from "@/components/course/QuizLesson";
 import { CardsLesson } from "@/components/course/CardsLesson";
 import { LessonQA } from "@/components/course/LessonQA";
 import { LearnShell, type LearnNavGroup } from "@/components/learn/LearnShell";
+import { Callout } from "@/components/practice/Markdown";
+import { ExerciseBlock } from "@/components/practice/ExerciseBlock";
+import { RewardModal } from "@/components/course/RewardModal";
+import type { CouponView } from "@/lib/payment";
 import { Skeleton } from "@/components/ui";
 
 type LessonState = { status: "ok"; data: LessonResponse } | { status: "locked"; message: string } | { status: "error"; message: string };
 
-// 강의 수강 화면 — 왼쪽 목차(섹션·차시) · 영상/오디오 플레이어 · 퀴즈 · 요약카드 · 이어보기 · 진도 저장 · 완료 · 이전/다음
+// 강의 수강 화면 — 왼쪽 목차(섹션·차시) · 영상/오디오 플레이어 · 퀴즈 · 요약카드 · 쓰기 실습 · 이어보기 · 진도 저장 · 완료 · 이전/다음
+// 무료 체험 차시는 로그인하면 수강권이 없어도 진도·기록이 저장된다(체험 수강권)
 export default function LearnPage() {
   const { slug, lesson: lessonKey } = useParams<{ slug: string; lesson: string }>();
-  const { loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [state, setState] = useState<{ key: string; value: LessonState } | null>(null);
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [playback, setPlayback] = useState<{ key: string; value: Playback | null; error: string } | null>(null);
   const [completed, setCompleted] = useState<{ key: string; value: boolean } | null>(null);
   const [savingDone, setSavingDone] = useState(false);
+  const [reward, setReward] = useState<CouponView | null>(null); // 수료 쿠폰
 
   // 재생 주소 (오디오 서명 주소가 만료되면 다시 호출)
   const loadPlayback = useCallback(() => {
@@ -57,6 +63,8 @@ export default function LearnPage() {
   const current = state?.key === lessonKey ? state.value : null;
   const data = current?.status === "ok" ? current.data : null;
   const isDone = completed?.key === lessonKey ? completed.value : !!data?.progress.completed;
+  // 기록을 남길 수 있는가 — 수강권이 있거나, 로그인하고 무료 체험 차시를 보는 중
+  const canTrack = !!data && (data.enrolled || (!!user && data.lesson.isPreview));
 
   // 목차 그룹 — 이 화면에서 완료가 바뀌면 바로 반영
   const groups = useMemo<LearnNavGroup[] | null>(
@@ -65,9 +73,11 @@ export default function LearnPage() {
         ? course.sections.map((s) => ({
             key: s.key,
             title: s.title,
+            badge: !course.enrollment?.active && s.lessons.length > 0 && s.lessons.every((l) => l.isPreview) ? "무료" : undefined,
             items: s.lessons.map((l) => ({
               key: l.key,
               href: `/learn/${slug}/${l.key}`,
+              label: l.label || undefined,
               title: l.title,
               meta: formatDuration(l.durationSec) || (l.type === "quiz" || l.type === "cards" ? LESSON_TYPE_LABEL[l.type] : undefined),
               completed: l.key === lessonKey ? isDone : l.completed,
@@ -89,22 +99,24 @@ export default function LearnPage() {
       nextHref={data?.next && !data.next.locked ? `/learn/${slug}/${data.next.key}` : null}
     >
       {content}
+      {reward && <RewardModal coupon={reward} onClose={() => setReward(null)} />}
     </LearnShell>
   );
 
   const saveProgress = useCallback(
     (body: { positionSec?: number; completed?: boolean }) => {
-      if (!data?.enrolled) return Promise.resolve(null);
-      return apiRequest<{ completed: boolean; progressPct: number }>(`/api/courses/${slug}/lessons/${lessonKey}/progress`, {
+      if (!canTrack) return Promise.resolve(null);
+      return apiRequest<{ completed: boolean; progressPct: number; reward?: { coupon: CouponView } | null }>(`/api/courses/${slug}/lessons/${lessonKey}/progress`, {
         method: "PUT",
         body: JSON.stringify(body),
         keepalive: true,
       }).then((res) => {
         if (res.ok && res.data && typeof res.data.completed === "boolean") setCompleted({ key: lessonKey, value: res.data.completed });
+        if (res.ok && res.data?.reward?.coupon) setReward(res.data.reward.coupon);
         return res;
       });
     },
-    [data?.enrolled, slug, lessonKey]
+    [canTrack, slug, lessonKey]
   );
 
   const onProgress = useCallback((sec: number) => void saveProgress({ positionSec: Math.floor(sec) }), [saveProgress]);
@@ -194,13 +206,26 @@ export default function LearnPage() {
         <p className="mt-6 text-sm font-semibold text-[var(--brand)]">
           {d.section.title} · {d.position.index + 1}/{d.position.total}
         </p>
+        {(d.lesson.label || d.lesson.type === "practice") && (
+          <div className="mt-3 flex items-center gap-2">
+            {d.lesson.label && <span className="rounded-lg bg-[var(--brand)] px-2.5 py-1 text-xs font-bold text-white">{d.lesson.label}</span>}
+            {d.lesson.type === "practice" && d.lesson.durationSec ? <span className="text-xs text-[var(--foreground-subtle)]">약 {Math.round(d.lesson.durationSec / 60)}분</span> : null}
+            {isDone && <span className="text-xs font-semibold text-[var(--brand)]">✓ 완료</span>}
+          </div>
+        )}
         <h1 className="mt-1 text-2xl font-bold text-[var(--foreground)] sm:text-3xl">{d.lesson.title}</h1>
         {d.lesson.summary && <p className="mt-2 text-[var(--foreground-muted)]">{d.lesson.summary}</p>}
 
         {!d.enrolled && d.lesson.isPreview && (
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[var(--brand-light)] px-5 py-4">
-            <p className="text-sm font-semibold text-[var(--brand-ink)]">미리보기 중이에요. 나머지 차시는 수강 신청 후 볼 수 있어요.</p>
-            <Link href={`/courses/${slug}`} className="text-sm font-bold text-[var(--brand)]">수강 신청 →</Link>
+            <p className="text-sm font-semibold text-[var(--brand-ink)]">
+              {user ? "무료 체험 중이에요. 적은 내용과 진도는 저장되고, 수강 신청하면 그대로 이어져요." : "무료 체험 차시예요. 로그인하면 적은 내용과 진도가 저장돼요."}
+            </p>
+            {user ? (
+              <Link href={`/courses/${slug}`} className="text-sm font-bold text-[var(--brand)]">수강 신청 →</Link>
+            ) : (
+              <Link href={`/login?next=/learn/${slug}/${lessonKey}`} className="text-sm font-bold text-[var(--brand)]">로그인 →</Link>
+            )}
           </div>
         )}
 
@@ -210,13 +235,33 @@ export default function LearnPage() {
           </div>
         )}
 
+        {d.lesson.type === "practice" && (
+          <div className="mt-8 space-y-8">
+            {(d.lesson.blocks ?? []).map((b) =>
+              b.type === "text" ? (
+                <Markdown key={b.key} md={b.md ?? ""} />
+              ) : b.type === "callout" ? (
+                <Callout key={b.key} block={b} />
+              ) : (
+                <ExerciseBlock
+                  key={`${lessonKey}-${b.key}`}
+                  saveUrl={`/api/courses/${slug}/lessons/${lessonKey}/entries/${b.key}`}
+                  block={b}
+                  initial={d.entries?.[b.key]}
+                  canSave={canTrack}
+                />
+              )
+            )}
+          </div>
+        )}
+
         {d.lesson.type === "quiz" && d.lesson.quiz && (
           <div className="mt-8">
             <QuizLesson
               key={lessonKey}
               endpoint={`/api/courses/${slug}/lessons/${lessonKey}/quiz`}
               quiz={d.lesson.quiz}
-              enrolled={d.enrolled}
+              enrolled={canTrack}
               best={d.progress.quizBest ?? null}
               attempts={d.progress.quizAttempts ?? 0}
               onGraded={(r) => r.saved && onLessonSaved(r.passed)}
@@ -230,7 +275,7 @@ export default function LearnPage() {
               key={lessonKey}
               endpoint={`/api/courses/${slug}/lessons/${lessonKey}/cards`}
               cards={d.lesson.cards}
-              enrolled={d.enrolled}
+              enrolled={canTrack}
               initialKnown={d.progress.cardsKnown ?? []}
               onSaved={onLessonSaved}
             />
@@ -238,19 +283,30 @@ export default function LearnPage() {
         )}
 
         <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-[var(--border-light)] pt-6">
-          {d.enrolled && d.lesson.type === "quiz" && (
+          {canTrack && d.lesson.type === "quiz" && (
             <span className={`inline-flex h-11 items-center rounded-xl px-5 text-sm font-semibold ${isDone ? "bg-[var(--brand-light)] text-[var(--brand)]" : "bg-[var(--surface)] text-[var(--foreground-muted)]"}`}>
               {isDone ? "✓ 합격·완료" : `합격(${d.lesson.quiz?.passScore ?? 60}점 이상)하면 완료돼요`}
             </span>
           )}
-          {d.enrolled && d.lesson.type !== "quiz" && (
+          {canTrack && d.lesson.type !== "quiz" && (
             <button
               onClick={toggleDone}
               disabled={savingDone}
-              className={`inline-flex h-11 cursor-pointer items-center rounded-xl px-5 text-sm font-semibold disabled:opacity-60 ${isDone ? "bg-[var(--brand-light)] text-[var(--brand)]" : "bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-muted)]"}`}
+              className={`inline-flex h-11 cursor-pointer items-center rounded-xl px-5 text-sm font-semibold disabled:opacity-60 ${
+                isDone
+                  ? "bg-[var(--brand-light)] text-[var(--brand)]"
+                  : d.lesson.type === "practice"
+                    ? "bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
+                    : "bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
+              }`}
             >
-              {isDone ? "✓ 완료함" : "완료로 표시"}
+              {isDone ? "✓ 완료함" : d.lesson.type === "practice" ? `${d.lesson.label || "오늘"} 완료하기` : "완료로 표시"}
             </button>
+          )}
+          {!user && d.lesson.type === "practice" && (
+            <Link href={`/login?next=/learn/${slug}/${lessonKey}`} className="inline-flex h-11 items-center rounded-xl bg-[var(--brand)] px-5 text-sm font-semibold text-white">
+              로그인하고 기록하기
+            </Link>
           )}
           <div className="ml-auto flex gap-2">
             {d.prev && (

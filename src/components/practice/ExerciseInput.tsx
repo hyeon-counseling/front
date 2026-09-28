@@ -18,7 +18,7 @@ import type {
   FormField,
   ScaleConfig,
   TableColumn,
-} from "@/lib/workbook";
+} from "@/lib/practice";
 
 type Choice = { selected: string[]; other?: string };
 

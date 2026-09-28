@@ -46,7 +46,7 @@ export default function MyCouponsPage() {
         </div>
       ) : list.length === 0 ? (
         <div className="mt-8">
-          <EmptyState title="아직 받은 쿠폰이 없어요" description="워크북을 95% 이상 완주하면 다음 워크북 할인 쿠폰을 드려요." />
+          <EmptyState title="아직 받은 쿠폰이 없어요" description="수료 쿠폰이 있는 강의를 마치면 다음 강의 할인 쿠폰을 드려요." />
         </div>
       ) : (
         <>

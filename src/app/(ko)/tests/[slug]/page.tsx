@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
 import type { TestDetail } from "@/lib/psychTest";
-import { Markdown } from "@/components/workbook/Markdown";
+import { Markdown } from "@/components/practice/Markdown";
 import { COMMON_ORIENTATION, SensitiveConsentText } from "@/components/tests/TestParts";
 import { Alert, Skeleton } from "@/components/ui";
 
