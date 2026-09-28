@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
 import type { MyWorkbook } from "@/lib/workbook";
 import type { MyCourse } from "@/lib/course";
+import type { MyProgram } from "@/lib/program";
 import type { MyTestItem } from "@/lib/psychTest";
 import { Skeleton } from "@/components/ui";
 import { StampCard } from "@/components/my/StampCard";
@@ -19,6 +20,7 @@ export default function MyPage() {
   const { user, logout, loading } = useAuth();
   const [workbooks, setWorkbooks] = useState<MyWorkbook[] | null>(null);
   const [courses, setCourses] = useState<MyCourse[] | null>(null);
+  const [programs, setPrograms] = useState<MyProgram[] | null>(null);
   const [tests, setTests] = useState<MyTestItem[] | null>(null);
 
   useEffect(() => {
@@ -29,10 +31,15 @@ export default function MyPage() {
     }
     apiRequest<MyWorkbook[]>("/api/my/workbooks").then((res) => setWorkbooks(res.ok && res.data ? res.data : []));
     apiRequest<MyCourse[]>("/api/my/courses").then((res) => setCourses(res.ok && res.data ? res.data : []));
+    apiRequest<MyProgram[]>("/api/my/programs").then((res) => setPrograms(res.ok && res.data ? res.data : []));
     apiRequest<MyTestItem[]>("/api/my/tests").then((res) => setTests(res.ok && res.data ? res.data : []));
   }, [loading, user, router]);
 
   if (loading || !user) return null;
+
+  // 과정에 든 과목은 '내 과정' 카드에서 보여 주고, '내 강의'에는 과정 밖 과목만
+  const inPrograms = new Set((programs ?? []).flatMap((p) => p.courses.map((c) => c.slug)));
+  const soloCourses = courses?.filter((c) => !inPrograms.has(c.slug)) ?? null;
 
   return (
     <div className="px-4 py-14 sm:px-6 sm:py-20">
@@ -99,22 +106,61 @@ export default function MyPage() {
           )}
         </section>
 
+        {/* 과정 (여러 과목 묶음) */}
+        {!!programs?.length && (
+          <section className="mt-10">
+            <h2 className="mb-4 text-lg font-bold text-[var(--foreground)]">내 과정</h2>
+            <div className="grid gap-4">
+              {programs.map((p) => (
+                <div key={p.slug} className="card p-6">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-[var(--foreground-subtle)]">
+                        {p.courseCount}과목 · {p.enrollment.completedAt ? "과정 수료" : `${p.enrollment.completedCourses}과목 수료`}
+                        {p.enrollment.expiresAt && ` · ${new Date(p.enrollment.expiresAt).toLocaleDateString("ko-KR")}까지`}
+                      </p>
+                      <h3 className="mt-1 text-xl font-bold text-[var(--foreground)]">{p.title}</h3>
+                      {p.nextCourse && <p className="mt-1 text-sm text-[var(--foreground-muted)]">이어서: {p.nextCourse.title}</p>}
+                    </div>
+                    <div className="flex gap-2">
+                      <Link href={`/programs/${p.slug}`} className="inline-flex h-11 items-center rounded-xl bg-[var(--surface)] px-4 text-sm font-semibold hover:bg-[var(--surface-muted)]">
+                        과목 {p.courseCount}개 보기
+                      </Link>
+                      {p.nextCourse && (
+                        <Link href={`/courses/${p.nextCourse.slug}`} className="inline-flex h-11 items-center rounded-xl bg-[var(--brand)] px-5 text-sm font-semibold text-white hover:bg-[var(--brand-hover)]">
+                          {p.enrollment.progressPct > 0 ? "이어하기" : "시작하기"}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="h-2 flex-1 rounded-full bg-[var(--surface-muted)]">
+                      <div className="h-2 rounded-full bg-[var(--brand)]" style={{ width: `${p.enrollment.progressPct}%` }} />
+                    </div>
+                    <span className="text-sm font-semibold text-[var(--foreground-muted)]">{p.enrollment.progressPct}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* 강의 */}
         <section className="mt-10">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-bold text-[var(--foreground)]">내 강의</h2>
             <Link href="/courses" className="text-sm font-semibold text-[var(--brand)]">강의 둘러보기 →</Link>
           </div>
-          {courses === null ? (
+          {soloCourses === null || programs === null ? (
             <Skeleton className="h-28" />
-          ) : courses.length === 0 ? (
+          ) : soloCourses.length === 0 ? (
             <div className="card p-6">
-              <p className="font-semibold text-[var(--foreground)]">수강 중인 강의가 없어요</p>
-              <p className="mt-1 text-sm text-[var(--foreground-muted)]">10분짜리 영상으로 편하게 시작해 보세요.</p>
+              <p className="font-semibold text-[var(--foreground)]">{inPrograms.size ? "과정 밖에서 따로 듣는 강의가 없어요" : "수강 중인 강의가 없어요"}</p>
+              <p className="mt-1 text-sm text-[var(--foreground-muted)]">{inPrograms.size ? "과정에 든 과목은 위 '내 과정'에서 볼 수 있어요." : "10분짜리 영상으로 편하게 시작해 보세요."}</p>
             </div>
           ) : (
             <div className="grid gap-4">
-              {courses.map((c) => (
+              {soloCourses.map((c) => (
                 <div key={c.slug} className="card p-6">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0">

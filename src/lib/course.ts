@@ -26,6 +26,8 @@ export interface CourseEnrollmentSummary {
   completedAt: string | null;
   completedLessons: string[];
   resume: { key: string; title: string } | null;
+  /** 과정으로만 받은 수강권 (과목을 따로 사지 않음) */
+  viaProgram?: boolean;
 }
 
 export type LessonType = "video" | "text" | "audio" | "quiz" | "cards";
@@ -75,6 +77,8 @@ export interface CurriculumLesson {
 
 export interface CourseDetail extends CourseListItem {
   description: string;
+  /** 이 강의가 들어 있는 과정 (공개 과정 + 내가 수강 중인 비공개 과정) */
+  programs?: { slug: string; title: string; enrolled: boolean }[];
   sections: { key: string; title: string; lessons: CurriculumLesson[] }[];
   enrollment: CourseEnrollmentSummary | null;
   canAccess: boolean;

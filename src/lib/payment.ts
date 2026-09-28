@@ -1,7 +1,10 @@
 // 사이트 결제 타입·헬퍼 — 백엔드 paymentController 응답과 같은 모양
 import { apiRequest } from "./api";
 
-export type ItemType = "course" | "workbook";
+export type ItemType = "course" | "workbook" | "program";
+
+/** 상품 종류 이름 — 결제·주문·쿠폰 화면 공통 */
+export const ITEM_TYPE_LABEL: Record<ItemType, string> = { course: "강의", workbook: "워크북", program: "과정" };
 
 export interface OrderSummary {
   orderId: string;
@@ -92,7 +95,7 @@ export function couponBenefit(c: Pick<CouponView, "discountType" | "discountValu
 /** 쿠폰 조건 한 줄 — 대상·최소 금액·기한 */
 export function couponConditions(c: Pick<CouponView, "itemTypes" | "minAmount" | "validUntil">): string {
   const parts: string[] = [];
-  if (c.itemTypes.length === 1) parts.push(c.itemTypes[0] === "workbook" ? "워크북 전용" : "강의 전용");
+  if (c.itemTypes.length && c.itemTypes.length < 3) parts.push(`${c.itemTypes.map((t) => ITEM_TYPE_LABEL[t]).join("·")} 전용`);
   if (c.minAmount) parts.push(`${won(c.minAmount)} 이상`);
   if (c.validUntil) parts.push(`${new Date(c.validUntil).toLocaleDateString("ko-KR")}까지`);
   return parts.join(" · ");

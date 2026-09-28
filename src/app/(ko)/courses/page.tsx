@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { CourseListItem } from "@/lib/course";
+import { totalTimeLabel, type ProgramListItem } from "@/lib/program";
 import { formatPrice } from "@/lib/workbook";
 
 export const metadata: Metadata = {
@@ -18,8 +19,18 @@ async function getCourses(): Promise<CourseListItem[] | null> {
   }
 }
 
+async function getPrograms(): Promise<ProgramListItem[]> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/programs`, { next: { revalidate: 60 } });
+    const body = await res.json();
+    return body.success ? body.data : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function CoursesPage() {
-  const list = await getCourses();
+  const [list, programs] = await Promise.all([getCourses(), getPrograms()]);
 
   return (
     <div className="px-4 py-14 sm:px-6 sm:py-20">
@@ -32,13 +43,51 @@ export default async function CoursesPage() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
+        {programs.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-lg font-bold text-[var(--foreground)]">과정 · 여러 과목을 한 번에</h2>
+            <div className="mt-4 grid gap-6 md:grid-cols-2">
+              {programs.map((p) => {
+                const price = formatPrice(p.salePriceEffective);
+                const separate = p.separateTotal && p.salePriceEffective && p.separateTotal > p.salePriceEffective ? p.separateTotal : null;
+                return (
+                  <Link key={p.slug} href={`/programs/${p.slug}`} className="card card-hover group flex flex-col overflow-hidden ring-1 ring-[var(--brand-light)]">
+                    <div className="bg-brand-gradient relative flex aspect-[16/7] items-end p-6 text-white">
+                      {p.coverImageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={p.coverImageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                      )}
+                      <span className="relative rounded-lg bg-black/25 px-2.5 py-1 text-xs font-semibold backdrop-blur-sm">
+                        {p.courseCount}과목 · {p.lessonCount}차시{p.totalMinutes ? ` · ${totalTimeLabel(p.totalMinutes)}` : ""}
+                      </span>
+                    </div>
+                    <div className="flex flex-1 flex-col p-6">
+                      <span className="text-xs font-bold text-[var(--brand)]">과정</span>
+                      <h3 className="mt-1 text-xl font-bold leading-snug text-[var(--foreground)] group-hover:text-[var(--brand)]">{p.title}</h3>
+                      {p.subtitle && <p className="mt-2 text-[var(--foreground-muted)]">{p.subtitle}</p>}
+                      <div className="mt-auto flex items-end justify-between pt-6">
+                        <span className="text-sm text-[var(--foreground-subtle)]">{p.instructor}</span>
+                        <span className="text-right">
+                          {separate && <span className="mr-2 text-sm text-[var(--foreground-subtle)] line-through">{formatPrice(separate)}</span>}
+                          <span className="text-lg font-extrabold text-[var(--foreground)]">{price ?? "준비 중"}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            {!!list?.length && <h2 className="mt-14 text-lg font-bold text-[var(--foreground)]">강의</h2>}
+          </section>
+        )}
+
+        <div className={`${programs.length > 0 ? "mt-4" : "mt-12"} grid gap-6 md:grid-cols-2`}>
           {list === null && (
             <div className="card p-8 text-sm text-[var(--foreground-muted)] md:col-span-2">
               강의 목록을 불러오지 못했어요. 잠시 후 새로고침해 주세요.
             </div>
           )}
-          {list?.length === 0 && (
+          {list?.length === 0 && programs.length === 0 && (
             <div className="rounded-3xl border border-dashed border-[var(--border)] p-10 text-center md:col-span-2">
               <p className="text-xl font-bold text-[var(--foreground)]">곧 공개됩니다</p>
               <p className="mt-2 text-sm text-[var(--foreground-muted)]">

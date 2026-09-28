@@ -27,7 +27,7 @@ export default function MyCertificatesPage() {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <Link href="/my" className="text-sm text-[var(--foreground-muted)] hover:text-[var(--foreground)]">← 내 학습</Link>
       <h1 className="font-display mt-3 text-3xl text-[var(--foreground)]">수료증</h1>
-      <p className="mt-2 text-[var(--foreground-muted)]">강의를 수료하거나 워크북을 95% 이상 완주하면 자동으로 발급돼요.</p>
+      <p className="mt-2 text-[var(--foreground-muted)]">강의·과정을 수료하거나 워크북을 95% 이상 완주하면 자동으로 발급돼요.</p>
       {!list ? (
         <Skeleton className="mt-8 h-28" />
       ) : list.length === 0 ? (
@@ -43,7 +43,7 @@ export default function MyCertificatesPage() {
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold text-[var(--foreground)]">{c.title}</span>
                   <span className="mt-0.5 block text-sm text-[var(--foreground-muted)]">
-                    {c.kind === "workbook" ? "워크북 완주" : "강의 수료"} · {krDate(c.issuedAt)}
+                    {c.kind === "workbook" ? "워크북 완주" : c.kind === "program" ? "과정 수료" : "강의 수료"} · {krDate(c.issuedAt)}
                     {c.minutes ? ` · ${hoursLabel(c.minutes)}` : ""}
                   </span>
                   <span className="mt-0.5 block font-mono text-xs text-[var(--foreground-subtle)]">{c.serial}</span>

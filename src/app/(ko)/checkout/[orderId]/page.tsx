@@ -111,7 +111,7 @@ export default function CheckoutPage() {
         <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">결제하기</h1>
 
         <div className="card mt-6 p-6">
-          <p className="text-xs font-semibold text-[var(--foreground-subtle)]">{order.itemType === "course" ? "강의" : "셀프 워크북 · 전체 이용권"}</p>
+          <p className="text-xs font-semibold text-[var(--foreground-subtle)]">{order.itemType === "course" ? "강의" : order.itemType === "program" ? "과정 · 과목 묶음" : "셀프 워크북 · 전체 이용권"}</p>
           <p className="mt-1 text-lg font-bold text-[var(--foreground)]">{order.itemTitle}</p>
           {(order.discountAmount ?? 0) > 0 && (
             <div className="mt-5 space-y-1.5 border-t border-[var(--border-light)] pt-4 text-sm">

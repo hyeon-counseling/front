@@ -31,7 +31,7 @@ export interface Attendance {
 
 export interface CertificateInfo {
   serial: string;
-  kind: "course" | "workbook";
+  kind: "course" | "workbook" | "program";
   title: string;
   name: string;
   minutes: number | null;
