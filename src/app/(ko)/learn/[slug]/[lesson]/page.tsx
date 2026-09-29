@@ -16,6 +16,7 @@ import { LearnShell, type LearnNavGroup } from "@/components/learn/LearnShell";
 import { Callout } from "@/components/practice/Markdown";
 import { ExerciseBlock } from "@/components/practice/ExerciseBlock";
 import { RewardModal } from "@/components/course/RewardModal";
+import { GuidedLesson } from "@/components/guided/GuidedLesson";
 import type { CouponView } from "@/lib/payment";
 import { Skeleton } from "@/components/ui";
 
@@ -269,6 +270,33 @@ export default function LearnPage() {
           </div>
         )}
 
+        {d.lesson.type === "guided" && d.lesson.steps && d.lesson.steps.length > 0 && (
+          <div className="mt-8">
+            <GuidedLesson
+              key={lessonKey}
+              slug={slug}
+              lessonKey={lessonKey}
+              lessonTitle={d.lesson.title}
+              lessonLabel={d.lesson.label}
+              lessonMin={d.lesson.estMinutes ?? undefined}
+              steps={d.lesson.steps}
+              check={d.lesson.check}
+              gad7Def={d.lesson.gad7}
+              initialEntries={d.entries ?? {}}
+              canSave={canTrack}
+              isDone={isDone}
+              onCompleted={(sun) => {
+                setCompleted({ key: lessonKey, value: true });
+                reloadCourse();
+                if (sun) {
+                  // 햇살 보상은 GuidedLesson 내부에서 표시
+                }
+              }}
+              onNext={d.next && !d.next.locked ? () => window.location.href = `/learn/${slug}/${d.next!.key}` : undefined}
+            />
+          </div>
+        )}
+
         {d.lesson.type === "cards" && d.lesson.cards && (
           <div className="mt-8">
             <CardsLesson
@@ -288,7 +316,7 @@ export default function LearnPage() {
               {isDone ? "✓ 합격·완료" : `합격(${d.lesson.quiz?.passScore ?? 60}점 이상)하면 완료돼요`}
             </span>
           )}
-          {canTrack && d.lesson.type !== "quiz" && (
+          {canTrack && d.lesson.type !== "quiz" && d.lesson.type !== "guided" && (
             <button
               onClick={toggleDone}
               disabled={savingDone}
