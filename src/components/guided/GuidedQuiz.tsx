@@ -15,6 +15,8 @@ interface Props {
   lessonKey: string;
   /** 미리보기/비로그인 시 seen 저장 생략 */
   canSave?: boolean;
+  /** 처음 답했을 때 (대화형은 답을 기다렸다 다음으로) */
+  onAnswered?: (correct: boolean) => void;
 }
 
 const KIND_LABEL: Record<Quiz["kind"], string> = {
@@ -37,7 +39,7 @@ function deterministicShuffle<T>(arr: T[], seed = 7): T[] {
   return r;
 }
 
-export function GuidedQuiz({ quiz, courseSlug, lessonKey, canSave = true }: Props) {
+export function GuidedQuiz({ quiz, courseSlug, lessonKey, canSave = true, onAnswered }: Props) {
   const [answered, setAnswered] = useState(false);
   const [correct, setCorrect] = useState<boolean | null>(null);
   const [shownAnswer, setShownAnswer] = useState<string | null>(null);
@@ -58,6 +60,7 @@ export function GuidedQuiz({ quiz, courseSlug, lessonKey, canSave = true }: Prop
       setAnswered(true);
       setCorrect(ok);
       setShownAnswer(shown ?? null);
+      onAnswered?.(ok);
       if (canSave) {
         void apiRequest(`/api/my/review/seen`, {
           method: "POST",
@@ -65,7 +68,7 @@ export function GuidedQuiz({ quiz, courseSlug, lessonKey, canSave = true }: Prop
         });
       }
     },
-    [answered, canSave, courseSlug, lessonKey, quiz.id]
+    [answered, canSave, courseSlug, lessonKey, quiz.id, onAnswered]
   );
 
   const q = quiz.q.replace("___", "___");

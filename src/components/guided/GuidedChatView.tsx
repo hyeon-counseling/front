@@ -21,6 +21,8 @@ import { GuidedQuiz } from "./GuidedQuiz";
 import {
   evalWhen,
   buildEntryValue,
+  getEntry,
+  resolveCardFrom,
   gad7Band,
   type Step,
   type AskStep,
@@ -191,6 +193,9 @@ export function GuidedChatView({
   const entries = useRef<Entries>(initialEntries);
   const running = useRef(true);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // react 판단용 답 (단일 선택은 몇 번째를 골랐는지 {__idx}, 저장 안 하는 선택은 id로)
+  const reactVals = useRef<Record<string, unknown>>({});
+  const [runId, setRunId] = useState(0);
 
   const scroll = useCallback(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
@@ -217,7 +222,9 @@ export function GuidedChatView({
   );
 
   const scheduleSave = useCallback(
-    (blockKey: string, value: unknown) => {
+    (blockKey: string, value: unknown, ask?: AskStep) => {
+      // key가 없거나 save:false인 입력(예: “할 수 있을 것 같아?”)은 저장하지 않는다
+      if (!blockKey || (ask && (!ask.key || (ask as { save?: boolean }).save === false))) return;
       if (saveTimers.current[blockKey]) clearTimeout(saveTimers.current[blockKey]);
       saveTimers.current[blockKey] = setTimeout(() => {
         delete saveTimers.current[blockKey];
@@ -282,9 +289,12 @@ export function GuidedChatView({
             const idx = ask.opts.indexOf(opt);
             setDock(null);
             addMe(opt);
-            const { blockKey, value } = buildEntryValue(ask, { selected: [opt] }, entries.current);
-            entries.current = { ...entries.current, [blockKey]: value };
-            scheduleSave(blockKey, value);
+            reactVals.current[ask.field && ask.key ? `${ask.key}.${ask.field}` : ask.key ?? ask.id ?? ""] = { __idx: idx, v: opt };
+            if (ask.key && (ask as { save?: boolean }).save !== false) {
+              const { blockKey, value } = buildEntryValue(ask, ask.field ? { selected: [opt] } : opt, entries.current);
+              entries.current = { ...entries.current, [blockKey]: value };
+              scheduleSave(blockKey, value, ask);
+            }
             res({ sel: [opt], idx });
           }
         };
@@ -292,21 +302,27 @@ export function GuidedChatView({
         const handleNone = () => {
           setDock(null);
           addMe(ask.none!);
-          const { blockKey, value } = buildEntryValue(ask, { selected: [] }, entries.current);
+          reactVals.current[ask.key ?? ask.id ?? ""] = [];
+          const { blockKey, value } = buildEntryValue(ask, ask.field ? { selected: [] } : ask.multi ? [] : null, entries.current);
           entries.current = { ...entries.current, [blockKey]: value };
-          scheduleSave(blockKey, value);
+          scheduleSave(blockKey, value, ask);
           res({ sel: [], idx: -1 });
         };
 
-        const handleSend = () => {
+        const handleSend = (other?: string) => {
           if (sending) return;
           sending = true;
           setDock(null);
-          const displayText = picked.length ? picked.join(", ") : ask.none ?? "없음";
+          const oth = (other ?? "").trim();
+          const displayText = [...picked, ...(oth ? [oth] : [])].join(", ") || (ask.none ?? "없음");
           addMe(displayText);
-          const { blockKey, value } = buildEntryValue(ask, { selected: picked }, entries.current);
+          reactVals.current[ask.key ?? ask.id ?? ""] = picked;
+          const built = buildEntryValue(ask, ask.field ? { selected: picked, ...(oth ? { other: oth } : {}) } : picked, entries.current);
+          const blockKey = built.blockKey;
+          // 직접 쓴 답은 { selected, other } 의 other 로
+          const value = !ask.field && oth ? { ...(built.value as object), other: oth } : built.value;
           entries.current = { ...entries.current, [blockKey]: value };
-          scheduleSave(blockKey, value);
+          scheduleSave(blockKey, value, ask);
           res({ sel: picked, idx: -1 });
         };
 
@@ -332,9 +348,12 @@ export function GuidedChatView({
         const handleSend = (v: string) => {
           setDock(null);
           if (v) addMe(v);
-          const { blockKey, value } = buildEntryValue(ask, v, entries.current);
-          entries.current = { ...entries.current, [blockKey]: value };
-          if (v) scheduleSave(blockKey, value);
+          reactVals.current[ask.field && ask.key ? `${ask.key}.${ask.field}` : ask.key ?? ""] = v;
+          if (ask.key) {
+            const { blockKey, value } = buildEntryValue(ask, v, entries.current);
+            entries.current = { ...entries.current, [blockKey]: value };
+            if (v) scheduleSave(blockKey, value, ask);
+          }
           res(v);
         };
 
@@ -355,9 +374,12 @@ export function GuidedChatView({
         const handleSend = (v: number) => {
           setDock(null);
           addMe(`${v}${ask.unit ?? ""}`);
-          const { blockKey, value } = buildEntryValue(ask, v, entries.current);
-          entries.current = { ...entries.current, [blockKey]: value };
-          scheduleSave(blockKey, value);
+          reactVals.current[ask.field && ask.key ? `${ask.key}.${ask.field}` : ask.key ?? ""] = v;
+          if (ask.key) {
+            const { blockKey, value } = buildEntryValue(ask, v, entries.current);
+            entries.current = { ...entries.current, [blockKey]: value };
+            scheduleSave(blockKey, value, ask);
+          }
           res(v);
         };
 
@@ -398,9 +420,10 @@ export function GuidedChatView({
       const score = ans.reduce((s, x) => s + x, 0);
       const band = gad7Band(score);
       const value = { answers: ans, score, band };
-      const { blockKey } = buildEntryValue(ask, value, entries.current);
+      const blockKey = ask.key ?? "";
       entries.current = { ...entries.current, [blockKey]: value };
-      scheduleSave(blockKey, value);
+      reactVals.current[blockKey] = value;
+      scheduleSave(blockKey, { answers: ans }, ask);
       // 점수 표시
       addMsg(
         newMsg({
@@ -462,7 +485,9 @@ export function GuidedChatView({
                   <summary className="cursor-pointer px-4 py-3 font-semibold text-[var(--brand)] outline-none">
                     더 알아보기 · {step.deep.replace(/^더 알아보기 — /, "")}
                   </summary>
-                  <p className="px-4 pb-3 pt-1 text-[var(--foreground-muted)]">{step.md}</p>
+                  {step.md.split(/\n\n+/).map((para, j) => (
+                    <p key={j} className="px-4 pb-3 pt-1 text-[var(--foreground-muted)]">{para}</p>
+                  ))}
                 </details>
               ),
             })
@@ -478,6 +503,12 @@ export function GuidedChatView({
                   <ul className="space-y-1 text-sm">
                     {(step.items ?? []).map((item, j) => (
                       <li key={j} className="text-[var(--foreground)]">· {item}</li>
+                    ))}
+                    {(step.from ?? []).map(([label, ref], j) => (
+                      <li key={`f${j}`} className="text-[var(--foreground)]">
+                        <b className="mr-1 font-semibold text-[var(--foreground-muted)]">{label}</b>
+                        {resolveCardFrom(ref, entries.current)}
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -567,12 +598,12 @@ export function GuidedChatView({
             }
             const { blockKey, value } = buildEntryValue(ask, { rows }, entries.current);
             entries.current = { ...entries.current, [blockKey]: value };
-            scheduleSave(blockKey, value);
+            scheduleSave(blockKey, value, ask);
           }
         } else if ("react" in step) {
           const rs = step as ReactStep;
           const on = rs.react.on;
-          const v = entries.current[on] ?? entries.current[on.split(".")[0]];
+          const v = on in reactVals.current ? reactVals.current[on] : getEntry(entries.current, on);
           const match = rs.react.cases.find((c) => evalWhen(c.when, v));
           if (match) {
             if (match.s) await say("s", match.s, match.st);
@@ -593,11 +624,11 @@ export function GuidedChatView({
                     courseSlug={slug}
                     lessonKey={lessonKey}
                     canSave={canSave}
+                    onAnswered={() => setTimeout(res, 1200)}
                   />
                 ),
               })
             );
-            setTimeout(res, 700);
           });
         }
       }
@@ -616,7 +647,17 @@ export function GuidedChatView({
         <div className="flex flex-wrap gap-2 p-3">
           <button
             type="button"
-            onClick={onNext}
+            onClick={
+              onNext ??
+              (() => {
+                setMsgs([]);
+                setDock(null);
+                setSun(null);
+                setCompleted(false);
+                reactVals.current = {};
+                setRunId((r) => r + 1);
+              })
+            }
             className="cursor-pointer rounded-xl bg-[var(--brand)] px-5 py-2 text-sm font-semibold text-white"
           >
             {onNext ? "다음 레슨 →" : "처음부터 다시"}
@@ -631,7 +672,7 @@ export function GuidedChatView({
       running.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [runId]);
 
   return (
     <div className="flex h-[calc(100dvh-120px)] min-h-[500px] flex-col">
@@ -726,7 +767,7 @@ function ChipsDock({
   picked?: string[];
   onToggle: (opt: string, checked: boolean) => void;
   onNone?: () => void;
-  onSend?: () => void;
+  onSend?: (other?: string) => void;
 }) {
   const [picked, setPicked] = useState<string[]>(initialPicked);
   const [otherVal, setOtherVal] = useState("");
@@ -783,8 +824,8 @@ function ChipsDock({
       {multi && onSend && (
         <button
           type="button"
-          disabled={picked.length === 0}
-          onClick={onSend}
+          disabled={picked.length === 0 && !otherVal.trim()}
+          onClick={() => onSend(otherVal)}
           className="mt-2 w-full cursor-pointer rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
         >
           다 골랐어

@@ -6,7 +6,6 @@
  */
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { apiRequest } from "@/lib/api";
 
 interface ForestState {
@@ -46,12 +45,6 @@ export function ForestCard() {
           <h2 className="text-base font-bold text-[var(--foreground)]">마음숲</h2>
           <p className="mt-0.5 text-xs text-[var(--foreground-muted)]">앱의 숲에서 친구를 돌볼 수 있어요</p>
         </div>
-        <Link
-          href="/my/forest"
-          className="text-xs font-semibold text-[var(--brand)] hover:underline"
-        >
-          숲 보기 →
-        </Link>
       </div>
 
       <div className="mt-4 flex gap-6">
