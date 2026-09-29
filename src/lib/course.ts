@@ -1,5 +1,6 @@
 // 강의(LMS) 타입 — 백엔드 courseController 응답과 같은 모양
 import type { Block } from "./practice";
+import type { Step, Gad7Def, SunGrant } from "./guided";
 
 export interface CourseListItem {
   slug: string;
@@ -42,7 +43,7 @@ export interface CourseEnrollmentSummary {
 export const STATUS_LABEL = { draft: "작성 중", published: "운영 중", archived: "보관" } as const;
 export const STATUS_TONE = { draft: "warning", published: "brand", archived: "neutral" } as const;
 
-export type LessonType = "video" | "text" | "audio" | "quiz" | "cards" | "practice";
+export type LessonType = "video" | "text" | "audio" | "quiz" | "cards" | "practice" | "guided";
 
 export const LESSON_TYPE_LABEL: Record<LessonType, string> = {
   video: "영상",
@@ -51,6 +52,7 @@ export const LESSON_TYPE_LABEL: Record<LessonType, string> = {
   quiz: "퀴즈",
   cards: "카드",
   practice: "쓰기 실습",
+  guided: "대화형 레슨",
 };
 
 /** 목록 필터용 구성 요소 이름·순서 */
@@ -125,15 +127,37 @@ export interface LessonResponse {
     cards?: LessonCard[] | null;
     label?: string;
     blocks?: Block[] | null;
+    /** guided 차시 — steps 배열 */
+    steps?: Step[] | null;
+    /** guided 차시 — 주차 점검 여부 */
+    check?: boolean;
+    /** guided 차시 — GAD-7 문항 정의 (steps에 gad7 ask가 있을 때) */
+    gad7?: Gad7Def | null;
+    estMinutes?: number | null;
   };
   position: { index: number; total: number };
-  progress: { positionSec: number; completed: boolean; quizBest?: number | null; quizAttempts?: number; cardsKnown?: number[] };
+  progress: {
+    positionSec: number;
+    completed: boolean;
+    quizBest?: number | null;
+    quizAttempts?: number;
+    cardsKnown?: number[];
+  };
   enrolled: boolean;
-  /** 쓰기 실습 차시의 내 답 (블록 key → 값) */
+  /** 쓰기 실습 · guided 차시의 내 답 (blockKey → value) */
   entries?: Record<string, unknown>;
   trial?: boolean;
   prev: { key: string; title: string; locked: boolean } | null;
   next: { key: string; title: string; locked: boolean } | null;
+}
+
+/** 완료 PUT 응답 추가 필드 */
+export interface ProgressResponse {
+  completed: boolean;
+  progressPct: number;
+  reward?: { coupon: import("./payment").CouponView } | null;
+  /** guided 레슨 완료 시 햇살 지급 정보 */
+  sun?: SunGrant | null;
 }
 
 export type Playback =
