@@ -33,7 +33,7 @@ interface Lesson {
   key: string;
   title: string;
   summary?: string;
-  type: "video" | "text" | "audio" | "quiz" | "cards" | "practice";
+  type: "video" | "text" | "audio" | "quiz" | "cards" | "practice" | "guided";
   isPreview?: boolean;
   label?: string;
   estMinutes?: number | null;
@@ -43,6 +43,10 @@ interface Lesson {
   quiz?: QuizValue | null;
   cards?: TextCard[] | null;
   body?: string;
+  /** guided 차시 — steps JSON */
+  steps?: unknown[] | null;
+  /** guided 차시 — 주차 점검 */
+  check?: boolean;
 }
 interface Section {
   key: string;
@@ -389,6 +393,7 @@ export default function AdminCourseEditor() {
                                 if (x.type === "quiz" && !x.quiz) x.quiz = { passScore: 60, questions: [] };
                                 if (x.type === "cards" && !x.cards) x.cards = [];
                                 if (x.type === "practice" && !x.blocks) x.blocks = [];
+                                if (x.type === "guided" && !x.steps) x.steps = [];
                               })
                             }
                             className="rounded-lg border border-[var(--border)] px-2 py-1"
@@ -399,6 +404,7 @@ export default function AdminCourseEditor() {
                             <option value="quiz">퀴즈 (예상문제)</option>
                             <option value="cards">요약카드</option>
                             <option value="practice">쓰기 실습</option>
+                            <option value="guided">대화형 레슨</option>
                           </select>
                         </label>
                         <label className="flex cursor-pointer items-center gap-2">
@@ -553,7 +559,21 @@ export default function AdminCourseEditor() {
                         </div>
                       )}
 
-                      {l.type !== "practice" && <textarea
+                      {l.type === "guided" && (
+                        <GuidedLessonEditor
+                          lessonKey={l.key}
+                          steps={l.steps ?? []}
+                          check={!!l.check}
+                          label={l.label ?? ""}
+                          estMinutes={l.estMinutes ?? null}
+                          onChangeSteps={(steps) => updateLesson(si, li, (x) => { x.steps = steps; })}
+                          onChangeCheck={(v) => updateLesson(si, li, (x) => { x.check = v; })}
+                          onChangeLabel={(v) => updateLesson(si, li, (x) => { x.label = v; })}
+                          onChangeMin={(v) => updateLesson(si, li, (x) => { x.estMinutes = v; })}
+                        />
+                      )}
+
+                      {l.type !== "practice" && l.type !== "guided" && <textarea
                         value={l.body ?? ""}
                         placeholder={
                           l.type === "text"
@@ -579,6 +599,113 @@ export default function AdminCourseEditor() {
       )}
 
       <Toast message={toast} onClose={() => setToast(null)} />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GuidedLessonEditor — steps JSON 편집기 + 주차 점검 체크박스 + 읽기형 미리보기
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { GuidedReadView } from "@/components/guided/GuidedReadView";
+import type { Step } from "@/lib/guided";
+
+interface GuidedLessonEditorProps {
+  lessonKey: string;
+  steps: unknown[];
+  check: boolean;
+  label: string;
+  estMinutes: number | null;
+  onChangeSteps: (steps: unknown[]) => void;
+  onChangeCheck: (v: boolean) => void;
+  onChangeLabel: (v: string) => void;
+  onChangeMin: (v: number | null) => void;
+}
+
+function GuidedLessonEditor({
+  lessonKey,
+  steps,
+  check,
+  label,
+  estMinutes,
+  onChangeSteps,
+  onChangeCheck,
+  onChangeLabel,
+  onChangeMin,
+}: GuidedLessonEditorProps) {
+  const [raw, setRaw] = useState(JSON.stringify(steps, null, 2));
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const handleRawChange = (v: string) => {
+    setRaw(v);
+    try {
+      const parsed = JSON.parse(v);
+      if (!Array.isArray(parsed)) throw new Error("최상위는 배열이어야 해요");
+      setParseError(null);
+      onChangeSteps(parsed);
+    } catch (e) {
+      setParseError(e instanceof Error ? e.message : "JSON 형식 오류");
+    }
+  };
+
+  // steps 요약
+  const summary = (() => {
+    const asks = steps.filter((s) => typeof s === "object" && s !== null && "ask" in (s as object));
+    const quizzes = steps.filter((s) => typeof s === "object" && s !== null && "quiz" in (s as object));
+    return `${steps.length}개 스텝 · 입력 ${asks.length}개 · 퀴즈 ${quizzes.length}개`;
+  })();
+
+  const safeSteps = parseError ? [] : (steps as Step[]);
+
+  return (
+    <div className="mt-3 rounded-xl bg-[var(--surface)] p-3 text-sm">
+      <div className="mb-3 flex flex-wrap items-end gap-3">
+        <div className="w-32">
+          <Input id={`${lessonKey}-gl-label`} label="머리표" placeholder="예: 입구 1" value={label} onChange={(e) => onChangeLabel(e.target.value)} />
+        </div>
+        <div className="w-28">
+          <Input id={`${lessonKey}-gl-min`} label="예상(분)" inputMode="numeric" value={estMinutes ?? ""} onChange={(e) => onChangeMin(e.target.value.trim() === "" ? null : Number(e.target.value))} />
+        </div>
+        <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            checked={check}
+            onChange={(e) => onChangeCheck(e.target.checked)}
+            className="accent-[var(--brand)]"
+          />
+          주차 점검 (완료 시 햇살 15)
+        </label>
+        <Button size="sm" variant="secondary" onClick={() => setShowPreview((v) => !v)}>
+          {showPreview ? "미리보기 닫기" : "읽기형 미리보기"}
+        </Button>
+      </div>
+
+      <p className="mb-1 text-xs text-[var(--foreground-subtle)]">{summary}</p>
+      <textarea
+        value={raw}
+        onChange={(e) => handleRawChange(e.target.value)}
+        rows={16}
+        spellCheck={false}
+        placeholder='[{ "h": "안녕하세요" }, { "s": "안녕!", "r": true }]'
+        className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 font-mono text-xs leading-relaxed outline-none focus-visible:border-[var(--brand)]"
+      />
+      {parseError && (
+        <p className="mt-1 text-xs text-[var(--error)]">JSON 오류: {parseError}</p>
+      )}
+
+      {showPreview && safeSteps.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-[var(--border)] bg-white p-4">
+          <p className="mb-3 text-xs font-semibold text-[var(--foreground-subtle)]">읽기형 미리보기 (저장 없음)</p>
+          <GuidedReadView
+            slug="__preview__"
+            lessonKey={lessonKey}
+            steps={safeSteps}
+            check={check}
+            preview
+          />
+        </div>
+      )}
     </div>
   );
 }

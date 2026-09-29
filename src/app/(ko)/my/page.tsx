@@ -10,6 +10,7 @@ import type { MyProgram } from "@/lib/program";
 import type { MyTestItem } from "@/lib/psychTest";
 import { Skeleton } from "@/components/ui";
 import { StampCard } from "@/components/my/StampCard";
+import { ForestCard } from "@/components/my/ForestCard";
 
 // ─────────────────────────────────────────────────────────────────
 // 내 학습(마이페이지) — 내 과정 · 내 강의(무료 체험 포함, 이어보기 · 쓰기 기록) · 심리검사 · 주문 내역
@@ -46,6 +47,7 @@ export default function MyPage() {
         <p className="mt-2 text-sm text-[var(--foreground-muted)]">{user.email}</p>
 
         <StampCard />
+        <ForestCard />
 
         {/* 과정 (여러 과목 묶음) */}
         {!!programs?.length && (

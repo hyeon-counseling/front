@@ -1,0 +1,85 @@
+/* 마음숲 캐릭터·이모티콘 움직임 — chars.js stickers.css 포트 */
+.ch-svg,
+.sticker svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  display: block;
+}
+.sticker {
+  display: inline-block;
+  line-height: 0;
+}
+.ch-svg .bd {
+  transform-origin: 100px 192px;
+}
+.live .ch-svg .bd {
+  animation: chBreathe 4.2s ease-in-out infinite;
+}
+.live .ch-svg .sp {
+  transform-origin: 101px 64px;
+  animation: chSway 5.5s ease-in-out infinite;
+}
+.live .ch-svg .eye,
+.sticker .eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: chBlink 5s infinite;
+}
+.ch-svg .ar {
+  transform-box: fill-box;
+  transform-origin: 30% 80%;
+}
+.sticker .ch-svg {
+  transform-origin: 50% 90%;
+}
+
+/* 이모티콘 움직임 */
+.st-wave .ar      { animation: chWave 0.9s ease-in-out infinite; }
+.st-wave .ch-svg  { animation: chTilt 1.8s ease-in-out infinite; }
+.st-nod .ch-svg   { animation: chNod 1.4s ease-in-out infinite; }
+.st-bounce .ch-svg{ animation: chBounce 1s cubic-bezier(0.3, 1.4, 0.5, 1) infinite; }
+.st-tilt .ch-svg  { animation: chTilt 2.2s ease-in-out infinite; }
+.st-squish .ch-svg{ animation: chSquish 1.6s ease-in-out infinite; }
+.st-breathe .ch-svg{ animation: chBig 4s ease-in-out infinite; }
+.st-shiver .ch-svg{ animation: chShiver 0.5s linear infinite; }
+.st-sway .ch-svg  { animation: chTilt 3s ease-in-out infinite; }
+.st-jump .ch-svg  { animation: chJump 1.2s ease-out infinite; }
+
+.fx { transform-box: fill-box; transform-origin: center; }
+.fx-float   { animation: fxFloat 2s ease-in-out infinite; }
+.fx-twinkle { animation: fxTwinkle 1.4s ease-in-out infinite; }
+.fx-bob     { animation: fxBob 1.4s ease-in-out infinite; }
+.fx-drip    { animation: fxDrip 1.6s ease-in infinite; }
+.fx-wave    { transform-origin: 0 100%; animation: fxFlag 1s ease-in-out infinite; }
+.fx-breath  { animation: fxBreath 4s ease-in-out infinite; }
+.fx-point   { transform-box: fill-box; transform-origin: 0 100%; animation: fxPoint 1.2s ease-in-out infinite; }
+.f2 { animation-delay: 0.5s; }
+.f3 { animation-delay: 0.9s; }
+
+@keyframes chBreathe  { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(0.985, 1.035); } }
+@keyframes chSway     { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(5deg); } }
+@keyframes chBlink    { 0%, 90%, 100% { transform: scaleY(1); } 93% { transform: scaleY(0.08); } }
+@keyframes chWave     { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-40deg) translate(4px, -6px); } }
+@keyframes chNod      { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-5deg) translateY(2px); } 60% { transform: rotate(3deg); } }
+@keyframes chBounce   { 0%, 100% { transform: translateY(0) scale(1, 1); } 20% { transform: scale(1.06, 0.92); } 50% { transform: translateY(-12%) scale(0.96, 1.05); } }
+@keyframes chTilt     { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+@keyframes chSquish   { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.07, 0.93); } }
+@keyframes chBig      { 0%, 100% { transform: scale(0.94); } 45%, 55% { transform: scale(1.06); } }
+@keyframes chShiver   { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-1.5%); } 75% { transform: translateX(1.5%); } }
+@keyframes chJump     { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-16%); } }
+@keyframes fxFloat    { 0% { transform: translateY(6px); opacity: 0.2; } 50% { opacity: 1; } 100% { transform: translateY(-14px); opacity: 0; } }
+@keyframes fxTwinkle  { 0%, 100% { transform: scale(0.5); opacity: 0.4; } 50% { transform: scale(1.2); opacity: 1; } }
+@keyframes fxBob      { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes fxDrip     { 0% { transform: translateY(-4px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(14px); opacity: 0; } }
+@keyframes fxFlag     { 0%, 100% { transform: skewY(0); } 50% { transform: skewY(-8deg); } }
+@keyframes fxBreath   { 0%, 100% { transform: translateX(-4px); opacity: 0.3; } 50% { transform: translateX(6px); opacity: 1; } }
+@keyframes fxPoint    { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-12deg); } }
+
+/* prefers-reduced-motion: 모든 애니메이션 끔 */
+@media (prefers-reduced-motion: reduce) {
+  .sticker *,
+  .live .ch-svg * {
+    animation: none !important;
+  }
+}
