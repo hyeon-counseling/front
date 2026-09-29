@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../components/character/stickers.css";
 
 /* ─────────────────────────────────────────────
    심리상담실 현 — 디자인 토큰 (v2: 한국형 SaaS 톤)
