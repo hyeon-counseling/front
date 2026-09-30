@@ -254,7 +254,7 @@ export default function LearnPage() {
         {d.lesson.type === "practice" && (
           <div className="mt-8">
             {/* quiet 강의(pro)가 아닐 때만 전환 토글 표시 */}
-            {!d.lesson.quiet && (
+            {!d.quiet && (
               <div className="mb-6 flex items-center gap-1 rounded-2xl bg-[var(--surface)] p-1">
                 <button
                   type="button"
@@ -282,7 +282,7 @@ export default function LearnPage() {
             )}
 
             {/* 대화형 모드: GuidedChatView로 변환된 steps 렌더링 */}
-            {practiceChat && !d.lesson.quiet ? (
+            {practiceChat && !d.quiet ? (
               <GuidedChatView
                 key={`practice-chat-${lessonKey}`}
                 slug={slug}

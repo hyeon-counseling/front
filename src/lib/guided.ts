@@ -65,6 +65,10 @@ export interface AskText extends AskBase {
   ph?: string;
   samples?: string[];
   short?: boolean;
+  /** 쓰기 실습 양식의 날짜 칸 — '오늘'·2026.10.1 같은 입력을 YYYY-MM-DD로 바꿔 저장 */
+  date?: boolean;
+  /** 쓰기 실습 양식의 숫자 칸 — 숫자로 바꿔 저장 (숫자가 아니면 저장하지 않음) */
+  numeric?: boolean;
 }
 export interface AskScale extends AskBase {
   ask: "scale";
@@ -82,7 +86,10 @@ export interface AskGo extends AskBase {
 export interface AskTable extends AskBase {
   ask: "table";
   rows: number;
-  cols: { key: string; label: string; kind: "text" | "scale" }[];
+  /** text=글, scale=0~100 막대, number=숫자 칸 */
+  cols: { key: string; label: string; kind: "text" | "scale" | "number"; ph?: string }[];
+  /** 줄 이름 (예: 1단계, 파국화) — 숫자뿐이면 비워 둔다 */
+  rowLabels?: string[];
 }
 export interface AskGad7 extends AskBase {
   ask: "gad7";

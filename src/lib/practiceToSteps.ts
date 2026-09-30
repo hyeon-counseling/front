@@ -201,6 +201,7 @@ export function practiceToSteps(meta: PracticeLessonMeta, blocks: Block[]): Step
         const fields = (cfg.fields ?? []) as FormField[];
         for (const f of fields) {
           if (f.kind === "text" || f.kind === "textarea") {
+            // 양식의 글 칸은 건너뛸 수 있게 (한 페이지 보기처럼 비워 둘 수 있다)
             steps.push({
               ask: "text",
               key: block.key,
@@ -208,7 +209,7 @@ export function practiceToSteps(meta: PracticeLessonMeta, blocks: Block[]): Step
               q: f.label,
               ph: f.placeholder,
               short: f.kind === "text",
-              optional: !!ex.optional,
+              optional: true,
             });
           } else if (f.kind === "scale") {
             steps.push({
@@ -217,13 +218,25 @@ export function practiceToSteps(meta: PracticeLessonMeta, blocks: Block[]): Step
               field: f.key,
               q: f.label,
               min: f.min ?? 0,
-              max: f.max ?? 10,
+              max: f.max ?? 100,
               step: f.step ?? 1,
               unit: f.unit,
               lo: f.minLabel,
               hi: f.maxLabel,
               optional: !!ex.optional,
             });
+            // 불안 수준 칸이 80 이상이면 도움 연결
+            if (needsSafetyCheck(f.label) || f.key === "level") {
+              steps.push({
+                react: {
+                  on: `${block.key}.${f.key}`,
+                  cases: [
+                    { when: ">=80", s: "불안이 많이 높았구나. 힘들 땐 혼자 버티지 않아도 돼.", safety: true },
+                    { when: "else" },
+                  ],
+                },
+              });
+            }
           } else if (f.kind === "choice") {
             steps.push({
               ask: "choice",
@@ -259,7 +272,8 @@ export function practiceToSteps(meta: PracticeLessonMeta, blocks: Block[]): Step
                 q: f.label,
                 ph: f.placeholder ?? "숫자로 입력해요",
                 short: true,
-                optional: !!ex.optional,
+                numeric: true,
+                optional: true,
               });
             }
           } else if (f.kind === "date") {
@@ -269,20 +283,28 @@ export function practiceToSteps(meta: PracticeLessonMeta, blocks: Block[]): Step
               key: block.key,
               field: f.key,
               q: f.label,
-              ph: "날짜 입력 (예: 오늘, 또는 2026-10-01)",
+              ph: "날짜 (예: 오늘, 2026-10-01)",
               samples: ["오늘"],
               short: true,
-              optional: !!ex.optional,
+              date: true,
+              optional: true,
             });
           }
         }
       } else if (ex.kind === "table") {
         // table: 행별로 상황 + 척도 묻기 (GuidedChatView ask:"table" 처리)
+        // 칸은 그대로(저장 key가 같아야 한다). 0~100 숫자 칸은 막대로, 숫자뿐인 줄 이름은 버린다
+        const labels = ((cfg.rowLabels as unknown[] | undefined) ?? []).map(String);
         const tableAsk = {
           ask: "table" as const,
           ...baseAsk,
-          rows: (cfg.rowLabels as string[] | undefined)?.length ?? 3,
-          cols: (cfg.columns ?? []) as { key: string; label: string; kind: "text" | "scale" }[],
+          rows: labels.length || 3,
+          rowLabels: labels.every((l) => /^\d+$/.test(l.trim())) ? [] : labels,
+          cols: ((cfg.columns ?? []) as { key: string; label: string; kind: string }[]).map((c) => ({
+            key: c.key,
+            label: c.label ?? c.key,
+            kind: (c.kind === "number" ? (String(c.label).includes("0~100") ? "scale" : "number") : "text") as "text" | "scale" | "number",
+          })),
         };
         steps.push(tableAsk);
       } else if (ex.kind === "assessment") {

@@ -18,6 +18,7 @@ import {
 import { apiRequest } from "@/lib/api";
 import { Character, Sticker } from "@/components/character/Character";
 import { GuidedQuiz } from "./GuidedQuiz";
+import { Markdown } from "@/components/practice/Markdown";
 import {
   evalWhen,
   buildEntryValue,
@@ -31,6 +32,7 @@ import {
   type AskScale,
   type AskGad7,
   type AskAssessment,
+  type AskTable,
   type ReactStep,
   type ExpandStep,
   type Gad7Def,
@@ -347,16 +349,28 @@ export function GuidedChatView({
   const askText = useCallback(
     (ask: AskText): Promise<string> =>
       new Promise((res) => {
-        const handleSend = (v: string) => {
+        const handleSend = (raw: string) => {
           setDock(null);
-          if (v) addMe(v);
+          // 쓰기 실습 날짜·숫자 칸은 서버가 받는 모양으로 바꿔 저장 (바꿀 수 없으면 저장하지 않음)
+          let v: string | number = raw;
+          let ok = !!raw;
+          if (raw && ask.date) {
+            const d = toDateKey(raw);
+            ok = !!d;
+            v = d ?? raw;
+          } else if (raw && ask.numeric) {
+            const n = Number(raw.replace(/,/g, ""));
+            ok = Number.isFinite(n);
+            v = ok ? n : raw;
+          }
+          if (raw) addMe(String(v));
           reactVals.current[ask.field && ask.key ? `${ask.key}.${ask.field}` : ask.key ?? ""] = v;
-          if (ask.key) {
+          if (ask.key && ok) {
             const { blockKey, value } = buildEntryValue(ask, v, entries.current);
             entries.current = { ...entries.current, [blockKey]: value };
-            if (v) scheduleSave(blockKey, value, ask);
+            scheduleSave(blockKey, value, ask);
           }
-          res(v);
+          res(String(v));
         };
 
         setDock(
@@ -635,27 +649,13 @@ export function GuidedChatView({
               // 나머지 문단 버블
               for (const p of ex.paras.slice(2)) await say("s", p);
               // 테이블이 있으면 자세히 읽기 카드
-              if (ex.md.includes("|")) {
-                addMsg(newMsg({ kind: "h", widget: (
-                  <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-sm">
-                    <summary className="cursor-pointer px-4 py-3 font-semibold text-[var(--brand)] outline-none">자세히 읽기</summary>
-                    <div className="px-4 pb-3 pt-1 text-[var(--foreground-muted)] font-mono text-xs whitespace-pre-wrap">{ex.md}</div>
-                  </details>
-                ) }));
+              if (/^\s*\|/m.test(ex.md)) {
+                addMsg(newMsg({ kind: "h", widget: <ReadMore md={ex.md} label="자세히 읽기 (표 포함)" /> }));
                 await wait(500);
               }
             } else {
               // 자세히 읽기 카드로 접기
-              addMsg(newMsg({ kind: "s", widget: (
-                <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-sm">
-                  <summary className="cursor-pointer px-4 py-3 font-semibold text-[var(--brand)] outline-none">자세히 읽기</summary>
-                  <div className="space-y-2 px-4 pb-3 pt-1">
-                    {ex.paras.map((p, i) => (
-                      <p key={i} className="text-sm leading-relaxed text-[var(--foreground-muted)]">{p}</p>
-                    ))}
-                  </div>
-                </details>
-              ) }));
+              addMsg(newMsg({ kind: "s", widget: <ReadMore md={ex.md} label="자세히 읽기 · 원문 전체" /> }));
               await wait(500);
             }
           }
@@ -689,11 +689,21 @@ export function GuidedChatView({
           } else if (ask.ask === "assessment") {
             await askAssessment(ask as AskAssessment);
           } else if (ask.ask === "table") {
-            await say("s", ask.q);
-            // 테이블은 채팅에서 단순화: 행별로 상황+불안 묻기
-            const rows: { situation: string; level: number }[] = [];
-            for (let r = 0; r < ask.rows; r++) {
+            // 표 — 줄마다 칸 정의대로 묻는다 (저장 key는 칸 key 그대로). 2줄째부터 [있어]/[여기까지]
+            const ta = ask as AskTable;
+            const cols = ta.cols?.length
+              ? ta.cols
+              : [
+                  { key: "situation", label: "상황", kind: "text" as const },
+                  { key: "level", label: "불안 수준", kind: "scale" as const },
+                ];
+            const labels = ta.rowLabels ?? [];
+            await say("s", ta.q);
+            const rows: Record<string, string | number>[] = [];
+            let alerted = false;
+            for (let r = 0; r < ta.rows; r++) {
               if (r > 0) {
+                await say("s", labels[r] ? `다음은 ‘${labels[r]}’. 적을 게 있어?` : "하나 더 있어?");
                 const moreRes = await new Promise<boolean>((res2) => {
                   setDock(
                     <ChipsDock
@@ -704,15 +714,47 @@ export function GuidedChatView({
                   );
                 });
                 if (!moreRes) break;
+              } else if (labels[0]) {
+                await say("s", `먼저 ‘${labels[0]}’부터.`);
               }
-              const situation = await askText({ ask: "text", q: "", ph: "상황을 간단히 적어요", short: true });
-              await say("s", "그때 불안은 몇 정도야?");
-              const level = await askScale({ ask: "scale", q: "불안 수준", min: 0, max: 100, step: 5, lo: "전혀", hi: "가장 심함" });
-              rows.push({ situation, level });
+              const row: Record<string, string | number> = {};
+              let skipped = false;
+              for (let j = 0; j < cols.length; j++) {
+                const c = cols[j];
+                const anxiety = c.key === "level" || c.label.includes("불안");
+                if (c.kind === "scale") {
+                  await say("s", anxiety ? "그때 불안은 몇 정도야?" : c.label);
+                  const v = await askScale({ ask: "scale", q: c.label, min: 0, max: 100, step: 5, lo: "전혀", hi: "가장 심함" });
+                  row[c.key] = v;
+                  if (anxiety && v >= 80 && !alerted) {
+                    alerted = true;
+                    addMsg(newMsg({ kind: "s", widget: <SafetyBox /> }));
+                  }
+                } else if (c.kind === "number") {
+                  await say("s", c.label);
+                  const t = await askText({ ask: "text", q: "", ph: "숫자", short: true, optional: true });
+                  const n = Number(t);
+                  if (t && Number.isFinite(n)) row[c.key] = n;
+                } else {
+                  if (r > 0 || j > 0 || labels.length > 0) await say("s", c.label);
+                  const t = (await askText({ ask: "text", q: "", ph: ("ph" in c && c.ph) || (j === 0 ? "간단히 적어요" : c.label), short: true, optional: j > 0 })).trim();
+                  // 줄의 첫 칸을 비우면 그 줄은 적지 않은 것으로
+                  if (j === 0 && !t) {
+                    skipped = true;
+                    break;
+                  }
+                  row[c.key] = t;
+                }
+              }
+              if (skipped) break;
+              rows.push(row);
             }
-            const { blockKey, value } = buildEntryValue(ask, { rows }, entries.current);
-            entries.current = { ...entries.current, [blockKey]: value };
-            scheduleSave(blockKey, value, ask);
+            // 한 줄도 적지 않았으면 저장하지 않는다 (한 페이지 보기에서 적어 둔 표를 지우지 않게)
+            if (rows.length > 0) {
+              const { blockKey, value } = buildEntryValue(ta, { rows }, entries.current);
+              entries.current = { ...entries.current, [blockKey]: value };
+              scheduleSave(blockKey, value, ta);
+            }
           }
         } else if ("react" in step) {
           const rs = step as ReactStep;
@@ -1046,4 +1088,31 @@ function SafetyBox({ text }: { text?: string }) {
       </p>
     </div>
   );
+}
+
+/** 쓰기 실습 원문 접어 보기 — 마크다운(표 포함) 그대로 */
+function ReadMore({ md, label }: { md: string; label: string }) {
+  return (
+    <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-sm">
+      <summary className="cursor-pointer px-4 py-3 font-semibold text-[var(--brand)] outline-none">{label}</summary>
+      <div className="px-4 pb-3 pt-1">
+        <Markdown md={md} className="text-sm" />
+      </div>
+    </details>
+  );
+}
+
+/** '오늘'·'2026.10.1'·'2026-10-01' → 'YYYY-MM-DD' (알 수 없으면 null) */
+function toDateKey(raw: string): string | null {
+  const t = raw.trim();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  if (t === "오늘") {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  const m = t.match(/^(\d{4})\s*[-./년]\s*(\d{1,2})\s*[-./월]\s*(\d{1,2})\s*일?$/);
+  if (!m) return null;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  return `${y}-${pad(mo)}-${pad(d)}`;
 }

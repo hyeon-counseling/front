@@ -136,9 +136,9 @@ export interface LessonResponse {
     estMinutes?: number | null;
     /** 숨이 한마디 — 차시 시작·끝 (≤300자) */
     sumi?: { intro?: string; outro?: string } | null;
-    /** pro 강의면 true — 대화형 전환 없이 한 페이지 유지 */
-    quiet?: boolean;
   };
+  /** 숨이 조용히가 기본인 강의(전문가 과정) — 대화형 전환 없이 한 페이지 유지 */
+  quiet?: boolean;
   position: { index: number; total: number };
   progress: {
     positionSec: number;
