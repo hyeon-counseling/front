@@ -399,7 +399,15 @@ export function GuidedChatView({
           res(v);
         };
 
-        setDock(<ScaleDock ask={ask} initial={mid} onSend={handleSend} />);
+        // 쓰기 실습 양식의 점수 칸(optional)은 한 페이지 보기처럼 비워 둘 수 있다 — 저장하지 않고 NaN
+        const handleSkip = ask.optional
+          ? () => {
+              setDock(null);
+              addMe("(건너뜀)");
+              res(Number.NaN);
+            }
+          : undefined;
+        setDock(<ScaleDock ask={ask} initial={mid} onSend={handleSend} onSkip={handleSkip} />);
       }),
     [addMe, scheduleSave]
   );
@@ -1042,7 +1050,7 @@ function TextDock({ ask, onSend }: { ask: AskText; onSend: (v: string) => void }
   );
 }
 
-function ScaleDock({ ask, initial, onSend }: { ask: AskScale; initial: number; onSend: (v: number) => void }) {
+function ScaleDock({ ask, initial, onSend, onSkip }: { ask: AskScale; initial: number; onSend: (v: number) => void; onSkip?: () => void }) {
   const [val, setVal] = useState(initial);
   return (
     <div className="p-4">
@@ -1074,6 +1082,11 @@ function ScaleDock({ ask, initial, onSend }: { ask: AskScale; initial: number; o
       >
         이 정도야
       </button>
+      {onSkip && (
+        <button type="button" onClick={onSkip} className="mt-2 w-full cursor-pointer text-xs text-[var(--foreground-subtle)] underline">
+          건너뛰기
+        </button>
+      )}
     </div>
   );
 }

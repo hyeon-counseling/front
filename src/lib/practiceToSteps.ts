@@ -224,7 +224,7 @@ export function practiceToSteps(meta: PracticeLessonMeta, blocks: Block[]): Step
               unit: f.unit,
               lo: f.minLabel,
               hi: f.maxLabel,
-              optional: !!ex.optional,
+              optional: true,
             });
             // 불안 수준 칸이 80 이상이면 도움 연결
             if (needsSafetyCheck(f.label) || f.key === "level") {
