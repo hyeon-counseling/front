@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/api";
 import { isExternal, scoreText, TONE_STYLE, type TestResult } from "@/lib/psychTest";
 import { Markdown } from "@/components/practice/Markdown";
 import { CrisisBox } from "@/components/tests/TestParts";
+import { Character } from "@/components/character/Character";
 import { Skeleton, Toast } from "@/components/ui";
 
 /** 점수 원형 게이지 */
@@ -153,6 +154,13 @@ export default function TestResultPage() {
                       {rec.tag && <span className="block text-xs font-semibold text-[var(--brand)]">{rec.tag}</span>}
                       <span className="block font-bold text-[var(--foreground)]">{rec.title}</span>
                       {rec.desc && <span className="mt-0.5 block text-sm text-[var(--foreground-muted)]">{rec.desc}</span>}
+                      {/* 첫 번째 추천 카드에만 숨이 초대 한 줄 */}
+                      {i === 0 && (
+                        <span className="mt-2 flex items-center gap-2 rounded-xl bg-[var(--brand-light)] px-3 py-2 text-xs text-[var(--brand-ink)]">
+                          <Character kind="sumi" mood="happy" arms={false} stage={1} className="h-7 w-7 shrink-0" />
+                          <span className="font-medium">숨이: 이 강의, 무료 체험부터 같이 해 볼래?</span>
+                        </span>
+                      )}
                     </span>
                     <span className="shrink-0 text-sm font-semibold text-[var(--brand)]">{rec.cta || "보기"} →</span>
                   </>
