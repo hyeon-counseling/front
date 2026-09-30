@@ -87,8 +87,15 @@ export interface AskTable extends AskBase {
 export interface AskGad7 extends AskBase {
   ask: "gad7";
 }
+/** 진단지 — practice assessment 블록을 대화형으로 변환할 때 사용 */
+export interface AskAssessment extends AskBase {
+  ask: "assessment";
+  items: string[];
+  options: { label: string; score: number }[];
+  bands?: { min: number; max: number; label: string; note?: string; alert?: boolean }[];
+}
 
-export type AskStep = AskChoice | AskText | AskScale | AskGo | AskTable | AskGad7;
+export type AskStep = AskChoice | AskText | AskScale | AskGo | AskTable | AskGad7 | AskAssessment;
 
 // ─── react ──────────────────────────────────────────────────────────────────
 
@@ -132,6 +139,18 @@ export interface Gad7Def {
 
 // ─── 통합 Step 타입 ──────────────────────────────────────────────────────────
 
+/**
+ * ExpandStep — practice 텍스트 블록을 대화형으로 변환할 때 쓰는 단계
+ * 문단이 3개 초과일 때 첫 2개 버블 → [더 알려줘]/[바로 해 볼래] 칩으로 접힌다.
+ * GuidedChatView와 PracticeChatView가 직접 처리한다.
+ */
+export interface ExpandStep {
+  /** 모든 문단(첫 2개 포함) */
+  paras: string[];
+  /** 원본 마크다운 (테이블·코드 등이 있을 수 있음) */
+  md: string;
+}
+
 export type Step =
   | SumiStep
   | TeacherStep
@@ -143,7 +162,8 @@ export type Step =
   | SafetyStep
   | AskStep
   | ReactStep
-  | QuizStep;
+  | QuizStep
+  | ExpandStep;
 
 // ─── 차시 타입 (API 응답) ────────────────────────────────────────────────────
 

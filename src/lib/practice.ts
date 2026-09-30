@@ -53,6 +53,8 @@ export interface Block {
   md?: string;
   tone?: "info" | "quote" | "caution";
   exercise?: Exercise;
+  /** 숨이 한마디 — exercise 블록 입력 칸 앞에 표시 (≤300자) */
+  lead?: string;
 }
 
 /** 가격 표시 "29,900원" (null이면 null) */

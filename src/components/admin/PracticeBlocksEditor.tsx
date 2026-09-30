@@ -132,7 +132,23 @@ function BlockEditor({
         {preview ? (
           <BlockPreview block={block} />
         ) : block.type === "exercise" ? (
-          <ExerciseEditor ex={block.exercise!} onChange={(fn) => onChange((b) => fn(b.exercise!))} />
+          <div className="space-y-4">
+            {/* 숨이 한마디 — 입력 칸 앞 말 (lead, ≤300자) */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-[var(--foreground-muted)]">
+                입력 칸 앞 숨이 한마디(lead) — 선택, {(block.lead ?? "").length}/300
+              </label>
+              <input
+                type="text"
+                value={block.lead ?? ""}
+                maxLength={300}
+                placeholder="비워 두면 바로 입력 칸이 나와요. 예: 어떤 상황이 가장 힘들었어?"
+                onChange={(e) => onChange((b) => { b.lead = e.target.value || undefined; })}
+                className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm outline-none focus-visible:border-[var(--brand)]"
+              />
+            </div>
+            <ExerciseEditor ex={block.exercise!} onChange={(fn) => onChange((b) => fn(b.exercise!))} />
+          </div>
         ) : (
           <div className="space-y-3">
             {block.type === "callout" && (

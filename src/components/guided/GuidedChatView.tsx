@@ -30,7 +30,9 @@ import {
   type AskText,
   type AskScale,
   type AskGad7,
+  type AskAssessment,
   type ReactStep,
+  type ExpandStep,
   type Gad7Def,
   type SunGrant,
   type Entries,
@@ -388,6 +390,65 @@ export function GuidedChatView({
     [addMe, scheduleSave]
   );
 
+  // ── assessment 문항별 답 받기 ─────────────────────────────────────────────
+
+  const askAssessment = useCallback(
+    async (ask: AskAssessment) => {
+      if (!ask.items.length) return;
+      await say("s", ask.q);
+      const answers: number[] = [];
+      for (let r = 0; r < ask.items.length; r++) {
+        addMsg(newMsg({ kind: "s", text: `${r + 1}/${ask.items.length}. ${ask.items[r]}` }));
+        const score = await new Promise<number>((res) => {
+          setDock(
+            <ChipsDock
+              opts={ask.options.map((o) => o.label)}
+              multi={false}
+              onToggle={(opt) => {
+                const found = ask.options.find((o) => o.label === opt);
+                setDock(null);
+                addMe(opt);
+                res(found?.score ?? 0);
+              }}
+            />
+          );
+        });
+        answers.push(score);
+      }
+      const total = answers.reduce((s, x) => s + x, 0);
+      // 밴드 찾기
+      const band = ask.bands?.find((b) => total >= b.min && total <= b.max);
+      const blockKey = ask.key ?? "";
+      const value = { answers, score: total, band: band?.label ?? "" };
+      entries.current = { ...entries.current, [blockKey]: value };
+      reactVals.current[blockKey] = value;
+      scheduleSave(blockKey, { answers }, ask);
+      // 점수 카드
+      addMsg(
+        newMsg({
+          kind: "s",
+          widget: (
+            <div className="rounded-2xl bg-[var(--surface)] p-4 text-sm">
+              <p className="font-bold text-[var(--brand)]">{ask.q} 점수: {total}점{band ? ` · ${band.label}` : ""}</p>
+              {band?.note && <p className="mt-1 text-[var(--foreground-muted)]">{band.note}</p>}
+              {/* 심한 불안(alert) 또는 점수 15 이상이면 안전 안내 */}
+              {(band?.alert || total >= 15) && (
+                <div className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                  <p className="font-semibold">지금 힘드신가요?</p>
+                  <p className="mt-0.5">
+                    <a href="tel:109" className="font-semibold underline">109</a> (자살예방) ·{" "}
+                    <a href="tel:15770199" className="font-semibold underline">1577-0199</a> (정신건강 위기, 24시간)
+                  </p>
+                </div>
+              )}
+            </div>
+          ),
+        })
+      );
+    },
+    [say, addMsg, addMe, scheduleSave]
+  );
+
   const askGad7 = useCallback(
     async (ask: AskGad7) => {
       const G = gad7Def;
@@ -547,6 +608,57 @@ export function GuidedChatView({
             })
           );
           await wait(600);
+        } else if ("paras" in step) {
+          // ExpandStep: practice 텍스트 블록 >3문단
+          const ex = step as ExpandStep;
+          if (ex.paras.length <= 3) {
+            // 3개 이하일 경우 (ExpandStep에 들어와도) 그냥 버블
+            for (const p of ex.paras) await say("s", p);
+          } else {
+            // 첫 2개 버블 → 칩 [더 알려줘]/[바로 해 볼래]
+            await say("s", ex.paras[0]);
+            await say("s", ex.paras[1]);
+            const choice = await new Promise<"more" | "skip">((res) => {
+              setDock(
+                <ChipsDock
+                  opts={["더 알려줘", "바로 해 볼래"]}
+                  multi={false}
+                  onToggle={(opt) => {
+                    setDock(null);
+                    addMe(opt);
+                    res(opt === "더 알려줘" ? "more" : "skip");
+                  }}
+                />
+              );
+            });
+            if (choice === "more") {
+              // 나머지 문단 버블
+              for (const p of ex.paras.slice(2)) await say("s", p);
+              // 테이블이 있으면 자세히 읽기 카드
+              if (ex.md.includes("|")) {
+                addMsg(newMsg({ kind: "h", widget: (
+                  <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-sm">
+                    <summary className="cursor-pointer px-4 py-3 font-semibold text-[var(--brand)] outline-none">자세히 읽기</summary>
+                    <div className="px-4 pb-3 pt-1 text-[var(--foreground-muted)] font-mono text-xs whitespace-pre-wrap">{ex.md}</div>
+                  </details>
+                ) }));
+                await wait(500);
+              }
+            } else {
+              // 자세히 읽기 카드로 접기
+              addMsg(newMsg({ kind: "s", widget: (
+                <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-sm">
+                  <summary className="cursor-pointer px-4 py-3 font-semibold text-[var(--brand)] outline-none">자세히 읽기</summary>
+                  <div className="space-y-2 px-4 pb-3 pt-1">
+                    {ex.paras.map((p, i) => (
+                      <p key={i} className="text-sm leading-relaxed text-[var(--foreground-muted)]">{p}</p>
+                    ))}
+                  </div>
+                </details>
+              ) }));
+              await wait(500);
+            }
+          }
         } else if ("ask" in step) {
           const ask = step as AskStep;
           if (ask.ask === "go") {
@@ -574,6 +686,8 @@ export function GuidedChatView({
             await askScale(ask as AskScale);
           } else if (ask.ask === "gad7") {
             await askGad7(ask as AskGad7);
+          } else if (ask.ask === "assessment") {
+            await askAssessment(ask as AskAssessment);
           } else if (ask.ask === "table") {
             await say("s", ask.q);
             // 테이블은 채팅에서 단순화: 행별로 상황+불안 묻기

@@ -47,11 +47,15 @@ interface Lesson {
   steps?: unknown[] | null;
   /** guided 차시 — 주차 점검 */
   check?: boolean;
+  /** 숨이 한마디 — 차시 시작·끝 (≤300자, 비우면 자동 대사) */
+  sumi?: { intro?: string; outro?: string } | null;
 }
 interface Section {
   key: string;
   title: string;
   lessons: Lesson[];
+  /** 주간 편지 — 섹션을 다 마쳤을 때 도착 (≤3000자, 마크다운) */
+  letter?: string;
 }
 interface CourseDoc {
   _id: string;
@@ -94,6 +98,7 @@ export default function AdminCourseEditor() {
   const [streamReady, setStreamReady] = useState<boolean | null>(null);
   const [uploading, setUploading] = useState<Record<string, number>>({});
   const [openPractice, setOpenPractice] = useState<Record<string, boolean>>({}); // 쓰기 실습 내용 펼침
+  const [practicePreview, setPracticePreview] = useState<{ key: string; title: string; blocks: Block[]; sumi?: { intro?: string; outro?: string } | null } | null>(null); // 대화로 미리 보기
 
   useEffect(() => {
     apiFetch(`/api/admin/courses/${id}`).then(setDoc);
@@ -357,6 +362,22 @@ export default function AdminCourseEditor() {
                   섹션 삭제
                 </Button>
               </div>
+              {/* 주간 편지 — 섹션 차시를 모두 마쳤을 때 도착 */}
+              <details className="mt-3">
+                <summary className="cursor-pointer text-xs font-semibold text-[var(--foreground-subtle)] hover:text-[var(--foreground)]">
+                  주간 편지 (현 선생님, 섹션을 다 마치면 도착)
+                  {s.letter ? ` · ${s.letter.length}/3000자` : " · 비어있음"}
+                </summary>
+                <textarea
+                  value={s.letter ?? ""}
+                  onChange={(e) => update((d) => { d.sections[si].letter = e.target.value || undefined; })}
+                  rows={6}
+                  maxLength={3000}
+                  placeholder="섹션을 다 마친 회원에게 보낼 편지를 적어 주세요. 마크다운 사용 가능. 비워 두면 편지가 없어요."
+                  className="mt-2 w-full rounded-xl border border-[var(--border)] bg-white p-3 font-mono text-xs leading-relaxed outline-none focus-visible:border-[var(--brand)]"
+                />
+                <p className="mt-1 text-right text-xs text-[var(--foreground-subtle)]">{(s.letter ?? "").length} / 3000</p>
+              </details>
 
               <div className="mt-4 space-y-4">
                 {s.lessons.map((l, li) => {
@@ -544,6 +565,13 @@ export default function AdminCourseEditor() {
                             <Button size="sm" variant="secondary" onClick={() => setOpenPractice((o) => ({ ...o, [l.key]: !o[l.key] }))}>
                               {openPractice[l.key] ? "내용 접기" : `내용 편집 (블록 ${l.blocks?.length ?? 0}개)`}
                             </Button>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => setPracticePreview({ key: l.key, title: l.title, blocks: l.blocks ?? [], sumi: l.sumi })}
+                            >
+                              대화로 미리 보기
+                            </Button>
                             <Link href={`/learn/${doc.slug}/${l.key}`} target="_blank" className="inline-flex h-9 items-center rounded-lg bg-white px-3 text-xs font-semibold">회원 화면 ↗</Link>
                           </div>
                           {openPractice[l.key] && (
@@ -573,6 +601,37 @@ export default function AdminCourseEditor() {
                         />
                       )}
 
+                      {/* 숨이 한마디 — 차시 시작·끝 (모든 차시 공통, 선택) */}
+                      <details className="mt-3">
+                        <summary className="cursor-pointer text-xs font-semibold text-[var(--foreground-subtle)] hover:text-[var(--foreground)]">
+                          숨이 한마디 — 시작 / 끝 (비워 두면 자동 대사)
+                        </summary>
+                        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-[var(--foreground-muted)]">시작 ({(l.sumi?.intro ?? "").length}/300)</label>
+                            <textarea
+                              value={l.sumi?.intro ?? ""}
+                              onChange={(e) => updateLesson(si, li, (x) => { x.sumi = { ...(x.sumi ?? {}), intro: e.target.value || undefined }; })}
+                              rows={2}
+                              maxLength={300}
+                              placeholder="예: 오늘 같이 살펴볼 주제는 불안이야."
+                              className="w-full rounded-xl border border-[var(--border)] bg-white p-2 text-xs outline-none focus-visible:border-[var(--brand)]"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-[var(--foreground-muted)]">끝 ({(l.sumi?.outro ?? "").length}/300)</label>
+                            <textarea
+                              value={l.sumi?.outro ?? ""}
+                              onChange={(e) => updateLesson(si, li, (x) => { x.sumi = { ...(x.sumi ?? {}), outro: e.target.value || undefined }; })}
+                              rows={2}
+                              maxLength={300}
+                              placeholder="예: 오늘 기록 잘 남겼어. 물방울 하나 모았어!"
+                              className="w-full rounded-xl border border-[var(--border)] bg-white p-2 text-xs outline-none focus-visible:border-[var(--brand)]"
+                            />
+                          </div>
+                        </div>
+                      </details>
+
                       {l.type !== "practice" && l.type !== "guided" && <textarea
                         value={l.body ?? ""}
                         placeholder={
@@ -598,6 +657,28 @@ export default function AdminCourseEditor() {
         </div>
       )}
 
+      {/* 쓰기 실습 대화로 미리 보기 모달 (저장 없음) */}
+      <AdminModal
+        open={!!practicePreview}
+        onClose={() => setPracticePreview(null)}
+        title={`대화로 미리 보기 — ${practicePreview?.title ?? ""}`}
+        wide
+      >
+        {practicePreview && (
+          <div className="h-[70vh]">
+            <GuidedChatView
+              key={`admin-preview-${practicePreview.key}`}
+              slug="__preview__"
+              lessonKey={practicePreview.key}
+              lessonTitle={practicePreview.title}
+              steps={practiceToSteps({ title: practicePreview.title, sumi: practicePreview.sumi }, practicePreview.blocks)}
+              canSave={false}
+              isDone={false}
+            />
+          </div>
+        )}
+      </AdminModal>
+
       <Toast message={toast} onClose={() => setToast(null)} />
     </div>
   );
@@ -608,7 +689,10 @@ export default function AdminCourseEditor() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { GuidedReadView } from "@/components/guided/GuidedReadView";
+import { GuidedChatView } from "@/components/guided/GuidedChatView";
+import { practiceToSteps } from "@/lib/practiceToSteps";
 import type { Step } from "@/lib/guided";
+import { Modal as AdminModal } from "@/components/ui";
 
 interface GuidedLessonEditorProps {
   lessonKey: string;
