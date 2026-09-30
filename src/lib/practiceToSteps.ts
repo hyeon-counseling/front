@@ -194,6 +194,7 @@ export function practiceToSteps(meta: PracticeLessonMeta, blocks: Block[]): Step
           opts: cc.options ?? [],
           multi: !!cc.multiple,
           other: !!cc.allowOther,
+          none: "건너뛸래", // 한 페이지 보기처럼 고르지 않고 넘어갈 수 있게
         });
       } else if (ex.kind === "form") {
         // form: 먼저 prompt 말하고 각 필드별로 ask
@@ -245,6 +246,8 @@ export function practiceToSteps(meta: PracticeLessonMeta, blocks: Block[]): Step
               q: f.label,
               opts: f.options ?? [],
               multi: !!f.multiple,
+              other: !!f.allowOther,
+              none: "건너뛸래",
               optional: !!ex.optional,
             });
           } else if (f.kind === "number") {
@@ -325,5 +328,20 @@ export function practiceToSteps(meta: PracticeLessonMeta, blocks: Block[]): Step
   const outro = meta.sumi?.outro?.trim();
   steps.push({ s: outro || "오늘 기록 잘 남겼어. 물방울 하나 모았어!" });
 
-  return steps;
+  return withQuestions(steps);
+}
+
+/**
+ * 대화형은 입력 칸의 질문(q)을 따로 말하지 않는다(대화형 원고는 앞 단계에서 묻는다).
+ * 쓰기 실습에서 바꾼 글·점수·선택 입력은 질문을 숨이 말로 먼저 넣는다. 표·검사는 스스로 질문을 말한다.
+ */
+function withQuestions(steps: Step[]): Step[] {
+  const out: Step[] = [];
+  for (const st of steps) {
+    if ("ask" in st && (st.ask === "text" || st.ask === "scale" || st.ask === "choice") && st.q?.trim()) {
+      out.push({ s: st.q.trim() });
+    }
+    out.push(st);
+  }
+  return out;
 }
