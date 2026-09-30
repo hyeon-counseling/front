@@ -43,7 +43,7 @@ export default function MyPage() {
     <div className="px-4 py-14 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-4xl">
         <p className="mb-3"><span className="eyebrow">내 학습</span></p>
-        <h1 className="font-display text-3xl text-[var(--foreground)] sm:text-4xl">{user.name}님, 오늘도 10분.</h1>
+        <h1 className="font-display text-3xl text-[var(--foreground)] sm:text-4xl">{user.name}님, 오늘도 편안한 속도로.</h1>
         <p className="mt-2 text-sm text-[var(--foreground-muted)]">{user.email}</p>
 
         <StampCard />

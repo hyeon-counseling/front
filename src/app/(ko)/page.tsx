@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { Character } from "@/components/character/Character";
 
 export const metadata: Metadata = {
   title: "심리상담실 현 — 나를 이해하는 공부, 편안한 속도로",
@@ -267,6 +268,33 @@ export default function HomePage() {
           <p className="mt-6 text-center text-sm text-[var(--foreground-muted)]">
             <Link href="/faq" className="font-semibold text-[var(--brand)]">전체 FAQ 보기 →</Link>
           </p>
+        </div>
+      </section>
+
+      {/* ── 숨이 소개 (작게) ─────────────────────── */}
+      {/* 마스코트 한 줄 카드 — 연습 친구로서 숨이를 소개. 홈 페이지를 크게 바꾸지 않는다. */}
+      <section className="px-4 py-10 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="card flex flex-wrap items-center gap-5 p-6 sm:p-7">
+            <div className="shrink-0">
+              <Character kind="sumi" mood="happy" arms stage={2} className="h-20 w-20" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-[var(--brand)]">숨이 · 매일 함께하는 연습 친구</p>
+              <h3 className="mt-1 text-lg font-bold text-[var(--foreground)] sm:text-xl">
+                상담 선생님이 아니라, 매일 같이 연습하는 친구예요
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                강의를 들을 때마다 물방울을 하나씩 모아 숨이가 자라요. 씨앗 → 잎 → 꽃봉오리 → 꽃까지. 진단이나 치료가 아니라, 꾸준한 연습을 응원하는 친구입니다.
+              </p>
+            </div>
+            <Link
+              href="/courses"
+              className="shrink-0 inline-flex h-11 items-center rounded-xl bg-[var(--brand)] px-5 text-sm font-semibold text-white hover:bg-[var(--brand-hover)]"
+            >
+              강의 시작하기 →
+            </Link>
+          </div>
         </div>
       </section>
 

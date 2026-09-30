@@ -83,7 +83,7 @@ export default function TestTakePage() {
     setError("");
     if (!user?.sensitiveAgreed) {
       if (!agree) {
-        setError("심리검사 응답 수집·이용에 동의해 주세요.");
+        setError("민감정보(심리검사 응답·마음 날씨) 수집·이용에 동의해 주세요.");
         return;
       }
       setBusy(true);
@@ -208,7 +208,7 @@ export default function TestTakePage() {
             <div className="mt-6 rounded-2xl border border-[var(--border)] p-5">
               <label className="flex cursor-pointer items-start gap-3">
                 <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 h-4 w-4 accent-[var(--brand)]" />
-                <span className="text-sm font-semibold text-[var(--foreground)]">[필수] 심리검사 응답(민감정보) 수집·이용에 동의합니다</span>
+                <span className="text-sm font-semibold text-[var(--foreground)]">[필수] 민감정보(심리검사 응답·마음 날씨) 수집·이용에 동의합니다</span>
               </label>
               <div className="mt-3 pl-7">
                 <SensitiveConsentText />

@@ -65,6 +65,10 @@ export interface AskText extends AskBase {
   ph?: string;
   samples?: string[];
   short?: boolean;
+  /** 쓰기 실습 양식의 날짜 칸 — '오늘'·2026.10.1 같은 입력을 YYYY-MM-DD로 바꿔 저장 */
+  date?: boolean;
+  /** 쓰기 실습 양식의 숫자 칸 — 숫자로 바꿔 저장 (숫자가 아니면 저장하지 않음) */
+  numeric?: boolean;
 }
 export interface AskScale extends AskBase {
   ask: "scale";
@@ -82,13 +86,23 @@ export interface AskGo extends AskBase {
 export interface AskTable extends AskBase {
   ask: "table";
   rows: number;
-  cols: { key: string; label: string; kind: "text" | "scale" }[];
+  /** text=글, scale=0~100 막대, number=숫자 칸 */
+  cols: { key: string; label: string; kind: "text" | "scale" | "number"; ph?: string }[];
+  /** 줄 이름 (예: 1단계, 파국화) — 숫자뿐이면 비워 둔다 */
+  rowLabels?: string[];
 }
 export interface AskGad7 extends AskBase {
   ask: "gad7";
 }
+/** 진단지 — practice assessment 블록을 대화형으로 변환할 때 사용 */
+export interface AskAssessment extends AskBase {
+  ask: "assessment";
+  items: string[];
+  options: { label: string; score: number }[];
+  bands?: { min: number; max: number; label: string; note?: string; alert?: boolean }[];
+}
 
-export type AskStep = AskChoice | AskText | AskScale | AskGo | AskTable | AskGad7;
+export type AskStep = AskChoice | AskText | AskScale | AskGo | AskTable | AskGad7 | AskAssessment;
 
 // ─── react ──────────────────────────────────────────────────────────────────
 
@@ -132,6 +146,18 @@ export interface Gad7Def {
 
 // ─── 통합 Step 타입 ──────────────────────────────────────────────────────────
 
+/**
+ * ExpandStep — practice 텍스트 블록을 대화형으로 변환할 때 쓰는 단계
+ * 문단이 3개 초과일 때 첫 2개 버블 → [더 알려줘]/[바로 해 볼래] 칩으로 접힌다.
+ * GuidedChatView와 PracticeChatView가 직접 처리한다.
+ */
+export interface ExpandStep {
+  /** 모든 문단(첫 2개 포함) */
+  paras: string[];
+  /** 원본 마크다운 (테이블·코드 등이 있을 수 있음) */
+  md: string;
+}
+
 export type Step =
   | SumiStep
   | TeacherStep
@@ -143,7 +169,8 @@ export type Step =
   | SafetyStep
   | AskStep
   | ReactStep
-  | QuizStep;
+  | QuizStep
+  | ExpandStep;
 
 // ─── 차시 타입 (API 응답) ────────────────────────────────────────────────────
 

@@ -17,8 +17,13 @@ import { Callout } from "@/components/practice/Markdown";
 import { ExerciseBlock } from "@/components/practice/ExerciseBlock";
 import { RewardModal } from "@/components/course/RewardModal";
 import { GuidedLesson } from "@/components/guided/GuidedLesson";
+import { GuidedChatView } from "@/components/guided/GuidedChatView";
+import { practiceToSteps } from "@/lib/practiceToSteps";
 import type { CouponView } from "@/lib/payment";
 import { Skeleton } from "@/components/ui";
+
+// localStorage 키 — 쓰기 실습 대화형 선택 기억
+const PRACTICE_MODE_KEY = "practice-chat-mode";
 
 type LessonState = { status: "ok"; data: LessonResponse } | { status: "locked"; message: string } | { status: "error"; message: string };
 
@@ -33,6 +38,10 @@ export default function LearnPage() {
   const [completed, setCompleted] = useState<{ key: string; value: boolean } | null>(null);
   const [savingDone, setSavingDone] = useState(false);
   const [reward, setReward] = useState<CouponView | null>(null); // 수료 쿠폰
+  // 쓰기 실습 대화형 모드 (quiet 강의는 항상 한 페이지)
+  const [practiceChat, setPracticeChat] = useState<boolean>(() => {
+    try { return localStorage.getItem(PRACTICE_MODE_KEY) === "1"; } catch { return false; }
+  });
 
   // 재생 주소 (오디오 서명 주소가 만료되면 다시 호출)
   const loadPlayback = useCallback(() => {
@@ -140,6 +149,12 @@ export default function LearnPage() {
     reloadCourse();
   };
 
+  // 쓰기 실습 대화형 전환 — localStorage에 선택 기억
+  const switchPracticeMode = (chat: boolean) => {
+    setPracticeChat(chat);
+    try { localStorage.setItem(PRACTICE_MODE_KEY, chat ? "1" : "0"); } catch { /* 무시 */ }
+  };
+
   if (!current) {
     return shell(
       <div className="mx-auto max-w-6xl space-y-4 px-4 py-10">
@@ -237,21 +252,76 @@ export default function LearnPage() {
         )}
 
         {d.lesson.type === "practice" && (
-          <div className="mt-8 space-y-8">
-            {(d.lesson.blocks ?? []).map((b) =>
-              b.type === "text" ? (
-                <Markdown key={b.key} md={b.md ?? ""} />
-              ) : b.type === "callout" ? (
-                <Callout key={b.key} block={b} />
-              ) : (
-                <ExerciseBlock
-                  key={`${lessonKey}-${b.key}`}
-                  saveUrl={`/api/courses/${slug}/lessons/${lessonKey}/entries/${b.key}`}
-                  block={b}
-                  initial={d.entries?.[b.key]}
-                  canSave={canTrack}
-                />
-              )
+          <div className="mt-8">
+            {/* quiet 강의(pro)가 아닐 때만 전환 토글 표시 */}
+            {!d.quiet && (
+              <div className="mb-6 flex items-center gap-1 rounded-2xl bg-[var(--surface)] p-1">
+                <button
+                  type="button"
+                  onClick={() => switchPracticeMode(false)}
+                  className={`flex-1 cursor-pointer rounded-xl py-2 text-sm font-semibold transition-colors ${
+                    !practiceChat
+                      ? "bg-white text-[var(--foreground)] shadow-sm"
+                      : "text-[var(--foreground-subtle)] hover:text-[var(--foreground)]"
+                  }`}
+                >
+                  한 페이지로 보기
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchPracticeMode(true)}
+                  className={`flex-1 cursor-pointer rounded-xl py-2 text-sm font-semibold transition-colors ${
+                    practiceChat
+                      ? "bg-white text-[var(--foreground)] shadow-sm"
+                      : "text-[var(--foreground-subtle)] hover:text-[var(--foreground)]"
+                  }`}
+                >
+                  숨이와 대화로 하기
+                </button>
+              </div>
+            )}
+
+            {/* 대화형 모드: GuidedChatView로 변환된 steps 렌더링 */}
+            {practiceChat && !d.quiet ? (
+              <GuidedChatView
+                key={`practice-chat-${lessonKey}`}
+                slug={slug}
+                lessonKey={lessonKey}
+                lessonTitle={d.lesson.title}
+                lessonLabel={d.lesson.label}
+                lessonMin={d.lesson.estMinutes ?? (d.lesson.durationSec ? Math.round(d.lesson.durationSec / 60) : undefined)}
+                steps={practiceToSteps(
+                  { title: d.lesson.title, sumi: d.lesson.sumi },
+                  d.lesson.blocks ?? []
+                )}
+                initialEntries={d.entries ?? {}}
+                canSave={canTrack}
+                isDone={isDone}
+                onCompleted={() => {
+                  setCompleted({ key: lessonKey, value: true });
+                  reloadCourse();
+                }}
+                onNext={d.next && !d.next.locked ? () => { window.location.href = `/learn/${slug}/${d.next!.key}`; } : undefined}
+              />
+            ) : (
+              /* 한 페이지 모드 (기본) */
+              <div className="space-y-8">
+                {(d.lesson.blocks ?? []).map((b) =>
+                  b.type === "text" ? (
+                    <Markdown key={b.key} md={b.md ?? ""} />
+                  ) : b.type === "callout" ? (
+                    <Callout key={b.key} block={b} />
+                  ) : (
+                    <ExerciseBlock
+                      key={`${lessonKey}-${b.key}`}
+                      saveUrl={`/api/courses/${slug}/lessons/${lessonKey}/entries/${b.key}`}
+                      block={b}
+                      initial={d.entries?.[b.key]}
+                      canSave={canTrack}
+                    />
+                  )
+                )}
+              </div>
             )}
           </div>
         )}

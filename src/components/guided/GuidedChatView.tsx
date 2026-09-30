@@ -18,6 +18,7 @@ import {
 import { apiRequest } from "@/lib/api";
 import { Character, Sticker } from "@/components/character/Character";
 import { GuidedQuiz } from "./GuidedQuiz";
+import { Markdown } from "@/components/practice/Markdown";
 import {
   evalWhen,
   buildEntryValue,
@@ -30,7 +31,10 @@ import {
   type AskText,
   type AskScale,
   type AskGad7,
+  type AskAssessment,
+  type AskTable,
   type ReactStep,
+  type ExpandStep,
   type Gad7Def,
   type SunGrant,
   type Entries,
@@ -192,6 +196,7 @@ export function GuidedChatView({
   const logRef = useRef<HTMLDivElement>(null);
   const entries = useRef<Entries>(initialEntries);
   const running = useRef(true);
+  const startedRun = useRef(-1); // 지금 돌고 있는 대화 실행 번호
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   // react 판단용 답 (단일 선택은 몇 번째를 골랐는지 {__idx}, 저장 안 하는 선택은 id로)
   const reactVals = useRef<Record<string, unknown>>({});
@@ -345,16 +350,28 @@ export function GuidedChatView({
   const askText = useCallback(
     (ask: AskText): Promise<string> =>
       new Promise((res) => {
-        const handleSend = (v: string) => {
+        const handleSend = (raw: string) => {
           setDock(null);
-          if (v) addMe(v);
+          // 쓰기 실습 날짜·숫자 칸은 서버가 받는 모양으로 바꿔 저장 (바꿀 수 없으면 저장하지 않음)
+          let v: string | number = raw;
+          let ok = !!raw;
+          if (raw && ask.date) {
+            const d = toDateKey(raw);
+            ok = !!d;
+            v = d ?? raw;
+          } else if (raw && ask.numeric) {
+            const n = Number(raw.replace(/,/g, ""));
+            ok = Number.isFinite(n);
+            v = ok ? n : raw;
+          }
+          if (raw) addMe(String(v));
           reactVals.current[ask.field && ask.key ? `${ask.key}.${ask.field}` : ask.key ?? ""] = v;
-          if (ask.key) {
+          if (ask.key && ok) {
             const { blockKey, value } = buildEntryValue(ask, v, entries.current);
             entries.current = { ...entries.current, [blockKey]: value };
-            if (v) scheduleSave(blockKey, value, ask);
+            scheduleSave(blockKey, value, ask);
           }
-          res(v);
+          res(String(v));
         };
 
         setDock(
@@ -383,9 +400,76 @@ export function GuidedChatView({
           res(v);
         };
 
-        setDock(<ScaleDock ask={ask} initial={mid} onSend={handleSend} />);
+        // 쓰기 실습 양식의 점수 칸(optional)은 한 페이지 보기처럼 비워 둘 수 있다 — 저장하지 않고 NaN
+        const handleSkip = ask.optional
+          ? () => {
+              setDock(null);
+              addMe("(건너뜀)");
+              res(Number.NaN);
+            }
+          : undefined;
+        setDock(<ScaleDock ask={ask} initial={mid} onSend={handleSend} onSkip={handleSkip} />);
       }),
     [addMe, scheduleSave]
+  );
+
+  // ── assessment 문항별 답 받기 ─────────────────────────────────────────────
+
+  const askAssessment = useCallback(
+    async (ask: AskAssessment) => {
+      if (!ask.items.length) return;
+      await say("s", ask.q);
+      const answers: number[] = [];
+      for (let r = 0; r < ask.items.length; r++) {
+        addMsg(newMsg({ kind: "s", text: `${r + 1}/${ask.items.length}. ${ask.items[r]}` }));
+        const score = await new Promise<number>((res) => {
+          setDock(
+            <ChipsDock
+              opts={ask.options.map((o) => o.label)}
+              multi={false}
+              onToggle={(opt) => {
+                const found = ask.options.find((o) => o.label === opt);
+                setDock(null);
+                addMe(opt);
+                res(found?.score ?? 0);
+              }}
+            />
+          );
+        });
+        answers.push(score);
+      }
+      const total = answers.reduce((s, x) => s + x, 0);
+      // 밴드 찾기
+      const band = ask.bands?.find((b) => total >= b.min && total <= b.max);
+      const blockKey = ask.key ?? "";
+      const value = { answers, score: total, band: band?.label ?? "" };
+      entries.current = { ...entries.current, [blockKey]: value };
+      reactVals.current[blockKey] = value;
+      scheduleSave(blockKey, { answers }, ask);
+      // 점수 카드
+      addMsg(
+        newMsg({
+          kind: "s",
+          widget: (
+            <div className="rounded-2xl bg-[var(--surface)] p-4 text-sm">
+              <p className="font-bold text-[var(--brand)]">{ask.q} 점수: {total}점{band ? ` · ${band.label}` : ""}</p>
+              {band?.note && <p className="mt-1 text-[var(--foreground-muted)]">{band.note}</p>}
+              {/* 심한 불안(alert) 또는 점수 15 이상이면 안전 안내 */}
+              {(band?.alert || total >= 15) && (
+                <div className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                  <p className="font-semibold">지금 힘드신가요?</p>
+                  <p className="mt-0.5">
+                    <a href="tel:109" className="font-semibold underline">109</a> (자살예방) ·{" "}
+                    <a href="tel:15770199" className="font-semibold underline">1577-0199</a> (정신건강 위기, 24시간)
+                  </p>
+                </div>
+              )}
+            </div>
+          ),
+        })
+      );
+    },
+    [say, addMsg, addMe, scheduleSave]
   );
 
   const askGad7 = useCallback(
@@ -439,10 +523,19 @@ export function GuidedChatView({
 
   useEffect(() => {
     running.current = true;
+    // 개발 모드(StrictMode)는 효과를 두 번 실행한다 — 같은 실행 번호는 다시 시작하지 않아 말풍선이 두 번 나오지 않게.
+    // '처음부터 다시'로 번호가 바뀌면 앞선 실행은 멈추고 새로 시작한다.
+    if (startedRun.current === runId) {
+      return () => {
+        running.current = false;
+      };
+    }
+    startedRun.current = runId;
+    const myRun = runId;
 
     const run = async () => {
       for (const step of steps) {
-        if (!running.current) return;
+        if (!running.current || startedRun.current !== myRun) return;
 
         if ("h" in step) {
           await say("h", step.h, step.st);
@@ -547,6 +640,43 @@ export function GuidedChatView({
             })
           );
           await wait(600);
+        } else if ("paras" in step) {
+          // ExpandStep: practice 텍스트 블록 >3문단
+          const ex = step as ExpandStep;
+          if (ex.paras.length <= 3) {
+            // 3개 이하일 경우 (ExpandStep에 들어와도) 그냥 버블
+            for (const p of ex.paras) await say("s", p);
+          } else {
+            // 첫 2개 버블 → 칩 [더 알려줘]/[바로 해 볼래]
+            await say("s", ex.paras[0]);
+            await say("s", ex.paras[1]);
+            const choice = await new Promise<"more" | "skip">((res) => {
+              setDock(
+                <ChipsDock
+                  opts={["더 알려줘", "바로 해 볼래"]}
+                  multi={false}
+                  onToggle={(opt) => {
+                    setDock(null);
+                    addMe(opt);
+                    res(opt === "더 알려줘" ? "more" : "skip");
+                  }}
+                />
+              );
+            });
+            if (choice === "more") {
+              // 나머지 문단 버블
+              for (const p of ex.paras.slice(2)) await say("s", p);
+              // 테이블이 있으면 자세히 읽기 카드
+              if (/^\s*\|/m.test(ex.md)) {
+                addMsg(newMsg({ kind: "h", widget: <ReadMore md={ex.md} label="자세히 읽기 (표 포함)" /> }));
+                await wait(500);
+              }
+            } else {
+              // 자세히 읽기 카드로 접기
+              addMsg(newMsg({ kind: "s", widget: <ReadMore md={ex.md} label="자세히 읽기 · 원문 전체" /> }));
+              await wait(500);
+            }
+          }
         } else if ("ask" in step) {
           const ask = step as AskStep;
           if (ask.ask === "go") {
@@ -574,12 +704,24 @@ export function GuidedChatView({
             await askScale(ask as AskScale);
           } else if (ask.ask === "gad7") {
             await askGad7(ask as AskGad7);
+          } else if (ask.ask === "assessment") {
+            await askAssessment(ask as AskAssessment);
           } else if (ask.ask === "table") {
-            await say("s", ask.q);
-            // 테이블은 채팅에서 단순화: 행별로 상황+불안 묻기
-            const rows: { situation: string; level: number }[] = [];
-            for (let r = 0; r < ask.rows; r++) {
+            // 표 — 줄마다 칸 정의대로 묻는다 (저장 key는 칸 key 그대로). 2줄째부터 [있어]/[여기까지]
+            const ta = ask as AskTable;
+            const cols = ta.cols?.length
+              ? ta.cols
+              : [
+                  { key: "situation", label: "상황", kind: "text" as const },
+                  { key: "level", label: "불안 수준", kind: "scale" as const },
+                ];
+            const labels = ta.rowLabels ?? [];
+            await say("s", ta.q);
+            const rows: Record<string, string | number>[] = [];
+            let alerted = false;
+            for (let r = 0; r < ta.rows; r++) {
               if (r > 0) {
+                await say("s", labels[r] ? `다음은 ‘${labels[r]}’. 적을 게 있어?` : "하나 더 있어?");
                 const moreRes = await new Promise<boolean>((res2) => {
                   setDock(
                     <ChipsDock
@@ -590,15 +732,47 @@ export function GuidedChatView({
                   );
                 });
                 if (!moreRes) break;
+              } else if (labels[0]) {
+                await say("s", `먼저 ‘${labels[0]}’부터.`);
               }
-              const situation = await askText({ ask: "text", q: "", ph: "상황을 간단히 적어요", short: true });
-              await say("s", "그때 불안은 몇 정도야?");
-              const level = await askScale({ ask: "scale", q: "불안 수준", min: 0, max: 100, step: 5, lo: "전혀", hi: "가장 심함" });
-              rows.push({ situation, level });
+              const row: Record<string, string | number> = {};
+              let skipped = false;
+              for (let j = 0; j < cols.length; j++) {
+                const c = cols[j];
+                const anxiety = c.key === "level" || c.label.includes("불안");
+                if (c.kind === "scale") {
+                  await say("s", anxiety ? "그때 불안은 몇 정도야?" : c.label);
+                  const v = await askScale({ ask: "scale", q: c.label, min: 0, max: 100, step: 5, lo: "전혀", hi: "가장 심함" });
+                  row[c.key] = v;
+                  if (anxiety && v >= 80 && !alerted) {
+                    alerted = true;
+                    addMsg(newMsg({ kind: "s", widget: <SafetyBox /> }));
+                  }
+                } else if (c.kind === "number") {
+                  await say("s", c.label);
+                  const t = await askText({ ask: "text", q: "", ph: "숫자", short: true, optional: true });
+                  const n = Number(t);
+                  if (t && Number.isFinite(n)) row[c.key] = n;
+                } else {
+                  if (r > 0 || j > 0 || labels.length > 0) await say("s", c.label);
+                  const t = (await askText({ ask: "text", q: "", ph: ("ph" in c && c.ph) || (j === 0 ? "간단히 적어요" : c.label), short: true, optional: j > 0 })).trim();
+                  // 줄의 첫 칸을 비우면 그 줄은 적지 않은 것으로
+                  if (j === 0 && !t) {
+                    skipped = true;
+                    break;
+                  }
+                  row[c.key] = t;
+                }
+              }
+              if (skipped) break;
+              rows.push(row);
             }
-            const { blockKey, value } = buildEntryValue(ask, { rows }, entries.current);
-            entries.current = { ...entries.current, [blockKey]: value };
-            scheduleSave(blockKey, value, ask);
+            // 한 줄도 적지 않았으면 저장하지 않는다 (한 페이지 보기에서 적어 둔 표를 지우지 않게)
+            if (rows.length > 0) {
+              const { blockKey, value } = buildEntryValue(ta, { rows }, entries.current);
+              entries.current = { ...entries.current, [blockKey]: value };
+              scheduleSave(blockKey, value, ta);
+            }
           }
         } else if ("react" in step) {
           const rs = step as ReactStep;
@@ -886,7 +1060,7 @@ function TextDock({ ask, onSend }: { ask: AskText; onSend: (v: string) => void }
   );
 }
 
-function ScaleDock({ ask, initial, onSend }: { ask: AskScale; initial: number; onSend: (v: number) => void }) {
+function ScaleDock({ ask, initial, onSend, onSkip }: { ask: AskScale; initial: number; onSend: (v: number) => void; onSkip?: () => void }) {
   const [val, setVal] = useState(initial);
   return (
     <div className="p-4">
@@ -918,6 +1092,11 @@ function ScaleDock({ ask, initial, onSend }: { ask: AskScale; initial: number; o
       >
         이 정도야
       </button>
+      {onSkip && (
+        <button type="button" onClick={onSkip} className="mt-2 w-full cursor-pointer text-xs text-[var(--foreground-subtle)] underline">
+          건너뛰기
+        </button>
+      )}
     </div>
   );
 }
@@ -932,4 +1111,31 @@ function SafetyBox({ text }: { text?: string }) {
       </p>
     </div>
   );
+}
+
+/** 쓰기 실습 원문 접어 보기 — 마크다운(표 포함) 그대로 */
+function ReadMore({ md, label }: { md: string; label: string }) {
+  return (
+    <details className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-sm">
+      <summary className="cursor-pointer px-4 py-3 font-semibold text-[var(--brand)] outline-none">{label}</summary>
+      <div className="px-4 pb-3 pt-1">
+        <Markdown md={md} className="text-sm" />
+      </div>
+    </details>
+  );
+}
+
+/** '오늘'·'2026.10.1'·'2026-10-01' → 'YYYY-MM-DD' (알 수 없으면 null) */
+function toDateKey(raw: string): string | null {
+  const t = raw.trim();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  if (t === "오늘") {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  const m = t.match(/^(\d{4})\s*[-./년]\s*(\d{1,2})\s*[-./월]\s*(\d{1,2})\s*일?$/);
+  if (!m) return null;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  return `${y}-${pad(mo)}-${pad(d)}`;
 }

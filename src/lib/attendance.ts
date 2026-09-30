@@ -3,6 +3,34 @@
 export interface AttendanceSettings {
   weeklyGoal: number;
   showStreak: boolean;
+  /** 숨이 이름 (기본 '숨이') */
+  buddyName?: string;
+  /** 조용히 모드 */
+  quiet?: boolean;
+  /** 하루 목표 분 (3·5·10) */
+  dailyMinutes?: number;
+  /** 첫 만남 완료 여부 */
+  onboarded?: boolean;
+}
+
+/** 숨이 성장 정보 */
+export interface SumiStatus {
+  drops: number;
+  /** 0 새싹 · 1 잎 하나 · 2 잎 둘 · 3 꽃봉오리 · 4 꽃 */
+  stage: number;
+  /** 다음 단계까지 필요한 물방울 수 (꽃이면 null) */
+  nextStageAt: number | null;
+  dropsToday: number;
+}
+
+/** 단계별 이름 */
+export const STAGE_NAMES = ["새싹", "잎 하나", "잎 둘", "꽃봉오리", "꽃"] as const;
+/** 단계별 필요 물방울 수 */
+export const STAGE_DROPS = [0, 5, 15, 30, 60] as const;
+
+/** 단계 이름 반환 */
+export function stageName(stage: number): string {
+  return STAGE_NAMES[Math.max(0, Math.min(4, stage))] ?? "새싹";
 }
 
 export interface AttendanceCourse {
@@ -27,6 +55,8 @@ export interface Attendance {
   streak: { days: number; restUsed: number; restAvailableThisWeek: boolean } | null;
   settings: AttendanceSettings;
   courses: AttendanceCourse[];
+  /** 숨이 성장 정보 (서버가 내려줄 때만) */
+  sumi?: SumiStatus;
 }
 
 export interface CertificateInfo {

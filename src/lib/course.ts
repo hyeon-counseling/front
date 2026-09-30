@@ -134,7 +134,11 @@ export interface LessonResponse {
     /** guided 차시 — GAD-7 문항 정의 (steps에 gad7 ask가 있을 때) */
     gad7?: Gad7Def | null;
     estMinutes?: number | null;
+    /** 숨이 한마디 — 차시 시작·끝 (≤300자) */
+    sumi?: { intro?: string; outro?: string } | null;
   };
+  /** 숨이 조용히가 기본인 강의(전문가 과정) — 대화형 전환 없이 한 페이지 유지 */
+  quiet?: boolean;
   position: { index: number; total: number };
   progress: {
     positionSec: number;

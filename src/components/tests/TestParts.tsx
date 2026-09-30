@@ -40,15 +40,15 @@ export const COMMON_ORIENTATION: { icon: string; title: string; body: string }[]
   { icon: "⏸️", title: "힘들면 언제든 멈춰도 돼요", body: "답하다가 마음이 무거워지면 잠시 쉬었다 와도 괜찮아요. 급하게 도움이 필요하면 109(24시간)로 연락하세요." },
 ];
 
-/** 민감정보(심리검사 응답) 수집·이용 안내 */
+/** 민감정보(심리검사 응답·마음 날씨) 수집·이용 안내 — SUMI-STAGES.md §2 */
 export function SensitiveConsentText() {
   return (
     <div className="space-y-1.5 text-xs leading-relaxed text-[var(--foreground-muted)]">
-      <p><strong className="text-[var(--foreground)]">수집 항목</strong> · 검사 응답, 점수와 결과, 검사 당시 나이·성별</p>
-      <p><strong className="text-[var(--foreground)]">이용 목적</strong> · 결과 제공, 내 검사 기록 보관, 상담 신청 시 참고, 서비스 개선을 위한 통계(개인을 알아볼 수 없는 형태)</p>
-      <p><strong className="text-[var(--foreground)]">열람</strong> · 본인과 심리상담실 현 상담가(운영자)만 볼 수 있어요</p>
-      <p><strong className="text-[var(--foreground)]">보관 기간</strong> · 회원 탈퇴 시 즉시 삭제</p>
-      <p>동의하지 않을 수 있지만, 그 경우 심리검사를 이용할 수 없어요. 자세한 내용은 <Link href="/privacy" className="underline" target="_blank">개인정보처리방침</Link>을 확인해 주세요.</p>
+      <p><strong className="text-[var(--foreground)]">수집 항목</strong> · 검사 응답, 점수와 결과, 검사 당시 나이·성별, 마음 날씨(앱에서 날짜별로 고르는 기분 날씨)</p>
+      <p><strong className="text-[var(--foreground)]">이용 목적</strong> · 결과 제공, 내 검사 기록 보관, 마음 날씨 달력·변화 보여주기, 상담 신청 시 참고, 서비스 개선을 위한 통계(개인을 알아볼 수 없는 형태)</p>
+      <p><strong className="text-[var(--foreground)]">열람</strong> · 심리검사 기록은 본인과 심리상담실 현 상담가(운영자)만 볼 수 있어요. 마음 날씨는 본인만 볼 수 있어요(운영자도 볼 수 없음).</p>
+      <p><strong className="text-[var(--foreground)]">보관 기간</strong> · 회원 탈퇴 시 즉시 삭제. 마음 날씨는 앱 [내 정보]에서 언제든 전부 지울 수 있어요.</p>
+      <p>동의하지 않을 수 있지만, 그 경우 심리검사와 마음 날씨 기능을 이용할 수 없어요. 자세한 내용은 <Link href="/privacy" className="underline" target="_blank">개인정보처리방침</Link>을 확인해 주세요.</p>
     </div>
   );
 }
