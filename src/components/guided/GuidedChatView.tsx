@@ -196,6 +196,7 @@ export function GuidedChatView({
   const logRef = useRef<HTMLDivElement>(null);
   const entries = useRef<Entries>(initialEntries);
   const running = useRef(true);
+  const startedRun = useRef(-1); // 지금 돌고 있는 대화 실행 번호
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   // react 판단용 답 (단일 선택은 몇 번째를 골랐는지 {__idx}, 저장 안 하는 선택은 id로)
   const reactVals = useRef<Record<string, unknown>>({});
@@ -522,10 +523,19 @@ export function GuidedChatView({
 
   useEffect(() => {
     running.current = true;
+    // 개발 모드(StrictMode)는 효과를 두 번 실행한다 — 같은 실행 번호는 다시 시작하지 않아 말풍선이 두 번 나오지 않게.
+    // '처음부터 다시'로 번호가 바뀌면 앞선 실행은 멈추고 새로 시작한다.
+    if (startedRun.current === runId) {
+      return () => {
+        running.current = false;
+      };
+    }
+    startedRun.current = runId;
+    const myRun = runId;
 
     const run = async () => {
       for (const step of steps) {
-        if (!running.current) return;
+        if (!running.current || startedRun.current !== myRun) return;
 
         if ("h" in step) {
           await say("h", step.h, step.st);

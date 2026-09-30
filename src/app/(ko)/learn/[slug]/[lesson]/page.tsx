@@ -289,7 +289,7 @@ export default function LearnPage() {
                 lessonKey={lessonKey}
                 lessonTitle={d.lesson.title}
                 lessonLabel={d.lesson.label}
-                lessonMin={d.lesson.estMinutes ?? undefined}
+                lessonMin={d.lesson.estMinutes ?? (d.lesson.durationSec ? Math.round(d.lesson.durationSec / 60) : undefined)}
                 steps={practiceToSteps(
                   { title: d.lesson.title, sumi: d.lesson.sumi },
                   d.lesson.blocks ?? []
