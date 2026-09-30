@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge, Button, Input, Modal, Skeleton, Toast } from "@/components/ui";
+import { stageName } from "@/lib/attendance";
 
 // ─────────────────────────────────────────────────────────────────
 // 회원 관리 — 목록·검색·역할 필터·상세(주문)·역할 변경
@@ -19,6 +20,8 @@ interface AdminUser {
   isEmailVerified: boolean;
   googleId?: string;
   createdAt: string;
+  /** 숨이 성장 정보 (참고용, 관리자 화면에서만) */
+  sumi?: { drops: number; stage: number } | null;
 }
 interface UserOrder {
   _id: string;
@@ -171,6 +174,12 @@ export default function AdminUsersPage() {
               <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
                 가입 {new Date(selected.createdAt).toLocaleDateString("ko-KR")} · {selected.googleId ? "구글 로그인" : selected.isEmailVerified ? "이메일 인증됨" : "이메일 미인증"}
               </p>
+              {/* 숨이 성장 정보 (참고용) — 마음 날씨 등 민감 정보는 표시하지 않는다 */}
+              {selected.sumi != null && (
+                <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
+                  숨이 물방울 {selected.sumi.drops}개 · {stageName(selected.sumi.stage)}
+                </p>
+              )}
             </div>
 
             <div>
