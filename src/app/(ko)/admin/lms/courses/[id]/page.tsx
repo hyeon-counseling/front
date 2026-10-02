@@ -19,11 +19,13 @@ import type { TextCard } from "@/lib/lessonText";
 //   [차시 구성] 섹션 → 차시(동영상/텍스트/오디오/퀴즈/요약카드) 편집, 순서 변경, 동영상·오디오 업로드
 // 동영상: Cloudflare Stream 직접 업로드(200MB 이하) 또는 Stream 대시보드에서 올린 동영상 ID 붙여넣기.
 //         Stream 도입 전 임시로 유튜브 '일부공개' 영상, 테스트용 직접 주소(https://…mp4)도 쓸 수 있다.
+//         비공개 저장소(R2)에 올린 mp4는 경로(courses/…/파일.mp4)만 적으면 수강생에게 2시간짜리 서명 주소로 재생된다.
 // ─────────────────────────────────────────────────────────────────
 
 interface Video {
-  provider: "stream" | "url" | "youtube";
+  provider: "stream" | "url" | "youtube" | "r2";
   uid?: string | null;
+  key?: string | null;
   url?: string | null;
   youtubeId?: string | null;
   durationSec?: number | null;
@@ -449,6 +451,10 @@ export default function AdminCourseEditor() {
                               <input type="radio" checked={v.provider === "url"} onChange={() => updateLesson(si, li, (x) => { x.video = { ...v, provider: "url" }; })} />
                               직접 주소 (테스트용)
                             </label>
+                            <label className="flex items-center gap-2">
+                              <input type="radio" checked={v.provider === "r2"} onChange={() => updateLesson(si, li, (x) => { x.video = { ...v, provider: "r2" }; })} />
+                              저장소 mp4 (비공개)
+                            </label>
                             {v.durationSec ? <Badge tone="neutral">{formatDuration(v.durationSec, true)}</Badge> : null}
                             {v.provider === "stream" && v.status && (
                               <Badge tone={v.status === "ready" ? "brand" : v.status === "error" ? "error" : "warning"}>
@@ -518,6 +524,23 @@ export default function AdminCourseEditor() {
                               <p className="mt-2 text-xs text-amber-700">
                                 유튜브에 <strong>일부공개</strong>로 올려 주세요(비공개는 재생 안 됨). 주소를 아는 사람은 볼 수 있어서 정식 판매 전에 Stream으로 바꾸는 걸 권해요.
                               </p>
+                            </div>
+                          ) : v.provider === "r2" ? (
+                            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_140px]">
+                              <input
+                                value={v.key ?? ""}
+                                placeholder="courses/과정주소/파일.mp4"
+                                onChange={(e) => updateLesson(si, li, (x) => { x.video = { ...v, provider: "r2", key: e.target.value.trim() || null }; })}
+                                className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs"
+                              />
+                              <input
+                                inputMode="numeric"
+                                value={v.durationSec ?? ""}
+                                placeholder="길이(초)"
+                                onChange={(e) => updateLesson(si, li, (x) => { x.video = { ...v, provider: "r2", durationSec: numOrNull(e.target.value) }; })}
+                                className="rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-xs"
+                              />
+                              <p className="text-xs text-[var(--foreground-muted)] sm:col-span-2">파일 저장소(R2)에 올린 mp4 경로예요. 수강생에게는 2시간짜리 임시 주소로만 재생돼요.</p>
                             </div>
                           ) : (
                             <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_140px]">
