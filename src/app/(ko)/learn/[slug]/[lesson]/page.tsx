@@ -348,7 +348,7 @@ export default function LearnPage() {
               lessonKey={lessonKey}
               lessonTitle={d.lesson.title}
               lessonLabel={d.lesson.label}
-              lessonMin={d.lesson.estMinutes ?? undefined}
+              lessonMin={d.lesson.estMinutes ?? (d.lesson.durationSec ? Math.max(1, Math.round(d.lesson.durationSec / 60)) : undefined)}
               steps={d.lesson.steps}
               check={d.lesson.check}
               gad7Def={d.lesson.gad7}
