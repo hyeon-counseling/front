@@ -198,6 +198,8 @@ export function GuidedChatView({
   const entries = useRef<Entries>(initialEntries);
   const running = useRef(true);
   const startedRun = useRef(-1); // 지금 돌고 있는 대화 실행 번호
+  const sayCount = useRef(0); // 말한 횟수 — 큰 스티커가 너무 잦지 않게 (앱과 같은 규칙: 두 마디 넘게 지나야 다시)
+  const lastSticker = useRef(-10);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   // react 판단용 답 (단일 선택은 몇 번째를 골랐는지 {__idx}, 저장 안 하는 선택은 id로)
   const reactVals = useRef<Record<string, unknown>>({});
@@ -247,16 +249,13 @@ export function GuidedChatView({
       const typing = newMsg({ kind: who, isTyping: true });
       addMsg(typing);
       await wait(typingDelay(text));
-      // 타이핑 메시지 교체
-      if (st && BIG_STICKERS.has(st)) {
-        setMsgs((prev) => {
-          const next = prev.filter((m) => m.id !== typing.id);
-          return [
-            ...next,
-            newMsg({ kind: who, sticker: st }),
-          ];
-        });
+      // 큰 스티커는 그림을 먼저 보여 주고, 대사는 그 아래 말풍선으로 이어서 보여 준다 (대사를 버리지 않는다)
+      sayCount.current += 1;
+      if (st && BIG_STICKERS.has(st) && sayCount.current - lastSticker.current > 2) {
+        lastSticker.current = sayCount.current;
+        setMsgs((prev) => [...prev.filter((m) => m.id !== typing.id), newMsg({ kind: who, sticker: st })]);
         await wait(350);
+        if (text) setMsgs((prev) => [...prev, newMsg({ kind: who, text, st })]);
       } else {
         setMsgs((prev) =>
           prev.map((m) =>
@@ -833,6 +832,8 @@ export function GuidedChatView({
                 setSun(null);
                 setCompleted(false);
                 reactVals.current = {};
+                sayCount.current = 0;
+                lastSticker.current = -10;
                 setRunId((r) => r + 1);
               })
             }
