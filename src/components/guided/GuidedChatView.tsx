@@ -8,6 +8,7 @@
  * 힘들 때 버튼: 109 · 1577-0199 안전 안내.
  */
 
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -785,6 +786,9 @@ export function GuidedChatView({
             if (match.safety) {
               addMsg(newMsg({ kind: "s", widget: <SafetyBox /> }));
             }
+            if (match.counsel) {
+              addMsg(newMsg({ kind: "s", widget: <CounselBox /> }));
+            }
           }
         } else if ("quiz" in step) {
           await wait(300);
@@ -1109,6 +1113,29 @@ function SafetyBox({ text }: { text?: string }) {
         {text ??
           "지금 많이 힘들다면 자살예방 상담전화 109 · 정신건강 위기상담 1577-0199 (24시간)에서 바로 이야기할 수 있어요."}
       </p>
+    </div>
+  );
+}
+
+/** 상담 연결 — 무료 공공 기관을 먼저, 심리상담실 현 상담(유료)은 그다음 */
+function CounselBox() {
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm">
+      <p className="font-bold text-[var(--foreground)]">사람과 함께 이야기해 보세요</p>
+      <ul className="mt-2 space-y-1.5 text-[var(--foreground-muted)]">
+        <li>
+          <a href="tel:15770199" className="font-semibold text-[var(--brand)] underline-offset-2 hover:underline">정신건강 위기상담 1577-0199</a> · 24시간 · 무료
+        </li>
+        <li>
+          <a href="https://www.mentalhealth.go.kr" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--brand)] underline-offset-2 hover:underline">
+            가까운 정신건강복지센터 찾기
+          </a>{" "}
+          · 무료 상담
+        </li>
+        <li>
+          <Link href="/counseling" className="font-semibold text-[var(--brand)] underline-offset-2 hover:underline">심리상담실 현 상담 알아보기</Link> · 유료 · 화상·대면
+        </li>
+      </ul>
     </div>
   );
 }
