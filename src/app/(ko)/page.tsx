@@ -99,7 +99,7 @@ export default function HomePage() {
             <div className="rise rise-5 mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--foreground-subtle)]">
               <span className="flex items-center gap-1.5"><Check /> 카드 없이 시작</span>
               <span className="flex items-center gap-1.5"><Check /> 기록은 나만 열람</span>
-              <span className="flex items-center gap-1.5"><Check /> 상담심리 석사 · 청소년상담 학사</span>
+              <span className="flex items-center gap-1.5"><Check /> 상담 및 심리치료 석사 · 청소년상담 학사</span>
             </div>
           </div>
 
@@ -225,7 +225,7 @@ export default function HomePage() {
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--brand)] text-2xl font-extrabold text-white">현</div>
               <p className="mt-5 text-xl font-bold text-[var(--foreground)]">김태현 심리상담가</p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {["상담심리 석사", "청소년상담 학사"].map((b) => (
+                {["상담 및 심리치료 석사", "청소년상담 학사"].map((b) => (
                   <span key={b} className="rounded-lg bg-[var(--surface)] px-2.5 py-1 text-xs font-medium text-[var(--foreground-muted)]">{b}</span>
                 ))}
               </div>
