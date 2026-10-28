@@ -5,11 +5,20 @@
  * - NEXT_PUBLIC_API_URL 환경변수로 백엔드 주소를 관리
  * - localStorage에서 JWT 토큰을 읽어 Authorization 헤더에 자동으로 첨부
  * - 응답이 { success: false }이면 에러를 throw하여 호출부에서 처리
+ * - 로그인 기한이 지났으면(토큰 만료·401) 저장된 로그인을 지우고 로그인 화면으로 보낸다 (lib/authSession)
  */
+import { EXPIRED_MESSAGE, expireSession, isAuthEntryPath, isTokenExpired, shouldExpire } from './authSession';
+
 export async function apiFetch(path: string, options: RequestInit = {}) {
   // localStorage는 브라우저에서만 사용 가능 — 서버사이드 렌더링 시 건너뜀
   const token =
     typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+  // 이미 기한이 지난 토큰이면 보내 보지 않고 바로 다시 로그인
+  if (token && isTokenExpired(token) && !isAuthEntryPath(path)) {
+    expireSession();
+    throw new Error(EXPIRED_MESSAGE);
+  }
 
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
     ...options,
@@ -21,6 +30,11 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
       ...options.headers,
     },
   });
+
+  if (shouldExpire(res.status, Boolean(token), path)) {
+    expireSession();
+    throw new Error(EXPIRED_MESSAGE);
+  }
 
   const data = await res.json();
 
@@ -42,6 +56,10 @@ export async function apiRequest<T = unknown>(
   options: RequestInit = {}
 ): Promise<{ ok: boolean; status: number; data: T | null; message: string }> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (token && isTokenExpired(token) && !isAuthEntryPath(path)) {
+    expireSession();
+    return { ok: false, status: 401, data: null, message: EXPIRED_MESSAGE };
+  }
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
       ...options,
@@ -51,6 +69,10 @@ export async function apiRequest<T = unknown>(
         ...options.headers,
       },
     });
+    if (shouldExpire(res.status, Boolean(token), path)) {
+      expireSession();
+      return { ok: false, status: 401, data: null, message: EXPIRED_MESSAGE };
+    }
     const body = await res.json().catch(() => ({}));
     return { ok: res.ok && body.success !== false, status: res.status, data: (body.data ?? null) as T | null, message: body.message ?? '' };
   } catch {
