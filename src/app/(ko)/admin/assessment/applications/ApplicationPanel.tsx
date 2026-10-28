@@ -7,6 +7,7 @@ import { StageTracker } from "@/components/assessment/StageTracker";
 import { INTAKE_STEPS } from "@/components/assessment/intakeConfig";
 import { kstParts } from "@/lib/assessment";
 import type { Row } from "./types";
+import { CancelBox, PlaceBox, ResendBox, TestsBox, type TestDetail } from "./PanelActions";
 
 /**
  * 신청 상세 — 오른쪽 패널 (좁은 화면에서는 전체 화면)
@@ -25,6 +26,9 @@ interface Detail extends Row {
   history: { stage: number; hold: string; at: string; by: string; note: string }[];
   intake: { answers: Record<string, string | string[]>; crisis: boolean; submittedAt: string } | null;
   notices: { code: string; dateKey: string; channel: string; result: string; reason: string | null; at: string }[];
+  testsDetail: Record<string, TestDetail>;
+  place: { name: string; address: string; mapUrl: string } | null;
+  videoLink: string | null;
 }
 
 const GENDER: Record<string, string> = { female: "여성", male: "남성", other: "기타", undisclosed: "밝히지 않음" };
@@ -53,6 +57,7 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
   const [msg, setMsg] = useState("");
 
   // 다른 신청을 열면 목록 쪽에서 key로 새로 그린다
+  const [ver, setVer] = useState(0);
   useEffect(() => {
     apiFetch(`/api/admin/assessment/applications/${id}`)
       .then((x: Detail) => {
@@ -60,7 +65,11 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
         setMemo(x.memo ?? "");
       })
       .catch((e) => setError(e.message));
-  }, [id]);
+  }, [id, ver]);
+  const refresh = () => {
+    setVer((v) => v + 1);
+    onChanged();
+  };
 
   const patch = async (body: Record<string, unknown>, done: string) => {
     setSaving(true);
@@ -159,6 +168,9 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
             </dl>
           </section>
 
+          {!d.closed && <TestsBox id={d.id} tests={d.testsDetail} onChanged={refresh} />}
+          {!d.closed && <PlaceBox key={`${d.place?.name ?? ""}|${d.videoLink ?? ""}`} id={d.id} method={d.method} place={d.place} videoLink={d.videoLink} onChanged={refresh} />}
+
           <section>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-bold text-[var(--foreground)]">접수면접지</h3>
@@ -209,6 +221,7 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
 
           <section>
             <h3 className="mb-3 text-sm font-bold text-[var(--foreground)]">알림 이력</h3>
+            {!d.closed && <ResendBox id={d.id} onChanged={refresh} />}
             {d.notices.length === 0 ? (
               <p className="text-sm text-[var(--foreground-subtle)]">보낸 알림이 없어요.</p>
             ) : (
@@ -226,6 +239,8 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
               </ul>
             )}
           </section>
+
+          <CancelBox id={d.id} closed={d.closed} onChanged={refresh} />
         </div>
       )}
     </aside>

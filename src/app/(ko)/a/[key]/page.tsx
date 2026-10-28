@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui";
 import { StageTracker } from "@/components/assessment/StageTracker";
+import { TestButtons } from "@/components/assessment/TestButtons";
 import { VerifyGate } from "@/components/assessment/VerifyGate";
 import { useProgress } from "@/components/assessment/useProgress";
 import type { ProgressView } from "@/lib/assessment";
@@ -39,7 +40,10 @@ function NextAction({ v }: { v: ProgressView }) {
     return (
       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
         <p className="font-bold text-[var(--foreground)]">해석 상담 일정을 새로 골라야 해요</p>
-        <p className="mt-2 text-sm text-[var(--foreground-muted)]">일정 다시 고르기 화면을 준비하고 있어요. 그동안은 카카오톡 채널 「심리상담실 현」으로 알려 주세요.</p>
+        <p className="mt-2 text-sm text-[var(--foreground-muted)]">검사 마감이 지나 지금 일정으로는 보고서를 준비하기 어려워요. 이미 마친 검사는 그대로 인정돼요.</p>
+        <Link href={`/a/${key}/reschedule`} className="mt-4 inline-flex h-12 items-center rounded-xl bg-[var(--brand)] px-6 font-bold text-white">
+          새 일정 고르기
+        </Link>
       </div>
     );
   }
@@ -70,16 +74,31 @@ function NextAction({ v }: { v: ProgressView }) {
     const left = v.tests.filter((t) => !t.done);
     return (
       <div className="rounded-2xl bg-[var(--brand-light)] p-6">
-        <p className="text-sm font-semibold text-[var(--brand)]">검사 진행 중 · 마감 {v.testDeadlineText} 밤 12시</p>
-        <ul className="mt-3 space-y-2">
-          {v.tests.map((t) => (
-            <li key={t.key} className="flex items-center justify-between rounded-xl bg-white px-4 py-3">
-              <span className="font-semibold text-[var(--foreground)]">{t.label}</span>
-              <span className={`text-sm font-semibold ${t.done ? "text-[var(--brand)]" : "text-[var(--foreground-subtle)]"}`}>{t.done ? "완료 ✓" : "알림톡의 링크로 검사하기"}</span>
-            </li>
-          ))}
-        </ul>
-        {left.length > 0 && <p className="mt-3 text-xs text-[var(--foreground-muted)]">나눠서 해도 괜찮아요. 남은 검사: {left.map((t) => t.label).join(", ")}</p>}
+        <p className="mb-3 text-sm font-semibold text-[var(--brand)]">검사 진행 중 · 마감 {v.testDeadlineText} 밤 12시</p>
+        <TestButtons v={v} />
+        <p className="mt-3 text-xs text-[var(--foreground-muted)]">
+          {left.length > 0 ? `나눠서 해도 괜찮아요. 남은 검사: ${left.map((t) => t.label).join(", ")}` : "세 가지 모두 마쳤어요. 내일 아침 8시에 완료 안내를 보내 드려요."}
+        </p>
+      </div>
+    );
+  }
+  if (v.stage >= 4 && v.stage <= 6 && (v.place || v.videoReady)) {
+    return (
+      <div className="rounded-2xl bg-[var(--brand-light)] p-6">
+        <p className="text-sm font-semibold text-[var(--brand)]">해석 상담 · {v.sessionText}</p>
+        {v.place ? (
+          <>
+            <p className="mt-2 text-lg font-bold text-[var(--foreground)]">{v.place.name}</p>
+            <p className="text-sm text-[var(--foreground-muted)]">{v.place.address}</p>
+            <Link href={`/a/${key}/place`} className="mt-4 inline-flex h-11 items-center rounded-xl bg-[var(--brand)] px-5 text-sm font-bold text-white">
+              지도 보기
+            </Link>
+          </>
+        ) : (
+          <Link href={`/a/${key}/video-room`} className="mt-4 inline-flex h-11 items-center rounded-xl bg-[var(--brand)] px-5 text-sm font-bold text-white">
+            화상 상담 입장
+          </Link>
+        )}
       </div>
     );
   }

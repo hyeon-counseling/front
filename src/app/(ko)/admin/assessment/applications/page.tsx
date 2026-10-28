@@ -7,6 +7,7 @@ import { STAGES } from "@/lib/assessment";
 import { Badge, EmptyState, Skeleton, cx } from "@/components/ui";
 import { ApplicationPanel } from "./ApplicationPanel";
 import type { Row } from "./types";
+import { MaskedName } from "../../_components/MaskedName";
 
 /**
  * 관리자 · 전문 심리검사 신청·진행 현황 (docs/ADMIN-REDESIGN-PLAN.md ②③)
@@ -21,14 +22,16 @@ interface Summary {
   testing: number;
   reschedule: number;
   failedNotices: number;
+  placeNeeded: number;
 }
 
-type FilterKey = "all" | "safety" | "intake" | "issue" | "reschedule" | "tester" | "closed" | `s${number}`;
+type FilterKey = "all" | "safety" | "intake" | "issue" | "reschedule" | "place" | "tester" | "closed" | `s${number}`;
+const FILTERS = new Set(["all", "safety", "intake", "issue", "reschedule", "place", "tester", "closed", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]);
 
 function query(f: FilterKey, q: string): string {
   const p = new URLSearchParams();
   if (f === "safety" || f === "reschedule") p.set("hold", f);
-  else if (f === "intake" || f === "issue") p.set("view", f);
+  else if (f === "intake" || f === "issue" || f === "place") p.set("view", f);
   else if (f === "tester") p.set("tester", "1");
   else if (f === "closed") p.set("closed", "1");
   else if (f.startsWith("s")) p.set("stage", f.slice(1));
@@ -41,7 +44,8 @@ function Inner() {
   const pathname = usePathname();
   const params = useSearchParams();
   const openId = params.get("id");
-  const [filter, setFilter] = useState<FilterKey>("all");
+  // 디스코드 링크 버튼이 ?f=issue 처럼 바로 그 목록을 연다
+  const [filter, setFilter] = useState<FilterKey>(() => (FILTERS.has(params.get("f") ?? "") ? (params.get("f") as FilterKey) : "all"));
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<Row[] | null>(null);
   const [sum, setSum] = useState<Summary | null>(null);
@@ -70,6 +74,7 @@ function Inner() {
     { key: "intake", label: "접수면접지 미제출", n: sum?.intakeWaiting, tone: "border-[var(--border-light)] bg-white text-[var(--foreground)]", hint: "N2 안내 대상" },
     { key: "s3", label: "검사 진행 중", n: sum?.testing, tone: "border-[var(--border-light)] bg-white text-[var(--foreground)]", hint: "완료 확인" },
     { key: "reschedule", label: "일정 재조정", n: sum?.reschedule, tone: "border-amber-200 bg-amber-50 text-amber-800", hint: "새 일정 필요" },
+    { key: "place", label: "장소 입력 필요", n: sum?.placeNeeded, tone: "border-amber-200 bg-amber-50 text-amber-800", hint: "5일 안 대면 상담" },
   ];
 
   const chips: { key: FilterKey; label: string }[] = [
@@ -91,7 +96,7 @@ function Inner() {
         </div>
 
         {/* 오늘 할 일 */}
-        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           {todo.map((t) => (
             <button
               key={t.key}
@@ -159,7 +164,7 @@ function Inner() {
                     >
                       <td className="px-4 py-3">
                         <p className="font-semibold text-[var(--foreground)]">
-                          {r.name}
+                          <MaskedName name={r.name} />
                           {r.isTester && <span className="ml-1.5 rounded bg-[var(--surface-muted)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--foreground-muted)]">테스터</span>}
                         </p>
                         <p className="text-xs text-[var(--foreground-subtle)]">{r.applicationNo}</p>

@@ -20,7 +20,10 @@ interface AdminSlot {
 }
 
 const REGIONS = ["홍대", "강남", "종로", "혜화", "사당"];
-const PRESET_TIMES = ["10:00", "11:00", "14:00", "15:00", "16:00", "17:00", "19:00", "20:00"];
+// 기본값(10/29 확정): 수·목·금·토·일, 14:00 · 15:30 · 18:00 · 19:30 — 월·화 없음, 대면 5곳 모두
+const DEFAULT_TIMES = ["14:00", "15:30", "18:00", "19:30"];
+const DEFAULT_DOWS = [3, 4, 5, 6, 0];
+const PRESET_TIMES = ["10:00", "11:00", ...DEFAULT_TIMES, "20:00"];
 const WEEKS = 6;
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -55,7 +58,7 @@ export default function SlotsPage() {
 
   const [slots, setSlots] = useState<AdminSlot[] | null>(null);
   const [pickDates, setPickDates] = useState<string[]>([]);
-  const [times, setTimes] = useState<string[]>(["14:00", "19:00"]);
+  const [times, setTimes] = useState<string[]>(DEFAULT_TIMES);
   const [custom, setCustom] = useState("");
   const [methods, setMethods] = useState<("offline" | "online")[]>(["offline", "online"]);
   const [regions, setRegions] = useState<string[]>([...REGIONS]);
@@ -178,7 +181,19 @@ export default function SlotsPage() {
             </div>
           )}
         </div>
-        <p className="text-sm font-semibold">3. 아래 달력에서 열 날짜를 눌러 고르세요 {pickDates.length > 0 && <span className="text-[var(--brand)]">· {pickDates.length}일 고름</span>}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-semibold">3. 아래 달력에서 열 날짜를 눌러 고르세요 {pickDates.length > 0 && <span className="text-[var(--brand)]">· {pickDates.length}일 고름</span>}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setPickDates(days.filter((k) => k >= firstBookable && DEFAULT_DOWS.includes(dowOf(k))));
+              setPreview(null);
+            }}
+            className="h-8 cursor-pointer rounded-lg bg-[var(--brand-light)] px-3 text-xs font-semibold text-[var(--brand)]"
+          >
+            기본: 수~일 모두 고르기
+          </button>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <button disabled={!pickDates.length || !times.length} onClick={doPreview} className="h-10 cursor-pointer rounded-xl bg-[var(--surface)] px-4 text-sm font-semibold disabled:opacity-40">
             미리 보기
