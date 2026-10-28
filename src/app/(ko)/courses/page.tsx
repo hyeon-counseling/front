@@ -6,7 +6,7 @@ import { formatPrice } from "@/lib/practice";
 
 export const metadata: Metadata = {
   title: "강의",
-  description: "심리상담가 현의 온라인 강의. 영상·오디오·글·퀴즈·카드·쓰기 실습으로 10분씩.",
+  description: "김태현 심리상담가의 온라인 강의. 영상·오디오·글·퀴즈·카드·쓰기 실습으로 10분씩.",
 };
 
 async function getCourses(): Promise<CourseListItem[] | null> {

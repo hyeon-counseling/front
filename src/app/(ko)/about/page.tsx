@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "소개",
-  description: "심리상담실 현과 상담가 현을 소개합니다. 상담심리 석사, 임상심리사 2급·청소년상담사 2급.",
+  description: "심리상담실 현과 김태현 심리상담가를 소개합니다. 상담심리 석사, 청소년상담 학사.",
 };
 
 const APPROACH = [
@@ -42,11 +42,11 @@ export default function AboutPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">상담가 · 운영자</p>
-                <h2 className="font-display text-xl text-[var(--foreground)]">심리상담가 현 (김태현)</h2>
+                <h2 className="font-display text-xl text-[var(--foreground)]">김태현 심리상담가</h2>
               </div>
             </div>
             <div className="mb-6 flex flex-wrap gap-2">
-              {["상담심리 석사", "청소년상담 학사", "임상심리사 2급", "청소년상담사 2급", "서울"].map((b) => (
+              {["상담심리 석사", "청소년상담 학사", "서울"].map((b) => (
                 <span key={b} className="rounded-full border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)]">
                   {b}
                 </span>
