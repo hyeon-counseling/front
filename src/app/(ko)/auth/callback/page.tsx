@@ -17,6 +17,7 @@
  */
 
 import { Suspense, useEffect, useState } from "react";
+import { pendingGiftPath } from "@/lib/gift";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, AuthUser } from "@/contexts/AuthContext";
 
@@ -48,7 +49,9 @@ function CallbackHandler() {
       login(token, user);
 
       // 생년월일·성별이 없으면(구글 첫 가입 등) 추가 정보 입력 화면으로
-      router.replace(user.profileComplete === false ? "/onboarding?next=/my" : "/my");
+      // 받으러 온 쿠폰 선물이 있으면 그리로
+      const dest = pendingGiftPath() ?? "/my";
+      router.replace(user.profileComplete === false ? `/onboarding?next=${encodeURIComponent(dest)}` : dest);
     } catch {
       setError(
         "사용자 정보를 처리하는 중 오류가 발생했습니다. 다시 시도해 주세요."

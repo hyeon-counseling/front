@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, apiRequest } from "@/lib/api";
 import { couponBenefit, ITEM_TYPE_LABEL, won, type ItemType } from "@/lib/payment";
@@ -178,8 +179,11 @@ export default function AdminCouponsPage() {
   return (
     <div className="px-4 py-8">
       <PageHeader title="쿠폰" description="할인 쿠폰을 만들고 회원에게 발급해요. 수료 쿠폰을 켠 강의를 수료하면 다른 강의 할인 쿠폰이 자동으로 발급돼요.">
-        <div className="mt-5">
+        <div className="mt-5 flex flex-wrap gap-2">
           <Button onClick={() => setCreating(true)}>새 쿠폰</Button>
+          <Link href="/admin/coupons/send" className="inline-flex h-11 items-center rounded-xl bg-[var(--surface)] px-5 text-sm font-semibold hover:bg-[var(--surface-muted)]">
+            🎁 쿠폰 보내기 · 선물
+          </Link>
         </div>
       </PageHeader>
 
