@@ -18,4 +18,5 @@ export interface Row {
   tests: Record<string, { collected: boolean; done: boolean }>;
   paidAt: string | null;
   createdAt: string;
+  cancelRequested?: boolean;
 }

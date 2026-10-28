@@ -51,7 +51,7 @@ export default function MyAssessmentPage() {
         ) : (
           <div className="mt-8 space-y-4">
             {list.map((a) => (
-              <Link key={a.applicationNo} href={`/a/${a.linkKey}`} className="card block p-6 transition hover:border-[var(--brand)]">
+              <div key={a.applicationNo} className="card p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold text-[var(--foreground-subtle)]">신청 번호 {a.applicationNo}</p>
@@ -61,11 +61,24 @@ export default function MyAssessmentPage() {
                     </p>
                   </div>
                   <span className="rounded-full bg-[var(--brand-light)] px-3 py-1 text-xs font-bold text-[var(--brand)]">
-                    {a.closed ? (a.closed === "refunded" ? "환불됨" : "취소됨") : a.holdLabel || `${a.stage}/8 ${a.stageLabel}`}
+                    {a.closed ? (a.closed === "refunded" ? "환불됨" : "취소됨") : a.cancelRequestedAt ? "취소 요청됨" : a.holdLabel || `${a.stage}/8 ${a.stageLabel}`}
                   </span>
                 </div>
                 {!a.closed && <StageTracker stage={a.stage} hold={a.hold} compact />}
-              </Link>
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
+                  <Link href={`/a/${a.linkKey}`} className="inline-flex h-10 items-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white">
+                    진행 상황 보기
+                  </Link>
+                  {!a.closed &&
+                    (a.cancelRequestedAt ? (
+                      <span className="text-xs font-semibold text-[var(--foreground-subtle)]">취소 요청됨 · 상담가 확인 중</span>
+                    ) : (
+                      <Link href={`/a/${a.linkKey}/cancel`} className="text-sm text-[var(--foreground-subtle)] underline underline-offset-2 hover:text-[var(--error)]">
+                        취소 요청
+                      </Link>
+                    ))}
+                </div>
+              </div>
             ))}
           </div>
         )}

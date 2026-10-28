@@ -7,7 +7,7 @@ import { StageTracker } from "@/components/assessment/StageTracker";
 import { INTAKE_STEPS } from "@/components/assessment/intakeConfig";
 import { kstParts } from "@/lib/assessment";
 import type { Row } from "./types";
-import { CancelBox, PlaceBox, ResendBox, TestsBox, type TestDetail } from "./PanelActions";
+import { PlaceBox, RefundBox, ResendBox, TestsBox, type RefundQuoteView, type TestDetail } from "./PanelActions";
 
 /**
  * 신청 상세 — 오른쪽 패널 (좁은 화면에서는 전체 화면)
@@ -29,6 +29,10 @@ interface Detail extends Row {
   testsDetail: Record<string, TestDetail>;
   place: { name: string; address: string; mapUrl: string } | null;
   videoLink: string | null;
+  cancelRequestedAt: string | null;
+  cancelRequest: { reason: string; quoteAmount: number; quoteTier: string; by: string } | null;
+  refund: { amount: number; note: string; processedAt: string } | null;
+  refundQuote: RefundQuoteView | null;
 }
 
 const GENDER: Record<string, string> = { female: "여성", male: "남성", other: "기타", undisclosed: "밝히지 않음" };
@@ -240,7 +244,7 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
             )}
           </section>
 
-          <CancelBox id={d.id} closed={d.closed} onChanged={refresh} />
+          <RefundBox id={d.id} closed={d.closed} request={d.cancelRequest} requestedAt={d.cancelRequestedAt} quote={d.refundQuote} refund={d.refund} onChanged={refresh} />
         </div>
       )}
     </aside>

@@ -23,15 +23,16 @@ interface Summary {
   reschedule: number;
   failedNotices: number;
   placeNeeded: number;
+  cancelRequests: number;
 }
 
-type FilterKey = "all" | "safety" | "intake" | "issue" | "reschedule" | "place" | "tester" | "closed" | `s${number}`;
-const FILTERS = new Set(["all", "safety", "intake", "issue", "reschedule", "place", "tester", "closed", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]);
+type FilterKey = "all" | "safety" | "intake" | "issue" | "reschedule" | "place" | "cancel" | "tester" | "closed" | `s${number}`;
+const FILTERS = new Set(["all", "safety", "intake", "issue", "reschedule", "place", "cancel", "tester", "closed", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]);
 
 function query(f: FilterKey, q: string): string {
   const p = new URLSearchParams();
   if (f === "safety" || f === "reschedule") p.set("hold", f);
-  else if (f === "intake" || f === "issue" || f === "place") p.set("view", f);
+  else if (f === "intake" || f === "issue" || f === "place" || f === "cancel") p.set("view", f);
   else if (f === "tester") p.set("tester", "1");
   else if (f === "closed") p.set("closed", "1");
   else if (f.startsWith("s")) p.set("stage", f.slice(1));
@@ -70,6 +71,7 @@ function Inner() {
 
   const todo: { key: FilterKey; label: string; n: number | undefined; tone: string; hint: string }[] = [
     { key: "safety", label: "안전 확인", n: sum?.safety, tone: "border-red-200 bg-red-50 text-red-700", hint: "24시간 안 직접 연락" },
+    { key: "cancel", label: "취소 요청", n: sum?.cancelRequests, tone: "border-red-200 bg-red-50 text-red-700", hint: "환불액 확인·처리" },
     { key: "issue", label: "코드 발급 대기", n: sum?.issueWaiting, tone: "border-[var(--brand-light)] bg-[var(--brand-light)] text-[var(--brand)]", hint: "접수면접지 제출 완료" },
     { key: "intake", label: "접수면접지 미제출", n: sum?.intakeWaiting, tone: "border-[var(--border-light)] bg-white text-[var(--foreground)]", hint: "N2 안내 대상" },
     { key: "s3", label: "검사 진행 중", n: sum?.testing, tone: "border-[var(--border-light)] bg-white text-[var(--foreground)]", hint: "완료 확인" },
@@ -96,7 +98,7 @@ function Inner() {
         </div>
 
         {/* 오늘 할 일 */}
-        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
           {todo.map((t) => (
             <button
               key={t.key}
@@ -176,6 +178,8 @@ function Inner() {
                       <td className="px-4 py-3">
                         {r.closed ? (
                           <Badge tone="neutral">{r.closed === "refunded" ? "환불" : "취소"}</Badge>
+                        ) : r.cancelRequested ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">취소 요청</span>
                         ) : r.hold === "safety" ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">● 안전 확인</span>
                         ) : (

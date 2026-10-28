@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
 import { deadlineText, kstParts, type SlotView } from "@/lib/assessment";
 import { Modal, Skeleton, cx } from "@/components/ui";
+import { RefundRules } from "@/components/assessment/RefundRules";
 
 /**
  * 종합심리검사 신청 (11-신청페이지-v2 기준)
@@ -521,16 +522,7 @@ export default function ApplyPage() {
       </form>
 
       <Modal open={refundOpen} onClose={() => setRefundOpen(false)} title="취소·환불 규정">
-        <div className="space-y-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
-          <p>종합심리검사 취소·환불 규정은 확정되는 대로 이곳에 안내해 드려요.</p>
-          <p>
-            그 전까지는{" "}
-            <Link href="/refund" target="_blank" className="link-underline">
-              환불 규정 페이지
-            </Link>
-            를 참고하시고, 궁금한 점은 카카오톡 채널 「심리상담실 현」으로 물어봐 주세요.
-          </p>
-        </div>
+        <RefundRules />
         <button onClick={() => setRefundOpen(false)} className="mt-6 h-12 w-full cursor-pointer rounded-xl bg-[var(--surface)] font-semibold">
           닫기
         </button>

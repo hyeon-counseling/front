@@ -19,6 +19,7 @@ interface Summary {
   failedNotices: number;
   placeNeeded?: number;
   unmatchedMails?: number;
+  cancelRequests?: number;
 }
 
 interface NavItem {
@@ -34,13 +35,13 @@ interface NavGroup {
 }
 
 function groups(s: Summary | null): NavGroup[] {
-  const todo = s ? s.safety + s.issueWaiting + s.reschedule + (s.placeNeeded ?? 0) : 0;
+  const todo = s ? s.safety + s.issueWaiting + s.reschedule + (s.placeNeeded ?? 0) + (s.cancelRequests ?? 0) : 0;
   return [
     { label: "", items: [{ label: "오늘 할 일", href: "/admin", badge: todo, exact: true }] },
     {
       label: "심리검사",
       items: [
-        { label: "전문 검사 신청", href: "/admin/assessment/applications", badge: s ? s.safety + s.reschedule : 0 },
+        { label: "전문 검사 신청", href: "/admin/assessment/applications", badge: s ? s.safety + s.reschedule + (s.cancelRequests ?? 0) : 0 },
         { label: "공개 슬롯", href: "/admin/assessment/slots" },
         { label: "코드 발급·수집", href: "/admin/assessment/codes", badge: s ? s.issueWaiting + (s.unmatchedMails ?? 0) : 0 },
         { label: "간이 무료 검사", href: "/admin/tests" },

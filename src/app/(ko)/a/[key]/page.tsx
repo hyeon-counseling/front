@@ -19,7 +19,18 @@ function NextAction({ v }: { v: ProgressView }) {
     return (
       <div className="rounded-2xl bg-[var(--surface)] p-6">
         <p className="font-bold text-[var(--foreground)]">{v.closed === "refunded" ? "환불된 신청이에요." : "취소된 신청이에요."}</p>
+        {v.refund && v.refund.amount > 0 && <p className="mt-1 text-sm text-[var(--foreground-muted)]">환불 {v.refund.amount.toLocaleString("ko-KR")}원 · 결제한 수단으로 영업일 3~5일 안에 들어가요.</p>}
         <p className="mt-1 text-sm text-[var(--foreground-muted)]">궁금한 점은 카카오톡 채널 「심리상담실 현」으로 물어봐 주세요.</p>
+      </div>
+    );
+  }
+  if (v.cancelRequestedAt) {
+    return (
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+        <p className="font-bold text-[var(--foreground)]">취소 요청됨 · 상담가가 확인하고 있어요</p>
+        <p className="mt-1 text-sm leading-relaxed text-[var(--foreground-muted)]">
+          {v.cancelRequest && v.cancelRequest.quoteAmount > 0 ? `예상 환불 ${v.cancelRequest.quoteAmount.toLocaleString("ko-KR")}원 · ` : ""}확인한 뒤 결제한 수단으로 영업일 3~5일 안에 처리해 드려요. 그동안 진행 안내는 보내지 않아요.
+        </p>
       </div>
     );
   }
@@ -138,8 +149,16 @@ export default function ProgressPage() {
         <p className="text-sm font-semibold text-[var(--foreground-subtle)]">종합심리검사 + 해석 상담 · {view.applicationNo}</p>
         <h1 className="font-display mt-1 text-2xl text-[var(--foreground)] sm:text-3xl">{view.name}님의 진행 상황</h1>
         <p className="mt-2 inline-flex rounded-full bg-[var(--surface)] px-3 py-1 text-sm font-semibold text-[var(--foreground)]">
-          {view.stage}/8 {view.stageLabel}
-          {view.holdLabel && <span className="ml-1 text-[var(--warning)]">· {view.holdLabel}</span>}
+          {view.closed ? (
+            view.closed === "refunded" ? "환불됨" : "취소됨"
+          ) : view.cancelRequestedAt ? (
+            "취소 요청됨"
+          ) : (
+            <>
+              {view.stage}/8 {view.stageLabel}
+              {view.holdLabel && <span className="ml-1 text-[var(--warning)]">· {view.holdLabel}</span>}
+            </>
+          )}
         </p>
 
         <div className="mt-6">
@@ -179,6 +198,13 @@ export default function ProgressPage() {
         </div>
 
         <p className="mt-8 text-center text-xs text-[var(--foreground-subtle)]">알림톡이 오지 않거나 궁금한 점이 있으면 카카오톡 채널 「심리상담실 현」으로 이름을 남겨 주세요.</p>
+        {!view.closed && !view.cancelRequestedAt && (
+          <p className="mt-3 text-center">
+            <Link href={`/a/${view.linkKey}/cancel`} className="text-xs text-[var(--foreground-subtle)] underline underline-offset-2 hover:text-[var(--error)]">
+              취소 요청
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );
