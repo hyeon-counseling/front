@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import AdminSidebar from "./_components/AdminSidebar";
 
@@ -13,18 +13,20 @@ import AdminSidebar from "./_components/AdminSidebar";
 // ─────────────────────────────────────────────────────────────────
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading } = useAuth();
 
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      router.replace("/login");
+      // 로그인한 뒤 보던 관리자 화면으로 돌아오게
+      router.replace(`/login?next=${encodeURIComponent(pathname || "/admin")}`);
       return;
     }
     if (user.role !== "admin") {
       router.replace("/");
     }
-  }, [loading, user, router]);
+  }, [loading, user, router, pathname]);
 
   // 로딩 중에는 스피너만(비관리자 콘텐츠 깜빡임 방지)
   if (loading) {

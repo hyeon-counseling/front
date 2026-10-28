@@ -20,6 +20,7 @@ import {
   useCallback,
   ReactNode,
 } from 'react';
+import { AUTH_EXPIRED_EVENT, expireSession, isProtectedPath, isTokenExpired } from '@/lib/authSession';
 
 // 로그인한 사용자 정보 구조
 export interface AuthUser {
@@ -59,7 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const savedToken = localStorage.getItem('token');
       const savedUser = localStorage.getItem('user');
 
-      if (savedToken && savedUser) {
+      if (savedToken && isTokenExpired(savedToken)) {
+        // 로그인 기한(7일)이 이미 지남 — 지우고, 로그인이 필요한 화면이면 바로 로그인으로(돌아올 주소 포함)
+        expireSession({ redirect: isProtectedPath(window.location.pathname) });
+      } else if (savedToken && savedUser) {
         setToken(savedToken);
         setUser(JSON.parse(savedUser) as AuthUser);
       }
@@ -70,6 +74,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // API 가 401(기한 지남)을 돌려주면 lib/authSession 이 저장소를 지우고 이 알림을 보낸다 → 화면 상태도 로그아웃으로
+  useEffect(() => {
+    const onExpired = () => {
+      setToken(null);
+      setUser(null);
+    };
+    window.addEventListener(AUTH_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, onExpired);
   }, []);
 
   // 로그인 처리 — token과 user를 상태 + localStorage에 저장

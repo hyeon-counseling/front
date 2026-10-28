@@ -6,6 +6,8 @@
 //
 // 주의: Content-Type 헤더를 설정하지 않는다(브라우저가 multipart 경계 자동 지정).
 
+import { EXPIRED_MESSAGE, expireSession, shouldExpire } from "@/lib/authSession";
+
 export async function uploadFile(path: string, field: string, file: File): Promise<unknown> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const formData = new FormData();
@@ -16,6 +18,10 @@ export async function uploadFile(path: string, field: string, file: File): Promi
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
+  if (shouldExpire(res.status, Boolean(token), path)) {
+    expireSession();
+    throw new Error(EXPIRED_MESSAGE);
+  }
   const data = await res.json();
   if (!data.success) throw new Error(data.message || "업로드에 실패했습니다.");
   return data.data;

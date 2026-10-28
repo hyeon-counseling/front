@@ -7,12 +7,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { Alert, Button, Input } from "@/components/ui";
 import { SocialLoginButtons, socialErrorMessage } from "@/components/ko/SocialLoginButtons";
+import { EXPIRED_MESSAGE, safeNext } from "@/lib/authSession";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/my";
+  // 돌아갈 주소는 같은 사이트 안의 경로만 (다른 사이트로 빠져나가지 않게)
+  const next = safeNext(searchParams.get("next"));
   const oauthError = searchParams.get("error");
+  const expired = searchParams.get("expired") === "1";
   const { login } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -27,7 +30,7 @@ function LoginForm() {
     try {
       const data = await apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
       login(data.token, data.user);
-      const dest = next.startsWith("/") ? next : "/my";
+      const dest = next;
       // 추가 정보가 없는 기존 회원은 입력 화면을 먼저 거친다
       router.push(data.user?.profileComplete === false ? `/onboarding?next=${encodeURIComponent(dest)}` : dest);
     } catch (err) {
@@ -48,6 +51,7 @@ function LoginForm() {
 
         <div className="card p-8 shadow-soft">
           <form onSubmit={handleSubmit} className="space-y-5">
+            {expired && !error && <Alert tone="info">{EXPIRED_MESSAGE}</Alert>}
             {error && <Alert>{error}</Alert>}
             <Input id="email" type="email" label="이메일" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required autoComplete="email" />
             <Input id="password" type="password" label="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="비밀번호" required autoComplete="current-password" />
