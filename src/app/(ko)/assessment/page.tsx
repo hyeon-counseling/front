@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { TestsTabs } from "@/components/assessment/TestsTabs";
 
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
 const PRODUCTS = [
   {
     href: "/assessment/comprehensive",
+    // 상품 이미지(16:9) — 10/29 상담가 확정 A안. 없으면 그린 머리로
+    cover: "/assessment/comprehensive-cover.png" as string | null,
     badge: "대표",
     title: "종합심리검사 TCI + MMPI-3 + SCT",
     summary: "타고난 기질, 지금의 마음 상태, 내 문장 속 이야기까지. 세 검사를 함께 읽고 해석 상담으로 풀어 드려요.",
@@ -35,16 +38,23 @@ export default function AssessmentListPage() {
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {PRODUCTS.map((p) => (
             <Link key={p.href} href={p.href} className="card card-hover group flex flex-col overflow-hidden">
-              <div className="relative flex h-40 items-end bg-[var(--brand)] p-5 text-white">
-                <span className="absolute right-4 top-4 rounded-full bg-white/20 px-2.5 py-1 text-xs font-semibold">{p.badge}</span>
-                <div className="flex gap-2 text-sm font-bold">
-                  {["TCI", "MMPI-3", "SCT"].map((t) => (
-                    <span key={t} className="rounded-lg bg-white/15 px-2.5 py-1">
-                      {t}
-                    </span>
-                  ))}
+              {p.cover ? (
+                <div className="relative aspect-video bg-[var(--surface)]">
+                  <Image src={p.cover} alt={p.title} fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
+                  <span className="absolute right-3 top-3 rounded-full bg-[var(--brand)] px-2.5 py-1 text-xs font-semibold text-white">{p.badge}</span>
                 </div>
-              </div>
+              ) : (
+                <div className="relative flex h-40 items-end bg-[var(--brand)] p-5 text-white">
+                  <span className="absolute right-4 top-4 rounded-full bg-white/20 px-2.5 py-1 text-xs font-semibold">{p.badge}</span>
+                  <div className="flex gap-2 text-sm font-bold">
+                    {["TCI", "MMPI-3", "SCT"].map((t) => (
+                      <span key={t} className="rounded-lg bg-white/15 px-2.5 py-1">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex flex-1 flex-col p-6">
                 <h2 className="text-lg font-bold leading-snug text-[var(--foreground)] group-hover:text-[var(--brand)]">{p.title}</h2>
                 <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--foreground-muted)]">{p.summary}</p>

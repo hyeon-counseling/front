@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { TestsTabs } from "@/components/assessment/TestsTabs";
 import { ProcessSteps } from "@/components/assessment/ProcessSteps";
@@ -43,6 +44,10 @@ export default function ComprehensivePage() {
 
         <div className="mt-3 grid gap-8 lg:grid-cols-[1fr_320px]">
           <div>
+            {/* 상품 이미지 (16:9, 10/29 확정 A안) */}
+            <div className="relative mb-6 aspect-video overflow-hidden rounded-3xl bg-[var(--surface)]">
+              <Image src="/assessment/comprehensive-cover.png" alt="종합심리검사 — 나를 세 겹으로 읽는 시간 (MMPI-3 · TCI · SCT)" fill priority sizes="(min-width: 1024px) 600px, 100vw" className="object-cover" />
+            </div>
             <h1 className="font-display text-3xl leading-tight text-[var(--foreground)] sm:text-4xl">종합심리검사 + 해석 상담</h1>
             <p className="mt-3 text-lg leading-relaxed text-[var(--foreground-muted)]">
               나를 더 깊이 이해하고 싶은 분을 위한 검사예요. 신청은 3분, 자세한 이야기는 결제 뒤 접수면접지로 들을게요.
