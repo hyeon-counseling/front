@@ -38,7 +38,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col lg:flex-row">
       <AdminSidebar />
-      <main className="min-w-0 flex-1">{children}</main>
+      {/* 휴대폰은 아래 탭(약 64px)만큼 띄운다 */}
+      <main className="min-w-0 flex-1 pb-20 lg:pb-0">{children}</main>
     </div>
   );
 }

@@ -69,19 +69,19 @@ function SuccessInner() {
   return (
     <>
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--brand-light)] text-3xl text-[var(--brand)]">✓</div>
-      <h1 className="mt-5 text-2xl font-bold text-[var(--foreground)] sm:text-3xl">{o.amount === 0 ? "쿠폰으로 이용권을 받았어요" : "결제가 완료되었어요"}</h1>
+      <h1 className="mt-5 text-2xl font-bold text-[var(--foreground)] sm:text-3xl">{o.itemType === "assessment" ? "신청이 완료되었어요" : o.amount === 0 ? "쿠폰으로 이용권을 받았어요" : "결제가 완료되었어요"}</h1>
       <p className="mt-2 text-[var(--foreground-muted)]">
         {o.itemTitle} · {won(o.amount)}
         {(o.discountAmount ?? 0) > 0 && ` (쿠폰 -${won(o.discountAmount)})`}
-        {o.provider === "mock" && " (테스트 결제)"}
+        {o.provider === "mock" && o.amount > 0 && " (테스트 결제)"}
       </p>
       {o.amount > 0 && <p className="mt-1 text-sm text-[var(--foreground-subtle)]">영수증을 이메일로 보내 드렸어요.</p>}
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link href={o.itemPath} className="inline-flex h-12 items-center rounded-xl bg-[var(--brand)] px-7 font-semibold text-white hover:bg-[var(--brand-hover)]">
-          바로 시작하기
+          {o.itemType === "assessment" ? "내 진행 상황 보기" : "바로 시작하기"}
         </Link>
         <Link href="/my" className="inline-flex h-12 items-center rounded-xl bg-[var(--surface)] px-6 font-semibold text-[var(--foreground)]">
-          내 학습
+          마이페이지
         </Link>
       </div>
     </>

@@ -9,16 +9,39 @@ import { useAuth } from "@/contexts/AuthContext";
 // 한국어 사이트 헤더 — 흰 바탕·굵은 로고·둥근 CTA (한국형 SaaS 톤)
 // ─────────────────────────────────────────────────────────────────
 
-const NAV = [
+type NavItem = { href: string; label: string; children?: { href: string; label: string; desc?: string }[]; match?: string[] };
+
+const NAV: NavItem[] = [
   { href: "/courses", label: "강의" },
-  { href: "/tests", label: "심리검사" },
+  {
+    href: "/assessment",
+    label: "심리검사",
+    match: ["/assessment", "/tests", "/a"],
+    children: [
+      { href: "/assessment", label: "전문 심리검사", desc: "TCI · MMPI-3 · SCT + 해석 상담" },
+      { href: "/tests", label: "간이 무료 심리검사", desc: "지금 바로 해 보는 자가 검사" },
+    ],
+  },
   { href: "/counseling", label: "상담" },
   { href: "/articles", label: "아티클" },
   { href: "/about", label: "소개" },
 ];
 
+/** 마이페이지 하위 메뉴 (모바일 메뉴에서도 씀) */
+export const MY_NAV = [
+  { href: "/my", label: "내 학습" },
+  { href: "/my/assessment", label: "심리검사 진행" },
+  { href: "/my/counseling", label: "심리상담 현황" },
+  { href: "/my/orders", label: "주문 내역" },
+  { href: "/my/coupons", label: "쿠폰함" },
+];
+
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
+}
+
+function itemActive(pathname: string, n: NavItem) {
+  return (n.match ?? [n.href]).some((h) => isActive(pathname, h));
 }
 
 function Logo() {
@@ -44,9 +67,9 @@ export default function SiteHeader() {
     router.push("/");
   };
 
-  const linkCls = (href: string) =>
+  const linkCls = (href: string, n?: NavItem) =>
     `rounded-lg px-3 py-2 text-[0.95rem] font-medium transition-colors ${
-      isActive(pathname, href)
+      (n ? itemActive(pathname, n) : isActive(pathname, href))
         ? "text-[var(--foreground)] bg-[var(--surface)]"
         : "text-[var(--foreground-muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]"
     }`;
@@ -57,11 +80,37 @@ export default function SiteHeader() {
         <div className="flex items-center gap-8">
           <Logo />
           <nav className="hidden items-center gap-1 md:flex">
-            {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className={linkCls(n.href)}>
-                {n.label}
-              </Link>
-            ))}
+            {NAV.map((n) =>
+              n.children ? (
+                <div key={n.href} className="group relative">
+                  <Link href={n.href} className={`${linkCls(n.href, n)} inline-flex items-center gap-1`} aria-haspopup="true">
+                    {n.label}
+                    <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" className="opacity-50 transition-transform group-hover:rotate-180 group-focus-within:rotate-180">
+                      <path d="M1.5 3.5 5 7l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </Link>
+                  {/* 하위 메뉴 — 마우스를 올리거나 키보드로 들어오면 열림 */}
+                  <div className="invisible absolute left-0 top-full z-50 pt-2 opacity-0 transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+                    <div className="w-64 rounded-2xl border border-[var(--border-light)] bg-white p-2 shadow-[0_12px_32px_rgba(0,0,0,0.08)]">
+                      {n.children.map((c) => (
+                        <Link
+                          key={c.href}
+                          href={c.href}
+                          className={`block rounded-xl px-3 py-2.5 transition-colors hover:bg-[var(--surface)] ${isActive(pathname, c.href) ? "bg-[var(--surface)]" : ""}`}
+                        >
+                          <span className="block text-[0.92rem] font-semibold text-[var(--foreground)]">{c.label}</span>
+                          {c.desc && <span className="mt-0.5 block text-xs text-[var(--foreground-subtle)]">{c.desc}</span>}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Link key={n.href} href={n.href} className={linkCls(n.href)}>
+                  {n.label}
+                </Link>
+              )
+            )}
           </nav>
         </div>
 
@@ -77,7 +126,7 @@ export default function SiteHeader() {
                 href="/my"
                 className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--brand-hover)]"
               >
-                내 학습
+                마이페이지
               </Link>
               <button onClick={handleLogout} className="cursor-pointer rounded-lg px-3 py-2 text-sm text-[var(--foreground-subtle)] hover:text-[var(--foreground)]">
                 로그아웃
@@ -114,21 +163,37 @@ export default function SiteHeader() {
       {open && (
         <nav className="border-t border-[var(--border-light)] bg-white px-3 py-3 md:hidden">
           {NAV.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              onClick={() => setOpen(false)}
-              className={`block rounded-xl px-4 py-3 text-[0.95rem] font-medium ${isActive(pathname, n.href) ? "bg-[var(--surface)] text-[var(--foreground)]" : "text-[var(--foreground-muted)]"}`}
-            >
-              {n.label}
-            </Link>
+            <div key={n.href}>
+              <Link
+                href={n.href}
+                onClick={() => setOpen(false)}
+                className={`block rounded-xl px-4 py-3 text-[0.95rem] font-medium ${itemActive(pathname, n) ? "bg-[var(--surface)] text-[var(--foreground)]" : "text-[var(--foreground-muted)]"}`}
+              >
+                {n.label}
+              </Link>
+              {n.children?.map((c) => (
+                <Link
+                  key={c.href}
+                  href={c.href}
+                  onClick={() => setOpen(false)}
+                  className={`ml-4 block rounded-xl px-4 py-2.5 text-sm ${isActive(pathname, c.href) ? "font-semibold text-[var(--brand)]" : "text-[var(--foreground-muted)]"}`}
+                >
+                  · {c.label}
+                </Link>
+              ))}
+            </div>
           ))}
           <div className="my-2 border-t border-[var(--border-light)]" />
           {loading ? null : user ? (
             <>
               <Link href="/my" onClick={() => setOpen(false)} className="block rounded-xl px-4 py-3 text-[0.95rem] font-medium text-[var(--foreground)]">
-                내 학습
+                마이페이지
               </Link>
+              {MY_NAV.map((m) => (
+                <Link key={m.href} href={m.href} onClick={() => setOpen(false)} className="ml-4 block rounded-xl px-4 py-2.5 text-sm text-[var(--foreground-muted)]">
+                  · {m.label}
+                </Link>
+              ))}
               {user.role === "admin" && (
                 <Link href="/admin" onClick={() => setOpen(false)} className="block rounded-xl px-4 py-3 text-[0.95rem] text-[var(--foreground-muted)]">
                   관리자

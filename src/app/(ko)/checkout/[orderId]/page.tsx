@@ -97,12 +97,14 @@ export default function CheckoutPage() {
 
   const isMock = order.checkout.mode === "mock";
   const free = order.amount === 0 && !!order.coupon;
+  // 전문 심리검사는 지금 쿠폰으로만 신청을 마칠 수 있다 (카드 결제 창구 준비 중) — 관리자만 테스트 결제 가능
+  const couponOnly = order.itemType === "assessment" && user?.role !== "admin";
   const methods = order.checkout.mode === "mock" ? order.checkout.methods : [];
 
   return (
     <div className="px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-lg">
-        {isMock && (
+        {isMock && !couponOnly && (
           <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
             <strong>테스트 결제입니다.</strong> 실제로 돈이 결제되지 않아요. 결제 흐름을 시험하기 위한 화면이에요.
           </div>
@@ -111,7 +113,7 @@ export default function CheckoutPage() {
         <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">결제하기</h1>
 
         <div className="card mt-6 p-6">
-          <p className="text-xs font-semibold text-[var(--foreground-subtle)]">{order.itemType === "course" ? "강의" : order.itemType === "program" ? "과정 · 과목 묶음" : "셀프 워크북 · 전체 이용권"}</p>
+          <p className="text-xs font-semibold text-[var(--foreground-subtle)]">{order.itemType === "course" ? "강의" : order.itemType === "program" ? "과정 · 과목 묶음" : order.itemType === "assessment" ? "전문 심리검사 · 해석 상담 포함" : "셀프 워크북 · 전체 이용권"}</p>
           <p className="mt-1 text-lg font-bold text-[var(--foreground)]">{order.itemTitle}</p>
           {(order.discountAmount ?? 0) > 0 && (
             <div className="mt-5 space-y-1.5 border-t border-[var(--border-light)] pt-4 text-sm">
@@ -134,7 +136,13 @@ export default function CheckoutPage() {
 
         <CouponPicker order={order} onChange={setOrder} />
 
-        {free ? null : isMock ? (
+        {free ? null : couponOnly ? (
+          <div className="mt-8 rounded-2xl bg-[var(--brand-light)] p-5 text-sm leading-relaxed text-[var(--foreground)]">
+            <strong>지금은 쿠폰으로 신청을 마칠 수 있어요.</strong>
+            <br />
+            받으신 쿠폰을 위 <b>쿠폰</b> 칸에서 고르거나 코드를 넣어 주세요. 고른 상담 시간은 30분 동안 잡아 둬요.
+          </div>
+        ) : isMock ? (
           <>
             <h2 className="mt-8 text-sm font-bold text-[var(--foreground)]">결제 수단</h2>
             <div className="mt-3 grid grid-cols-3 gap-2">
@@ -167,13 +175,13 @@ export default function CheckoutPage() {
 
         <button
           onClick={free ? claimFree : pay}
-          disabled={!agree || busy || (!isMock && !free)}
+          disabled={!agree || busy || (!isMock && !free) || (couponOnly && !free)}
           className="mt-6 flex h-14 w-full cursor-pointer items-center justify-center rounded-xl bg-[var(--brand)] text-lg font-bold text-white hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {busy ? "결제 중…" : free ? "쿠폰으로 무료로 받기" : `${won(order.amount)} 결제하기`}
+          {busy ? "결제 중…" : free ? (order.itemType === "assessment" ? "쿠폰으로 신청 완료하기" : "쿠폰으로 무료로 받기") : `${won(order.amount)} 결제하기`}
         </button>
 
-        {isMock && !free && (
+        {isMock && !free && !couponOnly && (
           <button onClick={simulateFail} className="mt-3 w-full cursor-pointer text-center text-sm text-[var(--foreground-subtle)] hover:text-[var(--foreground)]">
             실패로 처리해 보기 (테스트)
           </button>

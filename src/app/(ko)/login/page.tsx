@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api";
 import { Alert, Button, Input } from "@/components/ui";
 import { SocialLoginButtons, socialErrorMessage } from "@/components/ko/SocialLoginButtons";
 import { EXPIRED_MESSAGE, safeNext } from "@/lib/authSession";
+import { pendingGiftPath } from "@/lib/gift";
 
 function LoginForm() {
   const router = useRouter();
@@ -30,7 +31,8 @@ function LoginForm() {
     try {
       const data = await apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
       login(data.token, data.user);
-      const dest = next;
+      // 돌아갈 곳이 따로 없으면, 받으러 온 쿠폰 선물(가입·인증을 거쳐 온 경우)로
+      const dest = searchParams.get("next") ? next : pendingGiftPath() ?? next;
       // 추가 정보가 없는 기존 회원은 입력 화면을 먼저 거친다
       router.push(data.user?.profileComplete === false ? `/onboarding?next=${encodeURIComponent(dest)}` : dest);
     } catch (err) {
