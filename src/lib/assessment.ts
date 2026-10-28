@@ -29,6 +29,19 @@ export interface ProgressView {
   place: { name: string; address: string; mapUrl: string } | null; // 상담 3일 전부터
   videoReady: boolean; // 화상 링크 — 하루 전부터
   rescheduleCount: number;
+  cancelRequestedAt: string | null;
+  cancelRequest: { reason: string; quoteAmount: number; quoteTier: string } | null;
+  refund: { amount: number; processedAt: string } | null;
+}
+
+export interface RefundQuote {
+  tier: "free" | "before_link" | "link_not_started" | "started" | "after_deadline" | "none";
+  amount: number;
+  paid: number;
+  label: string;
+  reason: string;
+  ifStarted: number | null;
+  reportGiven: boolean;
 }
 
 export interface SlotView {

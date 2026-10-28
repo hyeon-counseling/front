@@ -181,21 +181,119 @@ export function ResendBox({ id, onChanged }: { id: string; onChanged: () => void
   );
 }
 
-export function CancelBox({ id, closed, onChanged }: { id: string; closed: string | null; onChanged: () => void }) {
+export interface RefundQuoteView {
+  tier: string;
+  amount: number;
+  paid: number;
+  label: string;
+  ifStarted: number | null;
+}
+
+const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
+
+/**
+ * 취소·환불 처리 (52-취소환불규정.md) — 고객 취소 요청이 있으면 맨 위에, 없으면 상담가가 직접 취소할 때.
+ * 금액은 규정대로 계산된 값이 기본, 예외(상담가 사정 전액·진행 중단 실비만 공제·시작 여부 확인)는 고쳐서 확정.
+ * 실제 돈은 결제 수단에서 상담가가 직접 돌려준다 — 여기서는 기록하고 슬롯을 다시 연다.
+ */
+export function RefundBox({
+  id,
+  closed,
+  request,
+  requestedAt,
+  quote,
+  refund,
+  onChanged,
+}: {
+  id: string;
+  closed: string | null;
+  request: { reason: string; quoteAmount: number; quoteTier: string; by: string } | null;
+  requestedAt: string | null;
+  quote: RefundQuoteView | null;
+  refund: { amount: number; note: string; processedAt: string } | null;
+  onChanged: () => void;
+}) {
+  const [amount, setAmount] = useState(quote ? String(quote.amount) : "");
+  const [note, setNote] = useState("");
+  const [open, setOpen] = useState(!!requestedAt);
   const [msg, setMsg] = useState("");
-  if (closed) return null;
-  const cancel = async () => {
-    if (!window.confirm("이 신청을 취소할까요? 잡아 둔 상담 시간이 다시 열려요. (환불은 결제·주문 화면에서 따로)")) return;
-    const r = await apiRequest(`/api/admin/assessment/applications/${id}`, { method: "PATCH", body: JSON.stringify({ cancel: true }) });
-    setMsg(r.ok ? "취소했어요." : r.message || "취소하지 못했어요.");
-    onChanged();
+  const [busy, setBusy] = useState(false);
+
+  if (closed) {
+    return refund ? (
+      <section className="rounded-2xl bg-[var(--surface)] p-4 text-sm">
+        <p className="font-bold">{closed === "refunded" ? `환불 완료 처리 · ${won(refund.amount)}` : "취소 완료 (환불 없음)"}</p>
+        <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
+          {new Date(refund.processedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}
+          {refund.note && ` · ${refund.note}`}
+        </p>
+      </section>
+    ) : null;
+  }
+
+  const done = async () => {
+    const n = Number(amount.replace(/\D/g, "") || 0);
+    if (!window.confirm(`${n > 0 ? `${won(n)} 환불 완료로` : "환불 없이 취소로"} 처리할까요? 잡아 둔 상담 시간이 다시 열려요. (실제 환불은 결제 수단에서 직접)`)) return;
+    setBusy(true);
+    setMsg("");
+    const r = await apiRequest(`/api/admin/assessment/applications/${id}/refund`, { method: "POST", body: JSON.stringify({ amount: n, note }) });
+    setBusy(false);
+    setMsg(r.ok ? "처리했어요." : r.message || "처리하지 못했어요.");
+    if (r.ok) onChanged();
   };
+  const withdraw = async () => {
+    if (!window.confirm("취소 요청을 거두고 진행을 계속할까요? (고객이 마음을 바꾼 경우)")) return;
+    const r = await apiRequest(`/api/admin/assessment/applications/${id}/cancel-withdraw`, { method: "POST" });
+    setMsg(r.ok ? "거뒀어요. 정기 안내가 다시 나가요." : r.message || "처리하지 못했어요.");
+    if (r.ok) onChanged();
+  };
+
+  if (!open) {
+    return (
+      <section className="border-t border-[var(--border-light)] pt-4">
+        <button onClick={() => setOpen(true)} className="h-9 cursor-pointer rounded-lg px-3 text-sm font-semibold text-[var(--error)] hover:bg-red-50">
+          취소·환불 처리
+        </button>
+      </section>
+    );
+  }
+
   return (
-    <section className="border-t border-[var(--border-light)] pt-4">
-      <button onClick={cancel} className={cx("h-9 cursor-pointer rounded-lg px-3 text-sm font-semibold text-[var(--error)] hover:bg-red-50")}>
-        신청 취소
-      </button>
-      {msg && <span className="ml-2 text-xs">{msg}</span>}
+    <section className={cx("rounded-2xl border p-4", requestedAt ? "border-red-200 bg-red-50" : "border-[var(--border-light)]")}>
+      <h3 className="text-sm font-bold text-[var(--foreground)]">{requestedAt ? "🧾 취소 요청 처리" : "취소·환불 처리"}</h3>
+      {requestedAt && request && (
+        <p className="mt-1 text-xs text-[var(--foreground-muted)]">
+          {new Date(requestedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })} {request.by === "customer" ? "고객 요청" : "상담가 등록"} · 요청 때 예상 {won(request.quoteAmount)}
+          {request.reason && <span className="mt-1 block text-[var(--foreground)]">사유: {request.reason}</span>}
+        </p>
+      )}
+      {quote && (
+        <p className="mt-2 text-xs text-[var(--foreground-muted)]">
+          지금 기준: <b className="text-[var(--foreground)]">{won(quote.amount)}</b> · {quote.label}
+          {quote.ifStarted !== null && ` (검사를 시작했다면 ${won(quote.ifStarted)})`}
+        </p>
+      )}
+      <div className="mt-3 grid gap-2 sm:grid-cols-[140px_1fr]">
+        <input value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))} inputMode="numeric" aria-label="환불액(원)" placeholder="환불액(원)" className="h-9 rounded-lg border border-[var(--border)] bg-white px-2 text-sm" />
+        <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} aria-label="메모" placeholder="메모 (예: 상담가 사정 전액, 검사 시작 확인)" className="h-9 rounded-lg border border-[var(--border)] bg-white px-2 text-sm" />
+      </div>
+      <p className="mt-1 text-[11px] text-[var(--foreground-subtle)]">예외: 상담가 사정 = 새 일정 또는 전액 · 상담가가 진행 중단 = 검사 전 전액 / 시작 후 실비 3만 원만 공제 · 쿠폰 0원 = 환불 없이 취소</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button onClick={done} disabled={busy} className="h-9 cursor-pointer rounded-lg bg-[var(--error)] px-3 text-sm font-semibold text-white disabled:opacity-60">
+          환불 완료 처리
+        </button>
+        {requestedAt && (
+          <button onClick={withdraw} className="h-9 cursor-pointer rounded-lg bg-white px-3 text-sm font-semibold">
+            요청 거두기
+          </button>
+        )}
+        {!requestedAt && (
+          <button onClick={() => setOpen(false)} className="h-9 cursor-pointer rounded-lg px-3 text-sm text-[var(--foreground-subtle)]">
+            닫기
+          </button>
+        )}
+      </div>
+      {msg && <p className="mt-2 text-xs text-[var(--brand)]">{msg}</p>}
     </section>
   );
 }

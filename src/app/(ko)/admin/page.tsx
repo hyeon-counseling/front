@@ -20,6 +20,7 @@ interface Summary {
   placeNeeded: number;
   unmatchedMails: number;
   doneToday: number;
+  cancelRequests: number;
   sessions: { id: string; applicationNo: string; name: string; sessionText: string; methodText: string; ready: boolean }[];
 }
 
@@ -35,6 +36,7 @@ export default function AdminToday() {
   const cards = s
     ? [
         { n: s.safety, label: "안전 확인", hint: "24시간 안 직접 연락", href: "/admin/assessment/applications?f=safety", urgent: true },
+        { n: s.cancelRequests, label: "취소 요청", hint: "환불액 확인·처리", href: "/admin/assessment/applications?f=cancel", urgent: true },
         { n: s.reschedule, label: "일정 재조정", hint: "고객이 새 일정을 고르는 중", href: "/admin/assessment/applications?f=reschedule" },
         { n: s.placeNeeded, label: "장소 입력 필요", hint: "5일 안 대면 상담", href: "/admin/assessment/applications?f=place" },
         { n: s.issueWaiting, label: "코드 발급 대기", hint: "밤 9시 '검사 업무 5분'", href: "/admin/assessment/codes" },
