@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { TestCard } from "@/lib/psychTest";
 import { COMMON_ORIENTATION } from "@/components/tests/TestParts";
+import { TestsTabs } from "@/components/assessment/TestsTabs";
 
 export const metadata: Metadata = {
   title: "무료 심리검사",
@@ -24,8 +25,9 @@ export default async function TestsPage() {
   return (
     <div className="px-4 py-14 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-6xl">
-        <div className="max-w-2xl">
-          <span className="eyebrow">무료 심리검사</span>
+        <TestsTabs active="free" />
+        <div className="mt-10 max-w-2xl">
+          <span className="eyebrow">간이 무료 심리검사</span>
           <h1 className="font-display mt-4 text-4xl leading-tight text-[var(--foreground)] sm:text-5xl">3분, 지금의 마음 살펴보기</h1>
           <p className="mt-4 text-lg leading-relaxed text-[var(--foreground-muted)]">
             상담 현장에서 쓰는 표준 자가 검사를 무료로 해 볼 수 있어요. 결과와 함께 지금 나에게 도움이 되는 방법을 안내해 드려요.

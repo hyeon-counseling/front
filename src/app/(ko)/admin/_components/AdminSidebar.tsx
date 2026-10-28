@@ -69,6 +69,10 @@ export default function AdminSidebar() {
       <nav className="flex flex-col lg:sticky lg:top-24">
         <NavLink item={{ label: "대시보드", href: "/admin" }} />
 
+        <SectionLabel>전문 심리검사</SectionLabel>
+        <NavLink item={{ label: "신청·진행 현황", href: "/admin/assessment/applications" }} />
+        <NavLink item={{ label: "공개 슬롯", href: "/admin/assessment/slots" }} />
+
         <SectionLabel>학습</SectionLabel>
         <NavLink item={{ label: "강의 (LMS)", href: "/admin/lms/courses" }} />
         <NavLink item={{ label: "과정 (과목 묶음)", href: "/admin/lms/programs" }} />
@@ -77,7 +81,7 @@ export default function AdminSidebar() {
         <SectionLabel>운영</SectionLabel>
         <NavLink item={{ label: "결제·주문", href: "/admin/payments" }} />
         <NavLink item={{ label: "쿠폰", href: "/admin/coupons" }} />
-        <NavLink item={{ label: "심리검사", href: "/admin/tests" }} />
+        <NavLink item={{ label: "간이 무료 검사", href: "/admin/tests" }} />
         <NavLink item={{ label: "검사 결과", href: "/admin/test-results" }} />
         <NavLink item={{ label: "회원", href: "/admin/users" }} />
         <NavLink item={{ label: "콘텐츠(아티클)", href: "/admin/common/contents" }} />

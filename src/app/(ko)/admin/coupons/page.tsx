@@ -165,12 +165,12 @@ export default function AdminCouponsPage() {
 
   const target = (c: CouponRow) => {
     if (c.itemIds.length) return c.itemIds.map((id) => items.find((i) => i.id === id)?.title ?? "(삭제된 상품)").join(", ");
-    const t = c.itemTypes.length && c.itemTypes.length < 3 ? `${c.itemTypes.map((x) => ITEM_TYPE_LABEL[x]).join("·")} 전체` : "모든 상품";
+    const t = c.itemTypes.length && c.itemTypes.length < 3 ? `${c.itemTypes.map((x) => ITEM_TYPE_LABEL[x]).join("·")} 전체` : "강의·과정 모두";
     return c.excludeItemIds.length ? `${t} (${c.excludeItemIds.length}개 제외)` : t;
   };
   /** 쿠폰 대상 배지 — 강의 전용 · 과정 전용 · 모든 상품 */
   const targetBadge = (c: CouponRow) =>
-    c.itemTypes.length === 1 ? `${ITEM_TYPE_LABEL[c.itemTypes[0]]} 전용` : c.itemTypes.length && c.itemTypes.length < 3 ? `${c.itemTypes.map((x) => ITEM_TYPE_LABEL[x]).join("·")}용` : "모든 상품";
+    c.itemTypes.length === 1 ? `${ITEM_TYPE_LABEL[c.itemTypes[0]]} 전용` : c.itemTypes.length && c.itemTypes.length < 3 ? `${c.itemTypes.map((x) => ITEM_TYPE_LABEL[x]).join("·")}용` : "강의·과정 모두";
   const shown = rows?.filter((c) =>
     !targetFilter ? true : targetFilter === "all" ? c.itemTypes.length === 0 || c.itemTypes.length === 3 : c.itemTypes.length === 1 && c.itemTypes[0] === targetFilter
   );
@@ -205,7 +205,8 @@ export default function AdminCouponsPage() {
           <option value="">대상 전체</option>
           <option value="course">강의 전용</option>
           <option value="program">과정 전용</option>
-          <option value="all">모든 상품</option>
+          <option value="assessment">전문 심리검사</option>
+          <option value="all">강의·과정 모두</option>
         </select>
       </div>
 
@@ -288,8 +289,8 @@ export default function AdminCouponsPage() {
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium">쿠폰 대상</label>
-            <div className="grid grid-cols-3 gap-2">
-              {([["course", "강의 전용"], ["program", "과정 전용"], ["", "모든 상품"]] as const).map(([v, l]) => {
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {([["course", "강의 전용"], ["program", "과정 전용"], ["assessment", "전문 심리검사"], ["", "강의·과정 모두"]] as const).map(([v, l]) => {
                 const on = v ? form.itemTypes.length === 1 && form.itemTypes[0] === v : form.itemTypes.length === 0;
                 return (
                   <button
@@ -304,7 +305,7 @@ export default function AdminCouponsPage() {
               })}
             </div>
             <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
-              {form.itemTypes.length === 1 && form.itemTypes[0] === "course" ? "과목을 하나씩 살 때만 쓸 수 있어요. (과정 결제에는 안 돼요)" : form.itemTypes.length === 1 && form.itemTypes[0] === "program" ? "과정(과목 묶음)을 살 때만 쓸 수 있어요." : "강의·과정 어디에나 쓸 수 있어요."}
+              {form.itemTypes.length === 1 && form.itemTypes[0] === "course" ? "과목을 하나씩 살 때만 쓸 수 있어요. (과정 결제에는 안 돼요)" : form.itemTypes.length === 1 && form.itemTypes[0] === "program" ? "과정(과목 묶음)을 살 때만 쓸 수 있어요." : form.itemTypes.length === 1 && form.itemTypes[0] === "assessment" ? "종합심리검사 신청 때만 쓸 수 있어요. 무료 테스터는 100% 할인·1인 1회로 만들어 주세요." : "강의·과정 어디에나 쓸 수 있어요. (전문 심리검사에는 안 돼요)"}
             </p>
           </div>
           <div>
