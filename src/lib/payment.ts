@@ -23,6 +23,8 @@ export interface OrderSummary {
   paidAt: string | null;
   failure: { code: string; message: string } | null;
   refund: { amount: number; reason: string; at: string } | null;
+  /** 검사 주문 — 고객이 취소를 요청했고 상담가가 아직 처리하지 않음 */
+  cancelRequested?: boolean;
 }
 
 export interface CheckoutOrder extends OrderSummary {

@@ -19,4 +19,8 @@ export interface Row {
   paidAt: string | null;
   createdAt: string;
   cancelRequested?: boolean;
+  /** 결제 전 신청: 결제 중(30분 안) · 결제 미완료(만료) · 결제 전 취소 */
+  payState?: "paying" | "expired" | "canceled" | null;
 }
+
+export const PAY_STATE_LABEL: Record<"paying" | "expired" | "canceled", string> = { paying: "결제 중", expired: "결제 미완료(만료)", canceled: "결제 전 취소" };

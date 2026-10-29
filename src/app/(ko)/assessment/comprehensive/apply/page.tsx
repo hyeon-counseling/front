@@ -11,6 +11,7 @@ import { RefundRules } from "@/components/assessment/RefundRules";
 import { FLOW_COMPACT, ProcessStepsCompact } from "@/components/assessment/ProcessSteps";
 import { Plate } from "@/components/assessment/Plate";
 import { Icon, type IconName } from "@/components/assessment/Icon";
+import { ResumePayment } from "@/components/assessment/ResumePayment";
 
 /**
  * 종합심리검사 신청 (11-신청페이지-v2 기준)
@@ -224,6 +225,7 @@ export default function ApplyPage() {
   return (
     <div className="assess">
       <div className="bg-[var(--ivory)] text-base leading-[1.6]">
+        <ResumePayment className="mx-auto max-w-[1080px] space-y-2 px-5 pt-4" />
         {/* 머리 */}
         <header className="relative overflow-hidden bg-[var(--mint-bg)]">
           <span aria-hidden="true" className="pointer-events-none absolute -right-[200px] -top-[220px] h-[640px] w-[640px] rounded-full bg-[radial-gradient(circle,#FBF8F3_0%,rgba(251,248,243,0)_68%)]" />

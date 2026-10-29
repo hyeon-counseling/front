@@ -263,7 +263,7 @@ export default function SlotsPage() {
                         <button
                           key={s.id}
                           type="button"
-                          onClick={() => setSelected(s)}
+                          onClick={() => (s.state === "held" && s.applicationId ? window.location.assign(`/admin/assessment/applications?id=${s.applicationId}`) : setSelected(s))}
                           className={cx("block w-full cursor-pointer rounded-md border px-1.5 py-0.5 text-left text-[11px] font-semibold", STATE_STYLE[s.state])}
                           title={`${STATE_LABEL[s.state]} · ${s.methods.map((m) => (m === "offline" ? "대면" : "화상")).join("·")}`}
                         >
@@ -293,7 +293,7 @@ export default function SlotsPage() {
             <div className="mt-5 grid gap-2">
               {selected.state === "booked" || selected.state === "held" ? (
                 <>
-                  <p className="text-sm text-[var(--foreground-muted)]">{selected.state === "booked" ? "예약된 시간이라 바꿀 수 없어요." : "지금 누군가 결제 중이에요 (30분)."}</p>
+                  <p className="text-sm text-[var(--foreground-muted)]">{selected.state === "booked" ? "예약된 시간이라 바꿀 수 없어요." : "지금 누군가 결제 중이에요. 30분이 지나면 저절로 풀려요."}</p>
                   {selected.applicationId && (
                     <a href={`/admin/assessment/applications?id=${selected.applicationId}`} className="flex h-11 items-center justify-center rounded-xl bg-[var(--brand)] text-sm font-semibold text-white">
                       신청 보기
