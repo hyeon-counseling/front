@@ -6,7 +6,7 @@ import { apiFetch, apiRequest } from "@/lib/api";
 import { STAGES } from "@/lib/assessment";
 import { Badge, EmptyState, Skeleton, cx } from "@/components/ui";
 import { ApplicationPanel } from "./ApplicationPanel";
-import type { Row } from "./types";
+import { PAY_STATE_LABEL, type Row } from "./types";
 import { MaskedName } from "../../_components/MaskedName";
 
 /**
@@ -24,15 +24,16 @@ interface Summary {
   failedNotices: number;
   placeNeeded: number;
   cancelRequests: number;
+  unpaid: number;
 }
 
-type FilterKey = "all" | "safety" | "intake" | "issue" | "reschedule" | "place" | "cancel" | "tester" | "closed" | `s${number}`;
-const FILTERS = new Set(["all", "safety", "intake", "issue", "reschedule", "place", "cancel", "tester", "closed", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]);
+type FilterKey = "all" | "safety" | "intake" | "issue" | "reschedule" | "place" | "cancel" | "unpaid" | "tester" | "closed" | `s${number}`;
+const FILTERS = new Set(["all", "safety", "intake", "issue", "reschedule", "place", "cancel", "unpaid", "tester", "closed", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]);
 
 function query(f: FilterKey, q: string): string {
   const p = new URLSearchParams();
   if (f === "safety" || f === "reschedule") p.set("hold", f);
-  else if (f === "intake" || f === "issue" || f === "place" || f === "cancel") p.set("view", f);
+  else if (f === "intake" || f === "issue" || f === "place" || f === "cancel" || f === "unpaid") p.set("view", f);
   else if (f === "tester") p.set("tester", "1");
   else if (f === "closed") p.set("closed", "1");
   else if (f.startsWith("s")) p.set("stage", f.slice(1));
@@ -84,6 +85,7 @@ function Inner() {
     ...STAGES.map((s, i) => ({ key: `s${i + 1}` as FilterKey, label: `${i + 1} ${s}` })),
     { key: "tester", label: "테스터" },
     { key: "closed", label: "취소·환불" },
+    { key: "unpaid", label: `결제 중·미완료${sum?.unpaid ? ` (${sum.unpaid})` : ""}` },
   ];
 
   return (
@@ -176,7 +178,11 @@ function Inner() {
                         <p className="text-xs text-[var(--foreground-subtle)]">{r.methodText}</p>
                       </td>
                       <td className="px-4 py-3">
-                        {r.closed ? (
+                        {r.payState ? (
+                          <span className={cx("inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold", r.payState === "paying" ? "bg-amber-100 text-amber-800" : "bg-[var(--surface-muted)] text-[var(--foreground-muted)]")}>
+                            {PAY_STATE_LABEL[r.payState]}
+                          </span>
+                        ) : r.closed ? (
                           <Badge tone="neutral">{r.closed === "refunded" ? "환불" : "취소"}</Badge>
                         ) : r.cancelRequested ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">취소 요청</span>
@@ -189,7 +195,7 @@ function Inner() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3">{r.intakeSubmitted ? <span className="text-[var(--brand)]">제출 ✓</span> : <span className="text-[var(--foreground-subtle)]">미제출</span>}</td>
+                      <td className="px-4 py-3">{r.payState ? <span className="text-[var(--foreground-subtle)]">—</span> : r.intakeSubmitted ? <span className="text-[var(--brand)]">제출 ✓</span> : <span className="text-[var(--foreground-subtle)]">미제출</span>}</td>
                       <td className="px-4 py-3">
                         <span className="flex gap-1.5">
                           {["mmpi3", "tci", "sct"].map((k) => {

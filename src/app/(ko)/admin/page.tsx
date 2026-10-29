@@ -21,6 +21,8 @@ interface Summary {
   unmatchedMails: number;
   doneToday: number;
   cancelRequests: number;
+  unpaid: number;
+  intakeMissing: { id: string; applicationNo: string; name: string; days: number }[];
   sessions: { id: string; applicationNo: string; name: string; sessionText: string; methodText: string; ready: boolean }[];
 }
 
@@ -37,6 +39,8 @@ export default function AdminToday() {
     ? [
         { n: s.safety, label: "안전 확인", hint: "24시간 안 직접 연락", href: "/admin/assessment/applications?f=safety", urgent: true },
         { n: s.cancelRequests, label: "취소 요청", hint: "환불액 확인·처리", href: "/admin/assessment/applications?f=cancel", urgent: true },
+        { n: s.intakeWaiting, label: "접수면접지 미제출", hint: "매일 아침 8시 고객에게 N2 안내", href: "/admin/assessment/applications?f=intake" },
+        { n: s.unpaid, label: "결제 중", hint: "30분 지나면 저절로 만료", href: "/admin/assessment/applications?f=unpaid" },
         { n: s.reschedule, label: "일정 재조정", hint: "고객이 새 일정을 고르는 중", href: "/admin/assessment/applications?f=reschedule" },
         { n: s.placeNeeded, label: "장소 입력 필요", hint: "5일 안 대면 상담", href: "/admin/assessment/applications?f=place" },
         { n: s.issueWaiting, label: "코드 발급 대기", hint: "밤 9시 '검사 업무 5분'", href: "/admin/assessment/codes" },
@@ -85,6 +89,34 @@ export default function AdminToday() {
                 </Link>
               ))}
             </div>
+          )}
+
+          {s.intakeMissing.length > 0 && (
+            <section className="mt-10">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="font-bold text-[var(--foreground)]">접수면접지 미제출 {s.intakeMissing.length}명</h2>
+                <Link href="/admin/assessment/applications?f=intake" className="text-sm text-[var(--brand)]">
+                  목록 →
+                </Link>
+              </div>
+              <p className="mb-2 text-xs text-[var(--foreground-subtle)]">결제한 다음 날부터 매일 아침 8시에 고객에게 안내(N2)가 가고, 디스코드 #검사-업무 아침·밤 9시 알림에도 인원이 올라가요.</p>
+              <ul className="divide-y divide-[var(--border-light)] rounded-2xl border border-[var(--border-light)] bg-white">
+                {s.intakeMissing.map((x) => (
+                  <li key={x.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
+                    <span className="flex items-center gap-3">
+                      <MaskedName name={x.name} />
+                      <span className="text-xs text-[var(--foreground-subtle)]">{x.applicationNo}</span>
+                    </span>
+                    <span className="flex items-center gap-3">
+                      <span className={cx("text-xs font-semibold", x.days >= 3 ? "text-[var(--warning)]" : "text-[var(--foreground-muted)]")}>{x.days === 0 ? "오늘 결제" : `결제 ${x.days}일째`}</span>
+                      <Link href={`/admin/assessment/applications?id=${x.id}`} className="font-semibold text-[var(--brand)]">
+                        상세
+                      </Link>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
 
           <section className="mt-10">

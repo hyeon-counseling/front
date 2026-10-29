@@ -33,6 +33,10 @@ const CODES: [string, string][] = [
   ["N8P", "N8-0 장소 확정 (D-3)"],
   ["N8A", "N8-1 하루 전 · 대면"],
   ["N8B", "N8-2 하루 전 · 화상"],
+  ["N10", "N10 후기"],
+  ["N11", "N11 1주 뒤 마음 체크"],
+  ["CANCEL", "취소 요청 접수"],
+  ["REFUND", "환불 완료"],
 ];
 
 const fmt = (iso: string) => new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -293,6 +297,41 @@ export function RefundBox({
           </button>
         )}
       </div>
+      {msg && <p className="mt-2 text-xs text-[var(--brand)]">{msg}</p>}
+    </section>
+  );
+}
+
+/**
+ * 결제 전 신청 — 환불할 돈이 없으니 [신청 취소·슬롯 풀기]만.
+ * 고객이 결제 화면을 나가면 바로, 창을 닫았으면 10분 뒤 저절로 취소되고 칸이 풀린다.
+ */
+export function UnpaidBox({ id, payState, onChanged }: { id: string; payState: "paying" | "left" | "expired" | "canceled"; onChanged: () => void }) {
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const cancel = async () => {
+    if (!window.confirm("결제 전 신청을 취소하고 잡아 둔 상담 시간을 다시 열까요? (고객에게 알림은 가지 않아요)")) return;
+    setBusy(true);
+    const r = await apiRequest(`/api/admin/assessment/applications/${id}/cancel-unpaid`, { method: "POST" });
+    setBusy(false);
+    setMsg(r.ok ? "취소하고 상담 시간을 다시 열었어요." : r.message || "처리하지 못했어요.");
+    if (r.ok) onChanged();
+  };
+  return (
+    <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm">
+      <h3 className="font-bold text-[var(--foreground)]">
+        {payState === "paying" ? "💳 결제 중 — 아직 결제 전이에요" : payState === "left" ? "↩ 결제 안 하고 나감 · 취소됨" : payState === "expired" ? "⌛ 결제 미완료 · 자동 취소" : "결제 전 취소됨"}
+      </h3>
+      <p className="mt-1 text-xs text-[var(--foreground-muted)]">
+        {payState === "paying"
+          ? "고객이 지금 결제 화면에 있어요. 결제 화면을 나가면 바로, 창을 닫았으면 10분 뒤 저절로 취소되고 상담 시간이 다시 열려요."
+          : "결제하지 않아 닫힌 신청이에요. 환불할 돈이 없어요. 고객이 다시 신청하면 새 신청으로 들어와요."}
+      </p>
+      {payState === "paying" && (
+        <button onClick={cancel} disabled={busy} className="mt-3 h-9 cursor-pointer rounded-lg bg-[var(--foreground)] px-3 text-sm font-semibold text-white disabled:opacity-60">
+          신청 취소 · 슬롯 풀기
+        </button>
+      )}
       {msg && <p className="mt-2 text-xs text-[var(--brand)]">{msg}</p>}
     </section>
   );

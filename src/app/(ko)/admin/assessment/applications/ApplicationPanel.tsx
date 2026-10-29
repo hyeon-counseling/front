@@ -6,8 +6,9 @@ import { Skeleton, cx } from "@/components/ui";
 import { StageTracker } from "@/components/assessment/StageTracker";
 import { INTAKE_STEPS } from "@/components/assessment/intakeConfig";
 import { kstParts } from "@/lib/assessment";
-import type { Row } from "./types";
-import { PlaceBox, RefundBox, ResendBox, TestsBox, type RefundQuoteView, type TestDetail } from "./PanelActions";
+import { PAY_STATE_LABEL, type Row } from "./types";
+import { PlaceBox, RefundBox, ResendBox, TestsBox, UnpaidBox, type RefundQuoteView, type TestDetail } from "./PanelActions";
+import { NoticeHistory, type NoticeRow } from "./NoticeHistory";
 
 /**
  * 신청 상세 — 오른쪽 패널 (좁은 화면에서는 전체 화면)
@@ -25,7 +26,7 @@ interface Detail extends Row {
   memo: string;
   history: { stage: number; hold: string; at: string; by: string; note: string }[];
   intake: { answers: Record<string, string | string[]>; crisis: boolean; submittedAt: string } | null;
-  notices: { code: string; dateKey: string; channel: string; result: string; reason: string | null; at: string }[];
+  notices: NoticeRow[];
   testsDetail: Record<string, TestDetail>;
   place: { name: string; address: string; mapUrl: string } | null;
   videoLink: string | null;
@@ -140,11 +141,21 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
 
           <section>
             <h3 className="mb-3 text-sm font-bold text-[var(--foreground)]">진행</h3>
-            {d.closed ? <p className="text-sm text-[var(--foreground-muted)]">{d.closed === "refunded" ? "환불됨" : "취소됨"}</p> : <StageTracker stage={d.stage} hold={d.hold} compact />}
-            <p className="mt-2 text-sm text-[var(--foreground)]">
-              {d.stage}/8 {d.stageLabel}
-              {d.holdLabel && <span className="ml-1 font-semibold text-[var(--warning)]">· {d.holdLabel}</span>}
-            </p>
+            {d.payState ? (
+              <p className="text-sm font-semibold text-[var(--warning)]">{PAY_STATE_LABEL[d.payState]}</p>
+            ) : d.closed ? (
+              <p className="text-sm text-[var(--foreground-muted)]">
+                {d.closed === "refunded" ? `환불 완료${d.refund ? ` · ${d.refund.amount.toLocaleString("ko-KR")}원 · ${fmt(d.refund.processedAt)}` : ""}` : "취소됨"}
+              </p>
+            ) : (
+              <StageTracker stage={d.stage} hold={d.hold} compact />
+            )}
+            {!d.payState && (
+              <p className="mt-2 text-sm text-[var(--foreground)]">
+                {d.stage}/8 {d.stageLabel}
+                {d.holdLabel && <span className="ml-1 font-semibold text-[var(--warning)]">· {d.holdLabel}</span>}
+              </p>
+            )}
           </section>
 
           <section className="rounded-2xl bg-[var(--surface)] p-4">
@@ -172,8 +183,9 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
             </dl>
           </section>
 
-          {!d.closed && <TestsBox id={d.id} tests={d.testsDetail} onChanged={refresh} />}
-          {!d.closed && <PlaceBox key={`${d.place?.name ?? ""}|${d.videoLink ?? ""}`} id={d.id} method={d.method} place={d.place} videoLink={d.videoLink} onChanged={refresh} />}
+          {d.payState && <UnpaidBox id={d.id} payState={d.payState} onChanged={refresh} />}
+          {!d.closed && !d.payState && <TestsBox id={d.id} tests={d.testsDetail} onChanged={refresh} />}
+          {!d.closed && !d.payState && <PlaceBox key={`${d.place?.name ?? ""}|${d.videoLink ?? ""}`} id={d.id} method={d.method} place={d.place} videoLink={d.videoLink} onChanged={refresh} />}
 
           <section>
             <div className="mb-3 flex items-center justify-between">
@@ -225,26 +237,14 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
 
           <section>
             <h3 className="mb-3 text-sm font-bold text-[var(--foreground)]">알림 이력</h3>
-            {!d.closed && <ResendBox id={d.id} onChanged={refresh} />}
-            {d.notices.length === 0 ? (
-              <p className="text-sm text-[var(--foreground-subtle)]">보낸 알림이 없어요.</p>
-            ) : (
-              <ul className="space-y-1.5 text-sm">
-                {d.notices.map((n, i) => (
-                  <li key={i} className="flex items-center justify-between rounded-lg bg-[var(--surface)] px-3 py-2">
-                    <span>
-                      <b>{n.code}</b> <span className="text-xs text-[var(--foreground-subtle)]">{n.channel === "alimtalk" ? "알림톡" : n.channel === "sms" ? "문자" : "—"}</span>
-                    </span>
-                    <span className={cx("text-xs font-semibold", n.result === "ok" ? "text-[var(--brand)]" : n.result === "failed" ? "text-[var(--error)]" : "text-[var(--foreground-subtle)]")}>
-                      {n.result === "ok" ? "보냄" : n.result === "failed" ? `실패 (${n.reason ?? ""})` : n.result === "skipped" ? "건너뜀" : "보내는 중"} · {fmt(n.at)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <NoticeHistory id={d.id} notices={d.notices} closed={!!d.closed} onChanged={refresh} />
+            {!d.closed && !d.payState && <ResendBox id={d.id} onChanged={refresh} />}
+            <a href="/admin/assessment/notices" className="mt-2 inline-block text-xs text-[var(--foreground-subtle)] underline underline-offset-2">
+              알림 종류 · 언제 무엇을 보내는지 보기
+            </a>
           </section>
 
-          <RefundBox id={d.id} closed={d.closed} request={d.cancelRequest} requestedAt={d.cancelRequestedAt} quote={d.refundQuote} refund={d.refund} onChanged={refresh} />
+          {!d.payState && <RefundBox id={d.id} closed={d.closed} request={d.cancelRequest} requestedAt={d.cancelRequestedAt} quote={d.refundQuote} refund={d.refund} onChanged={refresh} />}
         </div>
       )}
     </aside>

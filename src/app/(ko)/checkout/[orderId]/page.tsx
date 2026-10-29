@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/api";
@@ -13,7 +13,21 @@ import { CouponPicker } from "@/components/checkout/CouponPicker";
  * 결제 페이지 — 토스 결제위젯이 들어갈 자리.
  * 지금(mock)은 결제수단 선택 → [결제하기] → 서버가 결제키 발급 → 토스와 같은 successUrl 로 이동.
  * 쿠폰을 적용하면 서버가 금액을 다시 계산하고, 0원이 되면 [무료로 받기] → success?free=1 에서 완료 처리.
+ *
+ * 전문 심리검사 주문은 결제하지 않고 이 화면을 떠나면(뒤로가기·다른 메뉴) 신청을 바로 취소해 상담 시간을 푼다 (10/29 상담가).
+ * 창을 닫거나 새로고침해서 알 수 없을 때는 서버가 10분 뒤 자동 취소한다. [결제하기]·[쿠폰으로 신청 완료]로 넘어갈 때는 취소하지 않는다.
  */
+// 개발 모드는 화면을 한 번 붙였다 떼었다 다시 붙인다 — 떼는 순간 바로 보내지 않고 잠깐 기다렸다가 보낸다
+const pendingLeave = new Map<string, ReturnType<typeof setTimeout>>();
+function leaveCheckout(orderId: string) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (!token) return;
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/assessment/checkout/${encodeURIComponent(orderId)}/leave`, {
+    method: "POST",
+    keepalive: true,
+    headers: { Authorization: `Bearer ${token}` },
+  }).catch(() => undefined);
+}
 export default function CheckoutPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const router = useRouter();
@@ -23,6 +37,26 @@ export default function CheckoutPage() {
   const [method, setMethod] = useState("card");
   const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
+  // 결제·쿠폰 완료로 넘어가는 중이면 true — 이때 화면이 떠나도 취소하지 않는다
+  const proceeding = useRef(false);
+  const leaveWatch = order?.itemType === "assessment" && order.status === "pending";
+
+  useEffect(() => {
+    if (!leaveWatch) return;
+    const t = pendingLeave.get(orderId);
+    if (t) clearTimeout(t);
+    pendingLeave.delete(orderId);
+    return () => {
+      if (proceeding.current) return;
+      pendingLeave.set(
+        orderId,
+        setTimeout(() => {
+          pendingLeave.delete(orderId);
+          leaveCheckout(orderId);
+        }, 300)
+      );
+    };
+  }, [leaveWatch, orderId]);
 
   useEffect(() => {
     if (loading) return;
@@ -40,11 +74,13 @@ export default function CheckoutPage() {
     if (!order) return;
     setBusy(true);
     setError("");
+    proceeding.current = true;
     const res = await apiRequest<{ paymentKey: string; orderId: string; amount: number }>("/api/payments/mock/authorize", {
       method: "POST",
       body: JSON.stringify({ orderId: order.orderId, method }),
     });
     if (!res.ok || !res.data) {
+      proceeding.current = false;
       setError(res.message || "결제를 시작하지 못했어요.");
       setBusy(false);
       return;
@@ -55,6 +91,7 @@ export default function CheckoutPage() {
 
   const claimFree = () => {
     if (!order) return;
+    proceeding.current = true;
     router.push(`/checkout/success?${new URLSearchParams({ free: "1", orderId: order.orderId })}`);
   };
 
