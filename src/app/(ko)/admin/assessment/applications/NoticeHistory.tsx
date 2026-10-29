@@ -7,7 +7,7 @@ import { cx } from "@/components/ui";
 /**
  * 신청 상세 · 알림 이력 — 줄을 누르면 펼쳐서
  * 언제 보내는 알림인지 · 채널(알림톡/문자)과 문자로 바뀐 이유 · 받는 번호(가림)·시각 · 본문·버튼 · 결과(메시지 ID·실패 사유) · [다시 보내기]
- * 본문은 서버에 저장하지 않아서(이름·일정이 들어감) 지금 신청 정보로 다시 만든 것을 보여 준다.
+ * 본문은 보낸 그대로를 보여 준다(관리자만). 원문이 없는 10/29 이전 기록만 지금 신청 정보로 다시 만든 본문을 보여 준다.
  */
 export interface NoticeRow {
   id: string;
@@ -22,7 +22,17 @@ export interface NoticeRow {
   /** 솔라피 최종 전달 결과 (접수 뒤 5분마다 확인) */
   delivery?: { status: "pending" | "delivered" | "failed" | "unknown"; code: string | null; reason: string | null; type: string | null; checkedAt: string } | null;
   at: string;
-  detail?: { label: string; when: string; subject: string; body: string; buttons: { label: string; url: string }[] } | null;
+  detail?: {
+    label: string;
+    when: string;
+    subject: string;
+    body: string;
+    buttons: { label: string; url: string }[];
+    /** true = 보낸 그대로의 원문, false = 원문이 없어 다시 만든 본문 */
+    original?: boolean;
+    templateId?: string | null;
+    variables?: Record<string, string> | null;
+  } | null;
 }
 
 const fmt = (iso: string) =>
@@ -105,12 +115,26 @@ export function NoticeHistory({ id, notices, closed, onChanged }: { id: string; 
                 </dl>
                 {n.detail && (
                   <div>
-                    <p className="mb-1 font-semibold text-[var(--foreground-subtle)]">본문 — 지금 신청 정보로 다시 만든 내용 (보낸 뒤 일정·장소가 바뀌었으면 실제와 다를 수 있어요)</p>
+                    <p className="mb-1 font-semibold text-[var(--foreground-subtle)]">
+                      {n.detail.original
+                        ? n.detail.templateId
+                          ? `보낸 그대로 — 알림톡(승인 템플릿 ${n.detail.templateId})이 실패하면 나가는 대체 문자 본문과 같아요`
+                          : "보낸 그대로의 본문"
+                        : "다시 만든 본문 — 원문을 남기기 전 기록이라 지금 신청 정보로 만들었어요 (보낸 뒤 일정·장소가 바뀌었으면 실제와 다를 수 있어요)"}
+                    </p>
                     <pre className="max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg border border-[var(--border-light)] bg-white p-3 font-sans text-xs leading-relaxed text-[var(--foreground)]">
                       {n.detail.subject}
                       {"\n\n"}
                       {n.detail.body}
                     </pre>
+                    {n.detail.variables && Object.keys(n.detail.variables).length > 0 && (
+                      <p className="mt-2 break-all text-[var(--foreground-muted)]">
+                        <span className="font-semibold">알림톡 변수</span>{" "}
+                        {Object.entries(n.detail.variables)
+                          .map(([k, v]) => `${k} = ${v}`)
+                          .join(" · ")}
+                      </p>
+                    )}
                     {n.detail.buttons.length > 0 && (
                       <ul className="mt-2 space-y-1">
                         {n.detail.buttons.map((b) => (
