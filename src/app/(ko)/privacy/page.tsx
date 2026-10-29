@@ -89,7 +89,7 @@ export default function PrivacyPage() {
           <li>
             Cloudflare, Inc. (파일·동영상 저장·전송 · 국가: 확인 중) · 강의 영상, 해석 보고서·영상 파일 · 파일을 올리고 볼 때 전송 · 연락처 privacyquestions@cloudflare.com
           </li>
-          <li>Render (서버 · 국가: 확인 중) · 사이트 서버를 지나는 모든 정보 · 서비스 이용 시 실시간 전송 · 연락처: 확인 중</li>
+          <li>Render Inc. (서버 · 국가: 확인 중) · 사이트 서버를 지나는 모든 정보 · 서비스 이용 시 실시간 전송 · 연락처 privacy@render.com</li>
           <li>Vercel Inc. (웹 호스팅 · 국가: 확인 중) · 접속 기록 · 사이트를 열 때 전송 · 연락처 privacy@vercel.com</li>
           <li>Plus Five Five, Inc. — Resend (이메일 발송 · 미국) · 이름, 이메일, 메일 본문 · 인증·영수증·안내 메일을 보낼 때 전송 · 연락처 support@resend.com</li>
           <li>
