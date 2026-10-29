@@ -535,6 +535,20 @@ export default function ComprehensivePage() {
               </details>
             ))}
           </div>
+          <div className="mt-5 grid max-w-[780px] gap-2.5 sm:grid-cols-2">
+            {[
+              { href: "/guide/apply", label: "신청 안내와 FAQ", sub: "진행 순서 · 검사 마감 · 해석 상담" },
+              { href: "/guide/tests", label: "검사 소개와 FAQ", sub: "세 검사 · 요령 · 막힐 때" },
+            ].map((l) => (
+              <Link key={l.href} href={l.href} className="flex items-center justify-between gap-3 rounded-[18px] bg-white p-[18px] shadow-[var(--shadow-sm)]">
+                <span>
+                  <span className="block font-bold">{l.label}</span>
+                  <span className="block text-sm text-[var(--foreground-muted)]">{l.sub}</span>
+                </span>
+                <Icon name="arrow" className="h-5 w-5 shrink-0 text-[var(--brand)]" />
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

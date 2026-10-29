@@ -66,6 +66,18 @@ export default function FaqPage() {
         <div className="mt-10 border-t border-[var(--border)]">
           {FAQS.map((f) => <Item key={f.q} {...f} />)}
         </div>
+        <div className="mt-10 rounded-2xl bg-[var(--surface)] p-5">
+          <p className="font-semibold text-[var(--foreground)]">종합심리검사를 신청하셨다면</p>
+          <p className="mt-1 text-sm text-[var(--foreground-muted)]">진행 순서·검사 마감·검사 요령은 따로 모아 두었어요.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link href="/guide/apply" className="inline-flex h-10 items-center rounded-xl bg-white px-4 text-sm font-semibold text-[var(--foreground)] shadow-sm">
+              신청 안내와 FAQ →
+            </Link>
+            <Link href="/guide/tests" className="inline-flex h-10 items-center rounded-xl bg-white px-4 text-sm font-semibold text-[var(--foreground)] shadow-sm">
+              검사 소개와 FAQ →
+            </Link>
+          </div>
+        </div>
         <p className="mt-10 text-sm text-[var(--foreground-muted)]">
           찾는 답이 없다면{" "}
           <Link href="/contact" className="link-underline text-[var(--foreground)]">
