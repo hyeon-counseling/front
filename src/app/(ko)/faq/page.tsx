@@ -38,7 +38,7 @@ const FAQS = [
   },
   {
     q: "문의는 어디로 하나요?",
-    a: "support@hyeoncounseling.com 으로 보내 주세요. 영업일 기준 1~2일 안에 답변드립니다.",
+    a: "support@hyeon-counseling.com 으로 보내 주세요. 영업일 기준 1~2일 안에 답변드립니다.",
   },
 ];
 

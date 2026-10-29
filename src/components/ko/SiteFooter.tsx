@@ -40,7 +40,7 @@ const BUSINESS: { label: string; value: string }[] = [
   { label: "통신판매업 신고", value: "" },
   { label: "주소", value: "서울특별시 동작구 상도로15다길 16" },
   { label: "고객센터", value: "" },
-  { label: "이메일", value: "support@hyeoncounseling.com" },
+  { label: "이메일", value: "support@hyeon-counseling.com" },
   { label: "호스팅 제공", value: "Vercel Inc." },
 ];
 

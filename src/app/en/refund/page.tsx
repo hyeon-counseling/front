@@ -47,10 +47,10 @@ export default function RefundPage() {
             <div className="mt-4 rounded-2xl border border-[var(--border-light)] bg-[var(--surface)] p-5">
               <p className="font-medium text-[var(--foreground)]">Email us at:</p>
               <a
-                href="mailto:support@hyeoncounseling.com"
+                href="mailto:support@hyeon-counseling.com"
                 className="mt-1 inline-block text-[var(--brand)] hover:underline"
               >
-                support@hyeoncounseling.com
+                support@hyeon-counseling.com
               </a>
               <p className="mt-3 text-xs text-[var(--foreground-subtle)]">
                 Please include your order information and a description of the issue.
@@ -93,8 +93,8 @@ export default function RefundPage() {
             <h2 className="mb-3 text-lg font-semibold text-[var(--foreground)]">Questions?</h2>
             <p>
               If you have any questions about our Refund Policy, please contact us at{' '}
-              <a href="mailto:support@hyeoncounseling.com" className="text-[var(--brand)] hover:underline">
-                support@hyeoncounseling.com
+              <a href="mailto:support@hyeon-counseling.com" className="text-[var(--brand)] hover:underline">
+                support@hyeon-counseling.com
               </a>.
               We aim to respond to all inquiries within 1–2 business days.
             </p>

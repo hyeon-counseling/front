@@ -39,7 +39,7 @@ export default function CounselingPage() {
             쇼핑몰에서 상담 신청하기
             <span aria-hidden>↗</span>
           </a>
-          <a href="mailto:support@hyeoncounseling.com" className="link-underline px-2 py-3 text-sm text-[var(--foreground)]">
+          <a href="mailto:support@hyeon-counseling.com" className="link-underline px-2 py-3 text-sm text-[var(--foreground)]">
             먼저 문의하기
           </a>
         </div>

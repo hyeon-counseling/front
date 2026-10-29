@@ -80,10 +80,10 @@ export default function Footer() {
                 Contact Us
               </Link>
               <a
-                href="mailto:support@hyeoncounseling.com"
+                href="mailto:support@hyeon-counseling.com"
                 className="block text-xs text-[var(--foreground-subtle)] transition-colors hover:text-[var(--brand)]"
               >
-                support@hyeoncounseling.com
+                support@hyeon-counseling.com
               </a>
             </div>
           </div>

@@ -21,8 +21,8 @@ export default function ContactPage() {
 
         <div className="mt-10 rounded-3xl bg-[var(--surface)] p-8 text-center sm:p-10">
           <p className="text-sm text-[var(--foreground-muted)]">문의 메일</p>
-          <a href="mailto:support@hyeoncounseling.com" className="font-display mt-2 inline-block text-2xl text-[var(--brand)] hover:underline sm:text-3xl">
-            support@hyeoncounseling.com
+          <a href="mailto:support@hyeon-counseling.com" className="font-display mt-2 inline-block text-2xl text-[var(--brand)] hover:underline sm:text-3xl">
+            support@hyeon-counseling.com
           </a>
           <p className="mt-4 text-xs text-[var(--foreground-subtle)]">운영 시간 평일 10:00 – 18:00 (KST)</p>
         </div>
