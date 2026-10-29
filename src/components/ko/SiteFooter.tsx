@@ -31,15 +31,15 @@ const COLS = [
 
 /**
  * 사업자 정보 (전자상거래법 표시 사항 · 토스페이먼츠 카드사 심사)
- * 사업자등록증과 똑같이 적는다. 빈 값('')은 화면에 나오지 않는다 — 상담가 확인 뒤 채울 것: 고객센터 전화, 통신판매업 신고(면제) 표기
+ * 사업자등록증과 똑같이 적는다. 빈 값('')은 화면에 나오지 않는다. (10/30 상담가 값: 고객센터 전화, 통신판매업 신고번호)
  */
 const BUSINESS: { label: string; value: string }[] = [
   { label: "상호", value: "심리상담실 현 (Hyeon Counseling)" },
   { label: "대표", value: "김태현" },
   { label: "사업자등록번호", value: "185-25-02396" },
-  { label: "통신판매업 신고", value: "" },
+  { label: "통신판매업 신고", value: "2026-서울동작-0798" },
   { label: "주소", value: "서울특별시 동작구 상도로15다길 16" },
-  { label: "고객센터", value: "" },
+  { label: "고객센터", value: "010-6478-1181" },
   { label: "이메일", value: "support@hyeon-counseling.com" },
   { label: "호스팅 제공", value: "Vercel Inc." },
 ];
