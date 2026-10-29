@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { LegalPage, Section } from "@/components/ko/LegalPage";
+import { RefundRules } from "@/components/assessment/RefundRules";
 
 export const metadata: Metadata = { title: "환불 규정" };
 
-// 초안 — 운영자 검토 후 확정 (PRD-V2 §5.4 기준)
+// 강의·워크북은 초안(PRD-V2 §5.4) — 운영자 검토 후 확정. 종합심리검사는 52-취소환불규정(10/29 상담가 확정) 그대로
 export default function RefundPage() {
   return (
     <LegalPage eyebrow="약관" title="환불 규정" updated="2026년 9월 4일 (초안)">
@@ -14,7 +15,10 @@ export default function RefundPage() {
           <li>파일 손상, 재생 불가, 중복 결제 등 회사 측 문제는 기간과 관계없이 전액 환불합니다.</li>
         </ul>
       </Section>
-      <Section title="상담·심리검사">
+      <Section title="종합심리검사 + 해석 상담 (150,000원)">
+        <RefundRules />
+      </Section>
+      <Section title="그 밖의 상담">
         <p>쇼핑몰 상품 페이지에 표시된 취소·변경 규정을 따릅니다. (상담운영시스템 도입 시 이 문서에 통합합니다.)</p>
       </Section>
       <Section title="환불 방법">

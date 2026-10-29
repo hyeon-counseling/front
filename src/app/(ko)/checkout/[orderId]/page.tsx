@@ -8,10 +8,12 @@ import { apiRequest } from "@/lib/api";
 import { METHOD_LABEL, won, type CheckoutOrder } from "@/lib/payment";
 import { Skeleton } from "@/components/ui";
 import { CouponPicker } from "@/components/checkout/CouponPicker";
+import { TossWidget, type TossWidgetHandle } from "@/components/checkout/TossWidget";
 
 /**
- * 결제 페이지 — 토스 결제위젯이 들어갈 자리.
- * 지금(mock)은 결제수단 선택 → [결제하기] → 서버가 결제키 발급 → 토스와 같은 successUrl 로 이동.
+ * 결제 페이지
+ * - 토스(PAYMENT_PROVIDER=toss): 결제위젯 v2(카드·간편결제) → [결제하기] → 서버 준비(심리검사는 상담 시간 다시 잡기) → 토스 결제창 → successUrl
+ * - 테스트(mock): 결제수단 선택 → [결제하기] → 서버가 결제키 발급 → 토스와 같은 successUrl 로 이동
  * 쿠폰을 적용하면 서버가 금액을 다시 계산하고, 0원이 되면 [무료로 받기] → success?free=1 에서 완료 처리.
  *
  * 전문 심리검사 주문은 결제하지 않고 이 화면을 떠나면(뒤로가기·다른 메뉴) 신청을 바로 취소해 상담 시간을 푼다 (10/29 상담가).
@@ -39,6 +41,8 @@ export default function CheckoutPage() {
   const [busy, setBusy] = useState(false);
   // 결제·쿠폰 완료로 넘어가는 중이면 true — 이때 화면이 떠나도 취소하지 않는다
   const proceeding = useRef(false);
+  const toss = useRef<TossWidgetHandle>(null);
+  const [tossReady, setTossReady] = useState(false);
   const leaveWatch = order?.itemType === "assessment" && order.status === "pending";
 
   useEffect(() => {
@@ -70,8 +74,33 @@ export default function CheckoutPage() {
     });
   }, [loading, user, orderId, router]);
 
+  const payToss = async () => {
+    if (!order || !toss.current) return;
+    setBusy(true);
+    setError("");
+    proceeding.current = true;
+    // 결제창을 열기 직전에 서버가 주문·쿠폰·상담 시간을 다시 확인한다 (금액은 승인 때 서버가 한 번 더 검증)
+    const ready = await apiRequest(`/api/payments/orders/${order.orderId}/ready`, { method: "POST" });
+    if (!ready.ok) {
+      proceeding.current = false;
+      setError(ready.message || "결제를 시작하지 못했어요.");
+      setBusy(false);
+      return;
+    }
+    try {
+      await toss.current.requestPayment({ orderId: order.orderId, orderName: order.itemTitle, customerEmail: user?.email, customerName: user?.name });
+    } catch (e) {
+      // 결제창을 닫았거나(USER_CANCEL) 열지 못함 — 이 화면에 그대로 남는다
+      proceeding.current = false;
+      const code = (e as { code?: string })?.code;
+      if (code !== "USER_CANCEL") setError((e as { message?: string })?.message || "결제창을 열지 못했어요. 잠시 후 다시 시도해 주세요.");
+      setBusy(false);
+    }
+  };
+
   const pay = async () => {
     if (!order) return;
+    if (order.checkout.mode === "toss") return payToss();
     setBusy(true);
     setError("");
     proceeding.current = true;
@@ -134,8 +163,8 @@ export default function CheckoutPage() {
 
   const isMock = order.checkout.mode === "mock";
   const free = order.amount === 0 && !!order.coupon;
-  // 전문 심리검사는 지금 쿠폰으로만 신청을 마칠 수 있다 (카드 결제 창구 준비 중) — 관리자만 테스트 결제 가능
-  const couponOnly = order.itemType === "assessment" && user?.role !== "admin";
+  // 테스트 결제(mock) 동안 전문 심리검사는 쿠폰으로만 신청을 마칠 수 있다 — 관리자만 테스트 결제 가능. 토스가 붙으면 누구나 결제
+  const couponOnly = isMock && order.itemType === "assessment" && user?.role !== "admin";
   const methods = order.checkout.mode === "mock" ? order.checkout.methods : [];
 
   return (
@@ -177,7 +206,7 @@ export default function CheckoutPage() {
           <div className="mt-8 rounded-2xl bg-[var(--brand-light)] p-5 text-sm leading-relaxed text-[var(--foreground)]">
             <strong>지금은 쿠폰으로 신청을 마칠 수 있어요.</strong>
             <br />
-            받으신 쿠폰을 위 <b>쿠폰</b> 칸에서 고르거나 코드를 넣어 주세요. 고른 상담 시간은 30분 동안 잡아 둬요.
+            받으신 쿠폰을 위 <b>쿠폰</b> 칸에서 고르거나 코드를 넣어 주세요. 고른 상담 시간은 10분 동안 잡아 둬요.
           </div>
         ) : isMock ? (
           <>
@@ -194,11 +223,9 @@ export default function CheckoutPage() {
               ))}
             </div>
           </>
-        ) : (
-          <div className="mt-8 rounded-2xl bg-[var(--surface)] p-6 text-sm text-[var(--foreground-muted)]">
-            토스페이먼츠 결제창 연결을 준비하고 있어요.
-          </div>
-        )}
+        ) : order.checkout.mode === "toss" ? (
+          <TossWidget ref={toss} clientKey={order.checkout.clientKey} customerKey={order.checkout.customerKey} amount={order.amount} onReady={setTossReady} />
+        ) : null}
 
         <label className="mt-8 flex cursor-pointer items-start gap-3 text-sm text-[var(--foreground-muted)]">
           <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--brand)]" />
@@ -212,7 +239,7 @@ export default function CheckoutPage() {
 
         <button
           onClick={free ? claimFree : pay}
-          disabled={!agree || busy || (!isMock && !free) || (couponOnly && !free)}
+          disabled={!agree || busy || (!isMock && !free && !tossReady) || (couponOnly && !free)}
           className="mt-6 flex h-14 w-full cursor-pointer items-center justify-center rounded-xl bg-[var(--brand)] text-lg font-bold text-white hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy ? "결제 중…" : free ? (order.itemType === "assessment" ? "쿠폰으로 신청 완료하기" : "쿠폰으로 무료로 받기") : `${won(order.amount)} 결제하기`}
