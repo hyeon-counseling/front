@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "소개",
-  description: "심리상담실 현과 상담가 현을 소개합니다. 상담심리 석사, 임상심리사 2급·청소년상담사 2급.",
+  description: "심리상담실 현과 김태현 심리상담가를 소개합니다. 상담 및 심리치료 석사, 청소년상담 학사.",
 };
 
 const APPROACH = [
@@ -42,11 +42,11 @@ export default function AboutPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">상담가 · 운영자</p>
-                <h2 className="font-display text-xl text-[var(--foreground)]">심리상담가 현 (김태현)</h2>
+                <h2 className="font-display text-xl text-[var(--foreground)]">김태현 심리상담가</h2>
               </div>
             </div>
             <div className="mb-6 flex flex-wrap gap-2">
-              {["상담심리 석사", "청소년상담 학사", "임상심리사 2급", "청소년상담사 2급", "서울"].map((b) => (
+              {["상담 및 심리치료 석사", "청소년상담 학사", "서울"].map((b) => (
                 <span key={b} className="rounded-full border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)]">
                   {b}
                 </span>
@@ -54,7 +54,7 @@ export default function AboutPage() {
             </div>
             <div className="space-y-4 text-sm leading-relaxed text-[var(--foreground-muted)]">
               <p>
-                청소년상담을 전공하고 상담심리 석사를 마쳤습니다. 개인상담과 발달심리, 인지행동치료(CBT)·인간중심·정신역동 접근을 공부하고 임상에서 사용해 왔습니다.
+                청소년상담을 전공하고 상담 및 심리치료 석사(덕성여대 상담산업대학원)를 마쳤습니다. 개인상담과 발달심리, 인지행동치료(CBT)·인간중심·정신역동 접근을 공부하고 임상에서 사용해 왔습니다.
               </p>
               <p>
                 청소년과 성인을 만나면서 반복해서 보게 된 장면이 있습니다. 힘들어하는 사람들 대부분은 위기 상태가 아니었습니다. 다만 자기 안에서 무슨 일이 일어나는지 설명할 언어와 틀이 없었을 뿐입니다. 믿을 만한, 손에 잡히는 마음의 지도가 필요했습니다.

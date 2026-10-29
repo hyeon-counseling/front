@@ -72,7 +72,7 @@ export default function ArticleDetailPage() {
           {content.category && <p className="mb-3"><span className="eyebrow">{content.category}</span></p>}
           <h1 className="font-display text-3xl leading-tight text-[var(--foreground)] sm:text-4xl">{content.title}</h1>
           <p className="mt-4 text-sm text-[var(--foreground-subtle)]">
-            심리상담가 현 ·{" "}
+            김태현 심리상담가 ·{" "}
             {new Date(content.createdAt).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}
           </p>
         </header>

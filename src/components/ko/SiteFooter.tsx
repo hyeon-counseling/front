@@ -41,7 +41,7 @@ export default function SiteFooter() {
               <span className="font-bold tracking-tight text-[var(--foreground)]">심리상담실 현</span>
             </div>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-[var(--foreground-muted)]">
-              나를 이해하는 공부를, 편안한 속도로. 심리상담가 현이 만드는 강의·상담.
+              나를 이해하는 공부를, 편안한 속도로. 김태현 심리상담가가 만드는 강의·상담.
             </p>
           </div>
           {COLS.map((c) => (

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s | 심리상담실 현",
   },
   description:
-    "심리상담가 현의 강의(영상·오디오·직접 써 보는 실습)와 과정, 심리검사, 상담. 나를 이해하는 공부를 편안한 속도로.",
+    "김태현 심리상담가의 강의(영상·오디오·직접 써 보는 실습)와 과정, 심리검사, 상담. 나를 이해하는 공부를 편안한 속도로.",
   openGraph: {
     siteName: "심리상담실 현",
     locale: "ko_KR",

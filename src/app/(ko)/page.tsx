@@ -4,7 +4,7 @@ import { Character } from "@/components/character/Character";
 
 export const metadata: Metadata = {
   title: "심리상담실 현 — 나를 이해하는 공부, 편안한 속도로",
-  description: "심리상담가 현의 강의, 셀프 워크북, 상담·심리검사. 배우고, 스스로 해보고, 필요하면 함께 이야기합니다.",
+  description: "김태현 심리상담가의 강의, 셀프 워크북, 상담·심리검사. 배우고, 스스로 해보고, 필요하면 함께 이야기합니다.",
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ export default function HomePage() {
               <span className="text-gradient">하루 10분이면 충분해요</span>
             </h1>
             <p className="rise rise-3 mt-6 max-w-lg text-[1.05rem] leading-relaxed text-[var(--foreground-muted)] sm:text-lg">
-              심리상담가 현이 만드는 강의와 셀프 워크북. 배우고, 스스로 해보고, 필요하면 함께 이야기합니다.
+              김태현 심리상담가가 만드는 강의와 셀프 워크북. 배우고, 스스로 해보고, 필요하면 함께 이야기합니다.
             </p>
             <div className="rise rise-4 mt-8 flex flex-wrap items-center gap-3">
               <Link
@@ -99,7 +99,7 @@ export default function HomePage() {
             <div className="rise rise-5 mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--foreground-subtle)]">
               <span className="flex items-center gap-1.5"><Check /> 카드 없이 시작</span>
               <span className="flex items-center gap-1.5"><Check /> 기록은 나만 열람</span>
-              <span className="flex items-center gap-1.5"><Check /> 상담심리 석사 · 임상심리사</span>
+              <span className="flex items-center gap-1.5"><Check /> 상담 및 심리치료 석사 · 청소년상담 학사</span>
             </div>
           </div>
 
@@ -223,9 +223,9 @@ export default function HomePage() {
             <div className="blob -right-10 -top-10 h-40 w-40 bg-[var(--brand-light)]" aria-hidden />
             <div className="relative">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--brand)] text-2xl font-extrabold text-white">현</div>
-              <p className="mt-5 text-xl font-bold text-[var(--foreground)]">심리상담가 현 (김태현)</p>
+              <p className="mt-5 text-xl font-bold text-[var(--foreground)]">김태현 심리상담가</p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {["상담심리 석사", "청소년상담 학사", "임상심리사 2급", "청소년상담사 2급"].map((b) => (
+                {["상담 및 심리치료 석사", "청소년상담 학사"].map((b) => (
                   <span key={b} className="rounded-lg bg-[var(--surface)] px-2.5 py-1 text-xs font-medium text-[var(--foreground-muted)]">{b}</span>
                 ))}
               </div>
