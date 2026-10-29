@@ -19,6 +19,8 @@ export interface NoticeRow {
   result: string;
   reason: string | null;
   messageId: string | null;
+  /** 솔라피 최종 전달 결과 (접수 뒤 5분마다 확인) */
+  delivery?: { status: "pending" | "delivered" | "failed" | "unknown"; code: string | null; reason: string | null; type: string | null; checkedAt: string } | null;
   at: string;
   detail?: { label: string; when: string; subject: string; body: string; buttons: { label: string; url: string }[] } | null;
 }
@@ -26,7 +28,15 @@ export interface NoticeRow {
 const fmt = (iso: string) =>
   new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
 const CHANNEL: Record<string, string> = { alimtalk: "알림톡", sms: "문자", none: "—" };
-const RESULT: Record<string, string> = { ok: "보냄", failed: "실패", skipped: "건너뜀", pending: "보내는 중" };
+const RESULT: Record<string, string> = { ok: "접수됨", failed: "실패", skipped: "건너뜀", pending: "보내는 중" };
+const DELIVERY: Record<string, string> = { pending: "전달 확인 중", delivered: "받음 ✓", failed: "전달 실패", unknown: "결과 모름" };
+
+/** 줄 끝에 보일 한 단어 — 최종 결과가 있으면 그것 */
+function shortResult(n: NoticeRow): string {
+  if (n.delivery && n.delivery.status !== "pending") return DELIVERY[n.delivery.status];
+  if (n.result === "ok") return n.messageId ? "접수됨 · 전달 확인 중" : "접수됨";
+  return RESULT[n.result] ?? n.result;
+}
 
 export function NoticeHistory({ id, notices, closed, onChanged }: { id: string; notices: NoticeRow[]; closed: boolean; onChanged: () => void }) {
   const [open, setOpen] = useState<string | null>(null);
@@ -51,8 +61,8 @@ export function NoticeHistory({ id, notices, closed, onChanged }: { id: string; 
                 <b>{n.code}</b> <span className="text-[var(--foreground-muted)]">{n.detail?.label ?? ""}</span>{" "}
                 <span className="text-xs text-[var(--foreground-subtle)]">{CHANNEL[n.channel] ?? n.channel}</span>
               </span>
-              <span className={cx("shrink-0 text-xs font-semibold", n.result === "ok" ? "text-[var(--brand)]" : n.result === "failed" ? "text-[var(--error)]" : "text-[var(--foreground-subtle)]")}>
-                {RESULT[n.result] ?? n.result} · {fmt(n.at)} {on ? "▲" : "▼"}
+              <span className={cx("shrink-0 text-xs font-semibold", n.result === "failed" ? "text-[var(--error)]" : n.result === "ok" ? "text-[var(--brand)]" : "text-[var(--foreground-subtle)]")}>
+                {shortResult(n)} · {fmt(n.at)} {on ? "▲" : "▼"}
               </span>
             </button>
             {on && (
@@ -74,7 +84,23 @@ export function NoticeHistory({ id, notices, closed, onChanged }: { id: string; 
                   <dd className={n.result === "failed" ? "font-semibold text-[var(--error)]" : ""}>
                     {RESULT[n.result] ?? n.result}
                     {n.reason && ` · 사유 ${n.reason}`}
-                    {n.messageId && <span className="text-[var(--foreground-subtle)]"> · 솔라피 ID {n.messageId}</span>}
+                    {n.messageId && <span className="font-normal text-[var(--foreground-subtle)]"> · 솔라피 그룹 {n.messageId}</span>}
+                  </dd>
+                  <dt className="text-[var(--foreground-subtle)]">최종 전달</dt>
+                  <dd className={n.delivery?.status === "failed" ? "font-semibold text-[var(--error)]" : ""}>
+                    {n.delivery ? (
+                      <>
+                        {DELIVERY[n.delivery.status]}
+                        {n.delivery.code && ` · 상태코드 ${n.delivery.code}`}
+                        {n.delivery.reason && ` · ${n.delivery.reason}`}
+                        {n.delivery.type && <span className="font-normal text-[var(--foreground-subtle)]"> · {n.delivery.type}</span>}
+                        {n.delivery.code === "3113" && <span className="mt-0.5 block font-normal text-[var(--foreground)]">→ 발신번호가 통신사 &lsquo;번호도용문자차단서비스&rsquo;에 가입돼 있어요. 통신사에서 해제해야 문자가 나가요.</span>}
+                      </>
+                    ) : n.result === "ok" ? (
+                      "확인 중 (5분마다 솔라피에 물어봐요)"
+                    ) : (
+                      "—"
+                    )}
                   </dd>
                 </dl>
                 {n.detail && (

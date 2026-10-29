@@ -303,10 +303,10 @@ export function RefundBox({
 }
 
 /**
- * 결제 전(결제 중·만료) 신청 — 환불할 돈이 없으니 [신청 취소·슬롯 풀기]만.
- * 결제 중은 30분이 지나면 저절로 만료되고 칸이 풀린다.
+ * 결제 전 신청 — 환불할 돈이 없으니 [신청 취소·슬롯 풀기]만.
+ * 고객이 결제 화면을 나가면 바로, 창을 닫았으면 10분 뒤 저절로 취소되고 칸이 풀린다.
  */
-export function UnpaidBox({ id, payState, onChanged }: { id: string; payState: "paying" | "expired" | "canceled"; onChanged: () => void }) {
+export function UnpaidBox({ id, payState, onChanged }: { id: string; payState: "paying" | "left" | "expired" | "canceled"; onChanged: () => void }) {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const cancel = async () => {
@@ -319,10 +319,12 @@ export function UnpaidBox({ id, payState, onChanged }: { id: string; payState: "
   };
   return (
     <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm">
-      <h3 className="font-bold text-[var(--foreground)]">{payState === "paying" ? "💳 결제 중 — 아직 결제 전이에요" : payState === "expired" ? "⌛ 결제 미완료(만료)" : "결제 전 취소됨"}</h3>
+      <h3 className="font-bold text-[var(--foreground)]">
+        {payState === "paying" ? "💳 결제 중 — 아직 결제 전이에요" : payState === "left" ? "↩ 결제 안 하고 나감 · 취소됨" : payState === "expired" ? "⌛ 결제 미완료 · 자동 취소" : "결제 전 취소됨"}
+      </h3>
       <p className="mt-1 text-xs text-[var(--foreground-muted)]">
         {payState === "paying"
-          ? "고객이 결제 화면에 있거나 나갔어요. 30분 안에는 마이페이지·신청 페이지의 [결제 이어하기]로 마저 결제할 수 있고, 지나면 저절로 만료되고 상담 시간이 다시 열려요."
+          ? "고객이 지금 결제 화면에 있어요. 결제 화면을 나가면 바로, 창을 닫았으면 10분 뒤 저절로 취소되고 상담 시간이 다시 열려요."
           : "결제하지 않아 닫힌 신청이에요. 환불할 돈이 없어요. 고객이 다시 신청하면 새 신청으로 들어와요."}
       </p>
       {payState === "paying" && (

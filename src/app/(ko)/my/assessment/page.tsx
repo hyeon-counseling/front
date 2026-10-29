@@ -8,7 +8,6 @@ import { apiRequest } from "@/lib/api";
 import type { ProgressView } from "@/lib/assessment";
 import { EmptyState, Skeleton } from "@/components/ui";
 import { StageTracker } from "@/components/assessment/StageTracker";
-import { ResumePayment } from "@/components/assessment/ResumePayment";
 import { cx } from "@/components/ui";
 
 // 마이페이지 · 심리검사 진행 — 내 종합심리검사 신청 목록 → 진행 화면(/a/:key)
@@ -33,7 +32,6 @@ export default function MyAssessmentPage() {
       <div className="mx-auto max-w-4xl">
         <h1 className="font-display text-2xl text-[var(--foreground)] sm:text-3xl">심리검사 진행</h1>
         <p className="mt-2 text-sm text-[var(--foreground-muted)]">신청한 전문 심리검사가 지금 어디까지 왔는지 보여 드려요.</p>
-        <ResumePayment className="mt-6 space-y-2" />
 
         {!list ? (
           <div className="mt-8 space-y-4">
