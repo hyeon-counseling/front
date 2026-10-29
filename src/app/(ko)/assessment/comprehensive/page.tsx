@@ -7,6 +7,7 @@ import { ReportPreview } from "@/components/assessment/ReportPreview";
 import { StickyApplyBar } from "@/components/assessment/StickyApplyBar";
 import { Plate } from "@/components/assessment/Plate";
 import { Icon, type IconName } from "@/components/assessment/Icon";
+import { DETAIL_FAQ } from "@/content/assessmentGuide";
 import { DiffArt, HeroLayersArt, SpreadLayersArt, VideoSceneArt } from "@/components/assessment/AssessArt";
 
 export const metadata: Metadata = {
@@ -88,37 +89,8 @@ const DIFF: { n: 1 | 2 | 3; title: string; body: string }[] = [
   { n: 3, title: "읽고, 듣고, 다시 봐요", body: "보고서로 읽고, 60분 대화로 묻고, 해석 영상으로 다시 봐요. 결과를 혼자 받아 들고 막막해지는 일이 없어요." },
 ];
 
-const FAQ: { q: string; a: string[] }[] = [
-  {
-    q: "병이 있는지 가려내는 검사인가요?",
-    a: [
-      "아니에요. 나를 더 깊이 이해하고 탐색하기 위한 검사예요. 성격, 스트레스를 다루는 방식, 관계에서 반복되는 패턴을 함께 살펴봐요.",
-      "약 처방처럼 의학적 판단이 필요해 보이면, 병원(의료진)과 상의하시도록 따로 안내해 드려요.",
-    ],
-  },
-  { q: "딱히 고민이 없어도 받아도 되나요?", a: ["그럼요. 이 검사는 '어디가 문제일까'보다 '나는 어떤 사람일까'에서 시작해요. 내가 잘 쓰는 힘과 자주 반복되는 내 패턴을 알아 두면, 앞으로의 선택이 한결 쉬워져요."] },
-  {
-    q: "결과가 나쁘게 나오면 어떡하죠?",
-    a: ["이 검사에는 '좋은 점수, 나쁜 점수'가 없어요. 높거나 낮은 점수는 \"지금 이쪽에 힘이 많이 들어가 있구나\" 하는 신호예요.", "해석 상담에서는 내 강점을 먼저 찾고, 그 힘으로 어려운 순간을 어떻게 풀지 함께 이야기해요."],
-  },
-  {
-    q: "시간은 얼마나 걸려요?",
-    a: ["MMPI-3 335문항 약 35~50분, TCI 약 140문항 약 15~30분, SCT 약 50문장 약 20~40분이에요. 검사별로 나눠서 해도 괜찮고, 해석 상담 7일 전까지만 마치면 돼요.", "접수면접지는 15~20분, 해석 상담은 약 60분이에요."],
-  },
-  {
-    q: "언제 상담을 받을 수 있나요?",
-    a: ["신청일로부터 14일 뒤부터, 김태현 심리상담가가 미리 열어 둔 시간 중 하나를 골라요. 검사와 보고서 준비에 그만큼 시간이 필요해서예요.", "상담 3일 전까지는 일정을 한 번 무료로 바꿀 수 있어요."],
-  },
-  {
-    q: "결과는 누가 보나요?",
-    a: ["김태현 심리상담가만 봐요. 가족·회사·학교 누구에게도 동의 없이 알리지 않아요. 다만 본인이나 다른 사람의 생명·안전이 위험할 때, 법으로 정한 경우는 예외예요.", "기록은 10년 동안 안전하게 보관하고, 지나면 파기해요."],
-  },
-  { q: "대면 상담은 어디서 하나요?", a: ["서울 홍대·강남·종로·혜화·사당 중 신청 때 고른 1·2순위 지역의 조용한 스터디룸에서 만나요. 상담 3일 전에 장소를 확정해 알려 드리고, 하루 전에 한 번 더 알려 드려요."] },
-  {
-    q: "보고서는 언제 받나요? 미리 볼 수는 없나요?",
-    a: ["상담 중에 보고서를 화면으로 함께 보고, 끝나면 내 페이지에 보고서와 해석 영상을 올려 드려요.", "점수만 먼저 보면 오해하기 쉬워서, 설명을 들으며 처음 보시도록 하고 있어요."],
-  },
-];
+// 자주 묻는 질문 8개 — 문안은 src/content/assessmentGuide.ts (관리자 '안내·FAQ' 칸에서도 보인다)
+const FAQ = DETAIL_FAQ;
 
 const INCLUDED: { title: string; sub: string; gift?: string }[] = [
   { title: "온라인 심리검사 3종", sub: "TCI · MMPI-3 · SCT, 집에서" },
@@ -537,8 +509,8 @@ export default function ComprehensivePage() {
           </div>
           <div className="mt-5 grid max-w-[780px] gap-2.5 sm:grid-cols-2">
             {[
-              { href: "/guide/apply", label: "신청 안내와 FAQ", sub: "진행 순서 · 검사 마감 · 해석 상담" },
-              { href: "/guide/tests", label: "검사 소개와 FAQ", sub: "세 검사 · 요령 · 막힐 때" },
+              { href: "/guide/apply", label: "종합심리검사 신청 안내", sub: "진행 순서 · 검사 마감 · 자주 묻는 질문" },
+              { href: "/guide/tests", label: "검사 안내", sub: "검사 소개 · 검사 방법 · 자주 묻는 질문" },
             ].map((l) => (
               <Link key={l.href} href={l.href} className="flex items-center justify-between gap-3 rounded-[18px] bg-white p-[18px] shadow-[var(--shadow-sm)]">
                 <span>

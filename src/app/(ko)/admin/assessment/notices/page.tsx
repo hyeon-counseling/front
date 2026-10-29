@@ -14,6 +14,7 @@ interface Guide {
   when: string;
   subject: string;
   buttons: string[];
+  buttonLinks?: { label: string; path: string }[];
 }
 
 export default function AssessmentNoticeGuidePage() {
@@ -54,7 +55,7 @@ export default function AssessmentNoticeGuidePage() {
                   <td className="px-4 py-3 text-[var(--foreground-muted)]">{g.when}</td>
                   <td className="px-4 py-3">
                     <p className="text-[var(--foreground)]">{g.subject}</p>
-                    <p className="mt-1 text-xs text-[var(--foreground-subtle)]">{g.buttons.map((b) => `[${b}]`).join(" ")}</p>
+                    <p className="mt-1 text-xs text-[var(--foreground-subtle)]">{(g.buttonLinks ?? g.buttons.map((label) => ({ label, path: "" }))).map((b) => `[${b.label}]${b.path.startsWith("/guide") ? ` → ${b.path}` : ""}`).join(" ")}</p>
                   </td>
                 </tr>
               ))}

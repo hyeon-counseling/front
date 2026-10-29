@@ -71,10 +71,10 @@ export default function FaqPage() {
           <p className="mt-1 text-sm text-[var(--foreground-muted)]">진행 순서·검사 마감·검사 요령은 따로 모아 두었어요.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link href="/guide/apply" className="inline-flex h-10 items-center rounded-xl bg-white px-4 text-sm font-semibold text-[var(--foreground)] shadow-sm">
-              신청 안내와 FAQ →
+              종합심리검사 신청 안내 →
             </Link>
             <Link href="/guide/tests" className="inline-flex h-10 items-center rounded-xl bg-white px-4 text-sm font-semibold text-[var(--foreground)] shadow-sm">
-              검사 소개와 FAQ →
+              검사 안내 →
             </Link>
           </div>
         </div>
