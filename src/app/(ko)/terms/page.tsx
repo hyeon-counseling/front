@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, Section } from "@/components/ko/LegalPage";
+import { MAIL_ORDER_NO, SHOW_MAIL_ORDER_NO } from "@/lib/site";
 
 export const metadata: Metadata = { title: "이용약관" };
 
@@ -13,7 +14,7 @@ export default function TermsPage() {
       <section className="rounded-2xl bg-[var(--surface)] p-5 text-xs leading-relaxed">
         <p className="font-semibold text-[var(--foreground)]">운영자</p>
         <p className="mt-1">
-          심리상담실 현 (Hyeon Counseling) · 대표 김태현 (개인사업자) · 사업자등록번호 186-25-02396 · 통신판매업 신고 2026-서울동작-0798 · 서울특별시 동작구 상도로15다길 16 · 고객센터 010-6478-1181 · support@hyeon-counseling.com
+          심리상담실 현 (Hyeon Counseling) · 대표 김태현 (개인사업자) · 사업자등록번호 186-25-02396 · {SHOW_MAIL_ORDER_NO && `통신판매업 신고 ${MAIL_ORDER_NO} · `}서울특별시 동작구 상도로15다길 16 · 고객센터 010-6478-1181 · support@hyeon-counseling.com
         </p>
       </section>
 
