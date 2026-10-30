@@ -7,6 +7,7 @@ import { StageTracker } from "@/components/assessment/StageTracker";
 import { TestButtons } from "@/components/assessment/TestButtons";
 import { VerifyGate } from "@/components/assessment/VerifyGate";
 import { useProgress } from "@/components/assessment/useProgress";
+import { LinkHelp } from "@/components/assessment/LinkHelp";
 import type { ProgressView } from "@/lib/assessment";
 
 /**
@@ -126,13 +127,7 @@ export default function ProgressPage() {
   const { view, needsVerify, error, reload } = useProgress(key);
 
   if (needsVerify !== null) return <VerifyGate linkKey={key} nameHint={needsVerify} onDone={reload} />;
-  if (error && !view) {
-    return (
-      <div className="px-4 py-24 text-center">
-        <p className="text-[var(--foreground-muted)]">{error}</p>
-      </div>
-    );
-  }
+  if (error && !view) return <LinkHelp message={error} />;
   if (!view) {
     return (
       <div className="mx-auto max-w-2xl space-y-4 px-4 py-14">

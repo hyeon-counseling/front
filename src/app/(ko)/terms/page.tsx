@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, Section } from "@/components/ko/LegalPage";
+import { MAIL_ORDER_NO, SHOW_MAIL_ORDER_NO } from "@/lib/site";
 
 export const metadata: Metadata = { title: "이용약관" };
 
@@ -13,7 +14,7 @@ export default function TermsPage() {
       <section className="rounded-2xl bg-[var(--surface)] p-5 text-xs leading-relaxed">
         <p className="font-semibold text-[var(--foreground)]">운영자</p>
         <p className="mt-1">
-          심리상담실 현 (Hyeon Counseling) · 대표 김태현 (개인사업자) · 사업자등록번호 186-25-02396 · 통신판매업 신고 2026-서울동작-0798 · 서울특별시 동작구 상도로15다길 16 · 고객센터 010-6478-1181 · support@hyeon-counseling.com
+          심리상담실 현 (Hyeon Counseling) · 대표 김태현 (개인사업자) · 사업자등록번호 186-25-02396 · {SHOW_MAIL_ORDER_NO && `통신판매업 신고 ${MAIL_ORDER_NO} · `}서울특별시 동작구 상도로15다길 16 · 고객센터 010-6478-1181 · support@hyeon-counseling.com
         </p>
       </section>
 
@@ -59,7 +60,7 @@ export default function TermsPage() {
       <Section title="제7조 (심리검사와 상담)">
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            <b className="text-[var(--foreground)]">예약과 일정 변경</b> — 해석 상담·상담 일정은 신청할 때 공개된 시간 중에서 고르고, 결제가 끝나면 확정됩니다. 일정은 상담 3일 전까지 1회 무료로 바꿀 수 있습니다. 상담 2일 전부터 당일까지의 취소, 연락 없이 오지 않은 경우(노쇼)는{" "}
+            <b className="text-[var(--foreground)]">예약과 일정 변경</b> — 종합심리검사의 해석 상담 일정은 신청할 때 공개된 시간 중에서 고르고, 결제가 끝나면 확정됩니다(상담 3일 전까지 1회 무료 변경). 개인 상담은 결제 뒤 상담 세부 신청서를 받아 일정을 확정합니다. 회기 취소·변경, 연락 없이 오지 않은 경우(노쇼), 묶음 중도 해지는{" "}
             <Link href="/refund" className={L}>
               환불 규정
             </Link>

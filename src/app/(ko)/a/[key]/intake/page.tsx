@@ -7,6 +7,7 @@ import { assessRequest } from "@/lib/assessment";
 import { Skeleton, cx } from "@/components/ui";
 import { VerifyGate } from "@/components/assessment/VerifyGate";
 import { useProgress } from "@/components/assessment/useProgress";
+import { LinkHelp } from "@/components/assessment/LinkHelp";
 import { filled, INTAKE_STEPS, type Answers, type Q } from "@/components/assessment/intakeConfig";
 
 /**
@@ -367,7 +368,7 @@ export default function IntakePage() {
   };
 
   if (needsVerify !== null) return <VerifyGate linkKey={key} nameHint={needsVerify} onDone={reload} />;
-  if (error && !view) return <p className="px-4 py-24 text-center text-[var(--foreground-muted)]">{error}</p>;
+  if (error && !view) return <LinkHelp message={error} />;
   if (!view) {
     return (
       <div className="mx-auto max-w-2xl space-y-4 px-4 py-14">

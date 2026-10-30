@@ -190,7 +190,6 @@ export default function TestResultPage() {
 
         <p className="mt-8 rounded-2xl bg-[var(--surface)] p-4 text-xs leading-relaxed text-[var(--foreground-muted)]">
           이 결과는 자가 검사로, 의학적 진단을 대신하지 않아요. 걱정되는 점이 있다면 정신건강의학과 전문의나 상담 전문가와 이야기해 보세요.
-          힘든 마음이 들 땐 자살예방상담전화 109, 정신건강위기상담 1577-0199(24시간)로 연락할 수 있어요.
           {r.credit && <span className="mt-2 block text-[var(--foreground-subtle)]">출처: {r.credit}</span>}
         </p>
       </div>
