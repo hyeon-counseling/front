@@ -19,7 +19,7 @@ const NAV: NavItem[] = [
     label: "심리검사",
     match: ["/assessment", "/tests", "/a"],
     children: [
-      { href: "/assessment", label: "전문 심리검사", desc: "TCI · MMPI-3 · SCT + 해석 상담" },
+      { href: "/assessment", label: "전문 심리검사", desc: "MMPI-3 · TCI · SCT + 해석 상담" },
       { href: "/tests", label: "간이 무료 심리검사", desc: "지금 바로 해 보는 자가 검사" },
     ],
   },

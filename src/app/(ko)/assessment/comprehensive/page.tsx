@@ -11,7 +11,7 @@ import { DETAIL_FAQ } from "@/content/assessmentGuide";
 import { DiffArt, HeroLayersArt, SpreadLayersArt, VideoSceneArt } from "@/components/assessment/AssessArt";
 
 export const metadata: Metadata = {
-  title: "종합심리검사 TCI + MMPI-3 + SCT",
+  title: "종합심리검사 MMPI-3 + TCI + SCT",
   description: "온라인 심리검사 3종 + 종합 해석 보고서 + 해석 상담 약 60분 + 해석 영상. 150,000원.",
 };
 
@@ -93,7 +93,7 @@ const DIFF: { n: 1 | 2 | 3; title: string; body: string }[] = [
 const FAQ = DETAIL_FAQ;
 
 const INCLUDED: { title: string; sub: string; gift?: string }[] = [
-  { title: "온라인 심리검사 3종", sub: "TCI · MMPI-3 · SCT, 집에서" },
+  { title: "온라인 심리검사 3종", sub: "MMPI-3 · TCI · SCT, 집에서" },
   { title: "종합 해석 보고서", sub: "김태현 심리상담가가 직접 써요" },
   { title: "해석 상담 약 60분", sub: "대면(서울 5개 지역) 또는 화상" },
   { title: "해석 영상", sub: "상담 뒤 내 페이지에서 다시 보기", gift: "3만 원 상당" },
@@ -146,7 +146,7 @@ export default function ComprehensivePage() {
                 타고난 <span className="text-[var(--tci)]">나</span>,<br />
                 지금의 <span className="text-[#3F9C7E]">나</span>,<br />내 말 속의 <span className="text-[#E0704F]">나</span>
               </h1>
-              <p className="text-lg font-extrabold tracking-[-0.01em] text-[var(--tci)]">TCI · MMPI-3 · SCT</p>
+              <p className="text-lg font-extrabold tracking-[-0.01em] text-[var(--tci)]">MMPI-3 · TCI · SCT</p>
               <p className="mt-3.5 max-w-[520px] text-[17px] text-[var(--foreground-muted)] lg:text-lg">
                 세 가지 검사로 <b className="text-[var(--tci-dark)]">&apos;나 사용 설명서&apos;</b>를 함께 써 보는 시간이에요. 김태현 심리상담가가 세 겹을 하나로 읽고, 60분 동안 같이 풀어 드려요. 고민이 없어도 괜찮아요.
               </p>
