@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api";
 
 // ─────────────────────────────────────────────────────────────────
@@ -9,6 +9,8 @@ import { apiFetch } from "@/lib/api";
 //
 // Solapi에 승인된 알림톡 템플릿을 우리 시스템에 등록하고, 변수 매핑·문자 대체발송을 설정한다.
 // 상품 수정 화면(Cafe24)에서 이 템플릿을 골라 연결하면 해당 상품 주문 시 알림톡이 발송된다.
+// 종합심리검사·쿠폰 선물 알림은 「알림 코드」(N1~·CANCEL·REFUND·GIFT)를 붙이면 서버가 그 코드로 이 템플릿을 찾아 보내고,
+// 변수(#{이름} 등)는 서버가 신청·선물 정보로 자동으로 채운다(주문 변수 매핑을 쓰지 않음).
 // ─────────────────────────────────────────────────────────────────
 
 interface KakaoVariable {
@@ -25,6 +27,15 @@ interface KakaoTemplate {
   smsFallbackText?: string;
   description?: string;
   isActive: boolean;
+  assessmentCode?: string | null;
+}
+
+// 서버가 실제로 찾는 알림 코드와, 서버가 자동으로 채우는 변수 (GET /api/admin/kakao-templates/notice-codes)
+interface NoticeCode {
+  code: string;
+  label: string;
+  when: string;
+  variables: string[];
 }
 
 interface SolapiTemplate {
@@ -57,7 +68,16 @@ const emptyForm: {
   smsFallbackText: string;
   description: string;
   isActive: boolean;
-} = { name: "", templateId: "", pfId: "", variables: [], smsFallbackText: "", description: "", isActive: true };
+  assessmentCode: string;
+} = { name: "", templateId: "", pfId: "", variables: [], smsFallbackText: "", description: "", isActive: true, assessmentCode: "" };
+
+/** 솔라피 템플릿 이름에서 알림 코드 짐작 — AS_N01 → N1, AS_N08P → N8P, AS_CANCEL → CANCEL */
+function guessNoticeCode(name: string, codes: string[]): string {
+  const m = /\bAS[_-]?([A-Z]+)?0*(\d+)?([A-Z]?)/i.exec(name);
+  if (!m) return "";
+  const cand = m[2] ? `N${Number(m[2])}${(m[3] ?? "").toUpperCase()}` : (m[1] ?? "").toUpperCase();
+  return codes.includes(cand) ? cand : "";
+}
 
 // 알림톡 변수 키(#{상품명})에 어울리는 주문 변수({{상품명}})를 추측
 function guessMapping(key: string): string {
@@ -82,6 +102,13 @@ export default function KakaoTemplatesPage() {
   const [solapiLoading, setSolapiLoading] = useState(false);
   const [solapiError, setSolapiError] = useState("");
   const [pickedSolapiId, setPickedSolapiId] = useState(""); // 선택 하이라이트용
+  const [noticeCodes, setNoticeCodes] = useState<NoticeCode[]>([]);
+  const codeInfo = useMemo(() => noticeCodes.find((c) => c.code === form.assessmentCode) ?? null, [noticeCodes, form.assessmentCode]);
+  // 같은 코드를 쓰는 다른 활성 템플릿 — 서버는 그중 하나만 찾으므로 하나만 켜 두어야 한다
+  const codeClash = useMemo(
+    () => (form.assessmentCode ? templates.filter((t) => t.isActive && t.assessmentCode === form.assessmentCode && t._id !== editing?._id) : []),
+    [templates, form.assessmentCode, editing]
+  );
 
   const fetchTemplates = async () => {
     try {
@@ -97,6 +124,9 @@ export default function KakaoTemplatesPage() {
 
   useEffect(() => {
     fetchTemplates();
+    apiFetch("/api/admin/kakao-templates/notice-codes")
+      .then((d: NoticeCode[]) => setNoticeCodes(d))
+      .catch(() => setNoticeCodes([]));
   }, []);
 
   const openCreate = () => {
@@ -118,6 +148,7 @@ export default function KakaoTemplatesPage() {
       smsFallbackText: t.smsFallbackText ?? "",
       description: t.description ?? "",
       isActive: t.isActive,
+      assessmentCode: t.assessmentCode ?? "",
     });
     setFormError("");
     setSolapiError("");
@@ -158,6 +189,8 @@ export default function KakaoTemplatesPage() {
       // 기본 채널이 아닌 템플릿은 그 채널로 보내야 하므로 채널 ID도 채운다
       pfId: t.sameChannel === false && t.channelId ? t.channelId : prev.pfId,
       variables: vars.map((k) => ({ key: k, valueTemplate: guessMapping(k) })),
+      // 이름이 AS_N01 처럼 검사 알림이면 알림 코드도 미리 채움
+      assessmentCode: prev.assessmentCode || guessNoticeCode(t.name, noticeCodes.map((c) => c.code)),
     }));
     setPickedSolapiId(t.templateId); // 선택 표시
   };
@@ -174,6 +207,7 @@ export default function KakaoTemplatesPage() {
       const body = JSON.stringify({
         ...form,
         pfId: form.pfId.trim() || null,
+        assessmentCode: form.assessmentCode || null,
         variables: form.variables.filter((v) => v.key.trim()),
       });
       if (editing) {
@@ -247,6 +281,12 @@ export default function KakaoTemplatesPage() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-[var(--foreground)]">{t.name}</span>
+                  {t.assessmentCode && (
+                    <span className="rounded-full bg-[var(--brand-light)] px-2 py-0.5 text-xs font-semibold text-[var(--brand)]">
+                      알림 {t.assessmentCode}
+                      {noticeCodes.find((c) => c.code === t.assessmentCode) ? ` · ${noticeCodes.find((c) => c.code === t.assessmentCode)!.label}` : ""}
+                    </span>
+                  )}
                   {!t.isActive && <span className="rounded-full bg-[var(--surface)] px-2 py-0.5 text-xs text-[var(--foreground-subtle)]">비활성</span>}
                 </div>
                 <p className="mt-0.5 truncate text-xs text-[var(--foreground-muted)]">templateId: {t.templateId}</p>
@@ -330,7 +370,56 @@ export default function KakaoTemplatesPage() {
                   <input type="text" value={form.pfId} onChange={(e) => setForm({ ...form, pfId: e.target.value })} placeholder="KA01PF..." className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 font-mono text-xs outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)]" />
                 </div>
 
-                {/* 변수 매핑 */}
+                {/* 알림 코드 — 종합심리검사·쿠폰 선물 알림에 쓰는 템플릿이면 */}
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">
+                    알림 코드 <span className="font-normal text-[var(--foreground-subtle)]">(종합심리검사·쿠폰 선물 알림이면 — 주문 알림이면 비워 두기)</span>
+                  </label>
+                  <select
+                    value={form.assessmentCode}
+                    onChange={(e) => setForm({ ...form, assessmentCode: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm outline-none focus:border-[var(--brand)]"
+                  >
+                    <option value="">— 주문 알림 (코드 없음) —</option>
+                    {noticeCodes.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.code} · {c.label}
+                      </option>
+                    ))}
+                  </select>
+                  {codeInfo && <p className="mt-1 text-xs text-[var(--foreground-muted)]">⏱ {codeInfo.when}</p>}
+                  {codeClash.length > 0 && (
+                    <p className="mt-1 text-xs font-semibold text-[var(--error)]">
+                      ⚠ 같은 코드({form.assessmentCode})를 쓰는 활성 템플릿이 있어요: {codeClash.map((t) => t.name).join(", ")} — 서버는 하나만 쓰니, 하나만 켜 두세요.
+                    </p>
+                  )}
+                </div>
+
+                {/* 변수 — 알림 코드가 있으면 서버가 자동으로 채움, 없으면 주문 변수 매핑 */}
+                {codeInfo ? (
+                  <div className="rounded-xl bg-[var(--surface)] p-3">
+                    <p className="text-sm font-medium text-[var(--foreground)]">변수는 서버가 자동으로 채워요</p>
+                    <p className="mt-0.5 text-xs text-[var(--foreground-muted)]">
+                      {form.assessmentCode === "GIFT" ? "선물 정보" : "신청 정보"}로 채워요. 아래에 ⚠ 가 있으면 템플릿 변수 이름이 서버와 달라 빈칸으로 나가요(오타 확인).
+                    </p>
+                    {form.variables.length === 0 ? (
+                      <p className="mt-2 text-xs text-[var(--foreground-subtle)]">위에서 Solapi 템플릿을 불러오면 템플릿의 변수가 여기 보여요.</p>
+                    ) : (
+                      <ul className="mt-2 flex flex-wrap gap-1.5">
+                        {form.variables.map((v) => {
+                          const ok = codeInfo.variables.includes(v.key.trim());
+                          return (
+                            <li key={v.key} className={`rounded-md px-2 py-1 font-mono text-xs ${ok ? "bg-white text-[var(--brand)]" : "bg-red-50 font-semibold text-[var(--error)]"}`}>
+                              {ok ? "✅" : "⚠"} {v.key}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                    <p className="mt-2 text-[11px] text-[var(--foreground-subtle)]">서버가 채우는 변수: {codeInfo.variables.join(" ")}</p>
+                    <p className="mt-1 text-[11px] text-[var(--foreground-subtle)]">알림톡이 실패하면 서버의 같은 문안이 문자로 가요(아래 문자 대체 본문은 쓰지 않아요).</p>
+                  </div>
+                ) : (
                 <div>
                   <div className="mb-1 flex items-center justify-between">
                     <label className="block text-sm font-medium text-[var(--foreground)]">변수 매핑</label>
@@ -365,6 +454,7 @@ export default function KakaoTemplatesPage() {
                     </div>
                   )}
                 </div>
+                )}
 
                 <div>
                   <label className="mb-1 block text-sm font-medium text-[var(--foreground)]">문자 대체발송 본문 <span className="font-normal text-[var(--foreground-subtle)]">(선택 — 알림톡 실패 시 문자로 발송)</span></label>
