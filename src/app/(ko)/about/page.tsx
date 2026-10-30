@@ -1,3 +1,4 @@
+import { SHOW_COURSES } from "@/lib/site";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 const APPROACH = [
-  { n: "1", t: "근거 있는 이야기만", d: "강의와 워크북의 모든 개념은 검증된 심리학 연구와 임상 실무에 뿌리를 둡니다. 새 이론을 만들지 않고, 좋은 이론을 쉬운 말로 옮깁니다." },
+  { n: "1", t: "근거 있는 이야기만", d: (SHOW_COURSES ? "강의와 워크북" : "검사 해석과 글") + "의 모든 개념은 검증된 심리학 연구와 임상 실무에 뿌리를 둡니다. 새 이론을 만들지 않고, 좋은 이론을 쉬운 말로 옮깁니다." },
   { n: "2", t: "복잡함보다 명료함", d: "학술 용어는 심리학을 멀게 느끼게 합니다. 강의처럼 들리지 않고 대화처럼 읽히도록 씁니다." },
   { n: "3", t: "각자의 속도로", d: "성장은 정해진 일정대로 오지 않습니다. 오늘 10분, 내일 다시. 필요할 때 다시 꺼내 볼 수 있게 만듭니다." },
   { n: "4", t: "교육이지 치료가 아닙니다", d: "이곳의 콘텐츠는 심리 교육 도구입니다. 임상적 진단·치료를 대체하지 않으며, 심각한 어려움에는 전문가의 도움을 권합니다." },
@@ -60,7 +61,7 @@ export default function AboutPage() {
                 청소년과 성인을 만나면서 반복해서 보게 된 장면이 있습니다. 힘들어하는 사람들 대부분은 위기 상태가 아니었습니다. 다만 자기 안에서 무슨 일이 일어나는지 설명할 언어와 틀이 없었을 뿐입니다. 믿을 만한, 손에 잡히는 마음의 지도가 필요했습니다.
               </p>
               <p>
-                그래서 쓰기 시작했고, 이제는 강의와 워크북으로 옮기고 있습니다. 임상 심리학 지식을 누구나 읽고, 곱씹고, 실제로 써볼 수 있는 말로 바꾸는 것이 제 일입니다.
+                그래서 쓰기 시작했고, 이제는 {SHOW_COURSES ? "강의와 워크북으로" : "심리검사 해석과 글로"} 옮기고 있습니다. 임상 심리학 지식을 누구나 읽고, 곱씹고, 실제로 써볼 수 있는 말로 바꾸는 것이 제 일입니다.
               </p>
             </div>
           </div>
@@ -98,7 +99,7 @@ export default function AboutPage() {
             <div className="card p-6">
               <p className="eyebrow mb-1">한국어</p>
               <h3 className="font-display text-lg text-[var(--foreground)]">심리상담실 현</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">강의 · 셀프 워크북 · 상담과 심리검사. 이 사이트입니다.</p>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">{SHOW_COURSES ? "강의 · 셀프 워크북 · 상담과 심리검사. 이 사이트입니다." : "종합심리검사와 해석 상담, 간이 무료 검사, 아티클. 이 사이트입니다."}</p>
             </div>
             <div className="card p-6">
               <p className="eyebrow mb-1">English</p>

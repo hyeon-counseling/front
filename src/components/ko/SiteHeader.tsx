@@ -33,6 +33,11 @@ function visibleNav(admin: boolean): NavItem[] {
   return NAV.filter((n) => admin || ((SHOW_COURSES || n.href !== "/courses") && (SHOW_COUNSELING || n.href !== "/counseling")));
 }
 
+/** 마이페이지 하위 메뉴 — 상담을 숨긴 동안(lib/site.ts) 「심리상담 현황」은 관리자에게만 */
+export function myNav(admin: boolean) {
+  return MY_NAV.filter((m) => admin || SHOW_COUNSELING || m.href !== "/my/counseling");
+}
+
 /** 마이페이지 하위 메뉴 (모바일 메뉴에서도 씀) */
 export const MY_NAV = [
   { href: "/my", label: "내 학습" },
@@ -196,7 +201,7 @@ export default function SiteHeader() {
               <Link href="/my" onClick={() => setOpen(false)} className="block rounded-xl px-4 py-3 text-[0.95rem] font-medium text-[var(--foreground)]">
                 마이페이지
               </Link>
-              {MY_NAV.map((m) => (
+              {myNav(user.role === "admin").map((m) => (
                 <Link key={m.href} href={m.href} onClick={() => setOpen(false)} className="ml-4 block rounded-xl px-4 py-2.5 text-sm text-[var(--foreground-muted)]">
                   · {m.label}
                 </Link>

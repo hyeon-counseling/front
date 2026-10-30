@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MY_NAV } from "@/components/ko/SiteHeader";
+import { myNav } from "@/components/ko/SiteHeader";
+import { useAuth } from "@/contexts/AuthContext";
 
 // ─────────────────────────────────────────────────────────────────
 // 마이페이지 공통 — 하위 메뉴 탭 (내 학습 · 심리검사 진행 · 심리상담 현황 · 주문 내역 · 쿠폰함)
@@ -10,6 +11,7 @@ import { MY_NAV } from "@/components/ko/SiteHeader";
 // ─────────────────────────────────────────────────────────────────
 export default function MyLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const deep = pathname.startsWith("/my/courses/");
   const active = (href: string) => (href === "/my" ? pathname === "/my" : pathname === href || pathname.startsWith(href + "/"));
 
@@ -18,7 +20,7 @@ export default function MyLayout({ children }: { children: React.ReactNode }) {
     <>
       <div className="border-b border-[var(--border-light)] bg-white">
         <nav aria-label="마이페이지 메뉴" className="mx-auto flex max-w-4xl gap-1 overflow-x-auto px-4 sm:px-6">
-          {MY_NAV.map((m) => (
+          {myNav(user?.role === "admin").map((m) => (
             <Link
               key={m.href}
               href={m.href}

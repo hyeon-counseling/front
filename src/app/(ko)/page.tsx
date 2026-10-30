@@ -5,7 +5,9 @@ import { SHOW_COUNSELING, SHOW_COURSES } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "심리상담실 현 — 나를 이해하는 공부, 편안한 속도로",
-  description: "김태현 심리상담가의 강의, 셀프 워크북, 상담·심리검사. 배우고, 스스로 해보고, 필요하면 함께 이야기합니다.",
+  description: SHOW_COURSES
+    ? "김태현 심리상담가의 강의, 셀프 워크북, 상담·심리검사. 배우고, 스스로 해보고, 필요하면 함께 이야기합니다."
+    : "김태현 심리상담가의 종합심리검사(TCI·MMPI-3·SCT)와 해석 상담, 간이 무료 심리검사, 아티클. 나를 이해하는 첫걸음.",
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -82,18 +84,31 @@ const ASSESS_CARDS = [
 ];
 const CARDS = SHOW_COURSES && SHOW_COUNSELING ? SERVICES : SHOW_COURSES ? SERVICES.filter((s) => s.href !== "/counseling") : ASSESS_CARDS;
 
-const STEPS = [
+const COURSE_STEPS = [
   { n: "01", t: "가입은 이메일 하나", d: "카드 없이 시작. 워크북 1주차는 누구나 무료예요." },
   { n: "02", t: "하루 10분, 내 속도로", d: "강의는 10분 단위, 워크북은 하루 한 장. 보던 곳부터 이어집니다." },
   { n: "03", t: "기록이 남고, 돌아볼 수 있어요", d: "내가 쓴 답과 진도는 계정에 저장돼 언제든 다시 열어볼 수 있어요." },
   { n: "04", t: "필요하면 상담으로", d: "워크북과 강의로 다져진 언어로, 상담에서 더 깊게 이야기합니다." },
 ];
+const ASSESS_STEPS = [
+  { n: "01", t: "날짜를 고르고 신청", d: "해석 상담 날짜를 직접 고르고 결제하면 신청이 바로 확정돼요." },
+  { n: "02", t: "접수면접지와 온라인 검사", d: "요즘의 고민을 적고, 해석 상담 7일 전까지 세 가지 검사를 내 속도로 해요." },
+  { n: "03", t: "상담가가 직접 읽어요", d: "김태현 심리상담가가 검사 결과와 접수면접지를 함께 꼼꼼히 봐요." },
+  { n: "04", t: "해석 상담으로 정리", d: "화상 또는 서울 대면 50분. 결과를 쉬운 말로 함께 정리해요." },
+];
+const STEPS = SHOW_COURSES ? COURSE_STEPS : ASSESS_STEPS;
 
-const FAQ = [
+const COURSE_FAQ = [
   { q: "심각한 어려움이 있어도 이용해도 되나요?", a: "강의와 워크북은 심리 교육 자료예요. 정신과 진료나 전문 치료를 대체하지 않습니다. 자해·자살 생각이 있다면 전문가의 도움을 먼저 받아 주세요." },
   { q: "기록은 누가 볼 수 있나요?", a: "워크북 기록과 학습 내역은 본인만 볼 수 있어요. 운영자는 서비스 운영에 필요한 최소한의 정보만 확인합니다." },
   { q: "환불이 되나요?", a: "결제 후 7일 이내이고 진도가 10% 미만이면 전액 환불해 드려요. 자세한 기준은 환불 규정을 확인해 주세요." },
 ];
+const ASSESS_FAQ = [
+  { q: "심각한 어려움이 있어도 이용해도 되나요?", a: "심리검사와 해석 상담은 나를 이해하도록 돕는 서비스예요. 정신과 진료나 전문 치료를 대체하지 않습니다. 자해·자살 생각이 있다면 전문가의 도움을 먼저 받아 주세요." },
+  { q: "기록은 누가 볼 수 있나요?", a: "검사 응답과 결과는 본인과 김태현 심리상담가만 봐요. 운영자는 서비스 운영에 필요한 최소한의 정보만 확인합니다." },
+  { q: "환불이 되나요?", a: "종합심리검사는 검사를 시작하기 전이면 전액, 시작한 뒤에는 이미 들어간 비용만큼 빼고 돌려드려요. 자세한 기준은 환불 규정을 확인해 주세요." },
+];
+const FAQ = SHOW_COURSES ? COURSE_FAQ : ASSESS_FAQ;
 
 export default function HomePage() {
   return (
@@ -107,39 +122,44 @@ export default function HomePage() {
           <div>
             <span className="eyebrow rise rise-1">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />
-              첫 강의 · 고기능 우울증 준비 중
+              {SHOW_COURSES ? "첫 강의 · 고기능 우울증 준비 중" : "종합심리검사 · 해석 상담"}
             </span>
             <h1 className="font-display-tight rise rise-2 mt-5 text-[2.5rem] leading-[1.15] text-[var(--foreground)] sm:text-[3.5rem] lg:text-[3.9rem]">
               나를 이해하는 공부,
               <br />
-              <span className="text-gradient">하루 10분이면 충분해요</span>
+              <span className="text-gradient">{SHOW_COURSES ? "하루 10분이면 충분해요" : "검사로 시작해 보세요"}</span>
             </h1>
             <p className="rise rise-3 mt-6 max-w-lg text-[1.05rem] leading-relaxed text-[var(--foreground-muted)] sm:text-lg">
-              김태현 심리상담가가 만드는 강의와 셀프 워크북. 배우고, 스스로 해보고, 필요하면 함께 이야기합니다.
+              {SHOW_COURSES
+                ? "김태현 심리상담가가 만드는 강의와 셀프 워크북. 배우고, 스스로 해보고, 필요하면 함께 이야기합니다."
+                : "김태현 심리상담가가 TCI·MMPI-3·SCT 세 가지 검사를 직접 읽고, 해석 상담으로 함께 정리해 드려요. 가볍게는 무료 자가 검사와 아티클부터."}
             </p>
             <div className="rise rise-4 mt-8 flex flex-wrap items-center gap-3">
               <Link
-                href="/register"
+                href={SHOW_COURSES ? "/register" : "/assessment"}
                 className="inline-flex h-12 items-center rounded-xl bg-[var(--brand)] px-6 text-[0.95rem] font-semibold text-white shadow-soft transition-all hover:-translate-y-0.5 hover:bg-[var(--brand-hover)]"
               >
-                무료로 시작하기
+                {SHOW_COURSES ? "무료로 시작하기" : "종합심리검사 알아보기"}
               </Link>
               <Link
-                href={SHOW_COURSES ? "/courses" : "/assessment"}
+                href={SHOW_COURSES ? "/courses" : "/tests"}
                 className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-[var(--surface)] px-6 text-[0.95rem] font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--surface-muted)]"
               >
-                {SHOW_COURSES ? "강의 둘러보기" : "심리검사 보기"}
+                {SHOW_COURSES ? "강의 둘러보기" : "무료 검사 해 보기"}
                 <span aria-hidden>→</span>
               </Link>
             </div>
             <div className="rise rise-5 mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--foreground-subtle)]">
-              <span className="flex items-center gap-1.5"><Check /> 카드 없이 시작</span>
+              <span className="flex items-center gap-1.5"><Check /> {SHOW_COURSES ? "카드 없이 시작" : "무료 자가 검사 2~3분"}</span>
               <span className="flex items-center gap-1.5"><Check /> 기록은 나만 열람</span>
               <span className="flex items-center gap-1.5"><Check /> 상담 및 심리치료 석사 · 청소년상담 학사</span>
             </div>
           </div>
 
           {/* 제품 미리보기 카드 */}
+          {!SHOW_COURSES ? (
+            <AssessPreview />
+          ) : (
           <div className="rise rise-3 relative mx-auto w-full max-w-md lg:max-w-none">
             <div className="card shadow-float p-5 sm:p-6">
               <div className="flex items-center justify-between">
@@ -194,6 +214,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+          )}
         </div>
       </section>
 
@@ -233,12 +254,14 @@ export default function HomePage() {
             <div>
               <span className="eyebrow">이렇게 진행돼요</span>
               <h2 className="font-display mt-4 text-3xl text-[var(--foreground)] sm:text-4xl">
-                부담 없이 시작해서,
+                {SHOW_COURSES ? "부담 없이 시작해서," : "신청부터 해석 상담까지,"}
                 <br />
-                꾸준히 이어지도록
+                {SHOW_COURSES ? "꾸준히 이어지도록" : "한 걸음씩 안내해요"}
               </h2>
               <p className="mt-4 text-[var(--foreground-muted)]">
-                성장은 정해진 일정대로 오지 않아요. 오늘 10분, 내일 다시. 필요할 때 다시 꺼내 볼 수 있게 만들었습니다.
+                {SHOW_COURSES
+                  ? "성장은 정해진 일정대로 오지 않아요. 오늘 10분, 내일 다시. 필요할 때 다시 꺼내 볼 수 있게 만들었습니다."
+                  : "단계마다 알림톡으로 지금 할 일을 알려 드려요. 결제부터 해석 상담까지 보통 2~4주예요."}
               </p>
             </div>
             <ol className="grid gap-4 sm:grid-cols-2">
@@ -341,11 +364,13 @@ export default function HomePage() {
       {/* ── CTA ─────────────────────────────────── */}
       <section className="px-4 py-16 sm:px-6 sm:py-24">
         <div className="bg-brand-gradient mx-auto max-w-6xl overflow-hidden rounded-[28px] px-6 py-14 text-center text-white sm:px-12 sm:py-20">
-          <h2 className="font-display-tight text-3xl sm:text-5xl">오늘 10분부터 시작해요</h2>
-          <p className="mx-auto mt-4 max-w-md text-white/80">회원가입은 이메일 하나면 됩니다. 워크북 1주차는 누구나 무료.</p>
+          <h2 className="font-display-tight text-3xl sm:text-5xl">{SHOW_COURSES ? "오늘 10분부터 시작해요" : "나를 이해하는 첫걸음"}</h2>
+          <p className="mx-auto mt-4 max-w-md text-white/80">
+            {SHOW_COURSES ? "회원가입은 이메일 하나면 됩니다. 워크북 1주차는 누구나 무료." : "2~3분 무료 자가 검사부터 가볍게 시작해 보세요."}
+          </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/register" className="inline-flex h-12 items-center rounded-xl bg-white px-6 text-[0.95rem] font-semibold text-[var(--brand-ink)] transition-transform hover:-translate-y-0.5">
-              무료로 시작하기
+            <Link href={SHOW_COURSES ? "/register" : "/tests"} className="inline-flex h-12 items-center rounded-xl bg-white px-6 text-[0.95rem] font-semibold text-[var(--brand-ink)] transition-transform hover:-translate-y-0.5">
+              {SHOW_COURSES ? "무료로 시작하기" : "무료 검사 해 보기"}
             </Link>
             <Link href="/articles" className="inline-flex h-12 items-center rounded-xl bg-white/15 px-6 text-[0.95rem] font-semibold text-white ring-1 ring-white/30 transition-colors hover:bg-white/25">
               무료 아티클 읽기
@@ -362,5 +387,50 @@ function Check() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M20 6 9 17l-5-5" />
     </svg>
+  );
+}
+
+/** 강의를 숨긴 동안 히어로 오른쪽 — 종합심리검사 진행 화면 미리보기 (예시) */
+function AssessPreview() {
+  const rows = [
+    { t: "접수면접지", d: "제출 완료", done: true },
+    { t: "온라인 검사", d: "TCI ✓ · MMPI-3 ✓ · SCT 진행 중", done: false, now: true },
+    { t: "해석 상담", d: "화상 50분 · 상담 날짜 확정", done: false },
+  ];
+  return (
+    <div className="rise rise-3 relative mx-auto w-full max-w-md lg:max-w-none">
+      <div className="card shadow-float p-5 sm:p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-[var(--foreground-subtle)]">내 진행 상황 (예시)</p>
+            <p className="mt-0.5 text-lg font-bold text-[var(--foreground)]">종합심리검사 · 4/8 단계</p>
+          </div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-light)] text-sm font-bold text-[var(--brand)]">50%</div>
+        </div>
+        <ul className="mt-5 space-y-2.5">
+          {rows.map((r) => (
+            <li key={r.t} className={`flex items-center gap-3 rounded-2xl p-3.5 ${r.now ? "bg-[var(--surface)] ring-1 ring-[var(--brand-light)]" : "bg-[var(--surface)]"}`}>
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${r.done ? "bg-[var(--brand)] text-white" : r.now ? "bg-white text-[var(--brand)] ring-2 ring-[var(--brand)]" : "bg-white text-[var(--foreground-subtle)] ring-1 ring-[var(--border)]"}`}
+              >
+                {r.done ? "✓" : ""}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-[var(--foreground)]">{r.t}</span>
+                <span className="block text-xs text-[var(--foreground-muted)]">{r.d}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-5 h-11 rounded-xl bg-[var(--brand)] text-center text-sm font-semibold leading-[44px] text-white">검사 이어서 하기</div>
+      </div>
+      <div className="floaty card absolute -bottom-6 -left-6 hidden items-center gap-3 p-3 pr-4 shadow-soft sm:flex">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--brand-light)] text-lg">🌤️</span>
+        <div>
+          <p className="text-xs text-[var(--foreground-subtle)]">간이 무료 검사</p>
+          <p className="text-sm font-semibold text-[var(--foreground)]">2~3분이면 끝나요</p>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { SHOW_COUNSELING, SHOW_COURSES } from "@/lib/site";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -28,6 +29,13 @@ function Ring({ value, max, color, label }: { value: number; max: number; color:
       </div>
     </div>
   );
+}
+
+// 숨긴 상품(lib/site.ts)으로 가는 추천 카드는 보이지 않게
+const isCourseUrl = (u: string) => /^\/(courses|programs)(\/|\?|$)/.test(u);
+const isCounselingUrl = (u: string) => /^\/counseling(\/|\?|$)/.test(u);
+function visibleRecs<T extends { url: string }>(list: T[]): T[] {
+  return list.filter((x) => (SHOW_COURSES || !isCourseUrl(x.url)) && (SHOW_COUNSELING || !isCounselingUrl(x.url)));
 }
 
 export default function TestResultPage() {
@@ -141,11 +149,11 @@ export default function TestResultPage() {
           ))}
 
         {/* 추천 */}
-        {r.recommendations.length > 0 && (
+        {visibleRecs(r.recommendations).length > 0 && (
           <section className="mt-8">
             <h2 className="text-lg font-bold text-[var(--foreground)]">지금 나에게 도움이 될 수 있어요</h2>
             <div className="mt-4 space-y-3">
-              {r.recommendations.map((rec, i) => {
+              {visibleRecs(r.recommendations).map((rec, i) => {
                 const ext = isExternal(rec.url);
                 const inner = (
                   <>
@@ -155,7 +163,7 @@ export default function TestResultPage() {
                       <span className="block font-bold text-[var(--foreground)]">{rec.title}</span>
                       {rec.desc && <span className="mt-0.5 block text-sm text-[var(--foreground-muted)]">{rec.desc}</span>}
                       {/* 첫 번째 추천 카드에만 숨이 초대 한 줄 */}
-                      {i === 0 && (
+                      {i === 0 && isCourseUrl(rec.url) && (
                         <span className="mt-2 flex items-center gap-2 rounded-xl bg-[var(--brand-light)] px-3 py-2 text-xs text-[var(--brand-ink)]">
                           <Character kind="sumi" mood="happy" arms={false} stage={1} className="h-7 w-7 shrink-0" />
                           <span className="font-medium">숨이: 이 강의, 무료 체험부터 같이 해 볼래?</span>
