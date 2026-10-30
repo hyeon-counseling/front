@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, Section } from "@/components/ko/LegalPage";
 import { RefundRules } from "@/components/assessment/RefundRules";
+import { CounselingRefundRules } from "@/components/counseling/CounselingRules";
 
 export const metadata: Metadata = { title: "환불 규정" };
 
-// 시행 2026-10-30 (상담가 확정). 강의·워크북은 PRD-V2 §5.4, 종합심리검사는 52-취소환불규정 — 문안은 RefundRules 와 같다
+// 개정 2026-10-30 (상담가 확정). 강의·워크북은 PRD-V2 §5.4, 종합심리검사는 52-취소환불규정(RefundRules), 개인 상담은 결정 #56(CounselingRules)
 export default function RefundPage() {
   return (
     <LegalPage eyebrow="약관" title="환불 규정" updated="2026년 10월 30일">
@@ -19,8 +20,8 @@ export default function RefundPage() {
       <Section title="종합심리검사 + 해석 상담 (150,000원)">
         <RefundRules />
       </Section>
-      <Section title="그 밖의 상담">
-        <p>쇼핑몰 상품 페이지에 표시된 취소·변경 규정을 따릅니다. (상담운영시스템 도입 시 이 문서에 통합합니다.)</p>
+      <Section title="개인 상담 (1회기 60,000원)">
+        <CounselingRefundRules />
       </Section>
       <Section title="환불 방법">
         <ul className="list-disc space-y-1.5 pl-5">
