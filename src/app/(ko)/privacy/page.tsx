@@ -77,7 +77,8 @@ export default function PrivacyPage() {
           <li>토스페이먼츠 (결제 대행 · 한국) — 결제 승인·취소, 주문자 이름·이메일, 주문 정보</li>
           <li>솔라피 (알림톡·문자 발송 · 한국) — 이름, 휴대폰 번호, 알림 본문. 알림톡은 솔라피를 거쳐 카카오(한국)로 전달됩니다.</li>
           <li>MongoDB Atlas (데이터베이스 · 저장 위치 대한민국, AWS 서울 리전) — 회원·학습·주문·검사 신청·접수면접지·알림 이력 저장. 운영사: MongoDB, Inc. (privacy@mongodb.com)</li>
-          <li>Cloudflare, Render, Vercel, Resend, Discord, Google — 아래 6번(국외 이전)</li>
+          <li>Vercel Inc. (웹 호스팅 · 서버 처리 대한민국, 서울 리전) — 사이트 화면 제공, 접속 기록. 연락처 privacy@vercel.com</li>
+          <li>Cloudflare, Render — 아래 6번(국외 이전)</li>
         </ul>
       </Section>
 
@@ -89,15 +90,7 @@ export default function PrivacyPage() {
           <li>
             Cloudflare, Inc. (파일·동영상 저장·전송 · 국가: 확인 중) · 강의 영상, 해석 보고서·영상 파일 · 파일을 올리고 볼 때 전송 · 연락처 privacyquestions@cloudflare.com
           </li>
-          <li>Render Inc. (서버 · 국가: 확인 중) · 사이트 서버를 지나는 모든 정보 · 서비스 이용 시 실시간 전송 · 연락처 privacy@render.com</li>
-          <li>Vercel Inc. (웹 호스팅 · 국가: 확인 중) · 접속 기록 · 사이트를 열 때 전송 · 연락처 privacy@vercel.com</li>
-          <li>Plus Five Five, Inc. — Resend (이메일 발송 · 미국) · 이름, 이메일, 메일 본문 · 인증·영수증·안내 메일을 보낼 때 전송 · 연락처 support@resend.com</li>
-          <li>
-            Discord Inc. (운영 알림 · 미국) · 상담가에게 가는 업무 알림: 가린 이름(예: 김*현), 신청번호, 상담 일시·방식, 알림 실패 사유 · 신청·결제·정기 보고 때 전송. 연락처·접수면접지 내용은 보내지 않습니다. · 연락처 privacy@discord.com
-          </li>
-          <li>
-            Google LLC (Gmail · Apps Script · 미국 등 Google 서버 소재 국가) · 출판사가 상담가 메일로 보내는 검사 안내 메일의 수검자 이름·검사 종류·검사 링크를 읽어 사이트로 옮기는 데 사용 · 메일을 받을 때와 정해진 시각에 전송 · 연락처 googlekrsupport@google.com
-          </li>
+          <li>Render Inc. (서버 · 싱가포르) · 사이트 서버를 지나는 모든 정보 · 서비스 이용 시 실시간 전송 · 연락처 privacy@render.com</li>
         </ul>
       </Section>
 
