@@ -1,5 +1,5 @@
 // 판(플레이트) 그림 — 썸네일 C '세 층' 형태 언어 (70·71 시안 p-tci / p-mmpi / p-sct / p-stack)
-// TCI 진한 그린 · MMPI-2 민트 · SCT 코랄. stack = 아래부터 MMPI-2 · TCI · SCT 세 장
+// TCI 진한 그린 · MMPI-3 민트 · SCT 코랄. stack = 아래부터 TCI · MMPI-3 · SCT 세 장
 type Kind = "tci" | "mmpi" | "sct";
 
 const COLORS: Record<Kind, [string, string, string]> = {

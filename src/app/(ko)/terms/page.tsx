@@ -24,7 +24,7 @@ export default function TermsPage() {
         </p>
         <ul className="mt-2 list-disc space-y-1.5 pl-5">
           <li>온라인 강의, 셀프 워크북, 아티클 등 디지털 콘텐츠</li>
-          <li>종합심리검사(MMPI-2 · TCI · SCT)와 종합 해석 보고서·해석 상담·해석 영상</li>
+          <li>종합심리검사(MMPI-3 · TCI · SCT)와 종합 해석 보고서·해석 상담·해석 영상</li>
           <li>개인 상담(대면·화상)</li>
           <li>쿠폰(할인·무료 이용) 발급과 사용</li>
         </ul>

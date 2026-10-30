@@ -32,7 +32,7 @@ const SCENES: { tab: string; feel: string; h: string; p: string; said?: string; 
     h: "부탁이 몰릴 때 · 평가받을 때 · 쉬는 날",
     p: "이럴 때 같은 강점이 조금 과하게 켜져요. 서윤 님이 고장 난 게 아니라, 상황과 요즘 상태의 이야기예요.",
     said: '신호 — "결국 제가 다 해요."',
-    chips: [["m", "MMPI-2 요즘 날씨"], ["s", "SCT 내 문장"]],
+    chips: [["m", "MMPI-3 요즘 날씨"], ["s", "SCT 내 문장"]],
   },
   {
     tab: "4 다른 방향",

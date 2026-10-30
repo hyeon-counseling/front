@@ -3,7 +3,7 @@ import type { ProgressView } from "@/lib/assessment";
 
 // 검사 3종 버튼 (MMPI → TCI → SCT, 10/29 확정) — 진행 화면·검사 이어서 하기 공통
 const SLUG: Record<string, string> = { mmpi3: "mmpi", tci: "tci", sct: "sct" };
-const SITE: Record<string, string> = { mmpi3: "마음사랑 · 약 60~90분", tci: "마음사랑", sct: "인싸이트 · 문장 완성" };
+const SITE: Record<string, string> = { mmpi3: "마음사랑 · 약 35~50분", tci: "마음사랑", sct: "인싸이트 · 문장 완성" };
 
 export function TestButtons({ v }: { v: ProgressView }) {
   return (

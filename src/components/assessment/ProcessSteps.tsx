@@ -5,7 +5,7 @@ import { Icon, type IconName } from "./Icon";
 const STEPS: { title: string; when: string; body: string; icon: IconName; tone: "g" | "c" | "s" }[] = [
   { title: "신청·결제", when: "결제 즉시 확정", body: "상담 날짜·시간은 신청할 때 직접 골라요. 3분이면 끝나요.", icon: "heart", tone: "g" },
   { title: "접수면접지 작성", when: "알림톡 링크 · 15~20분", body: "지금의 나를 미리 알려 주시면, 해석이 내 삶에 꼭 맞게 돼요.", icon: "pencil", tone: "c" },
-  { title: "검사 링크 받기", when: "낸 다음 날 아침 8시", body: "MMPI-2 · TCI · SCT 링크가 알림톡으로 한 번에 와요.", icon: "bell", tone: "g" },
+  { title: "검사 링크 받기", when: "낸 다음 날 아침 8시", body: "MMPI-3 · TCI · SCT 링크가 알림톡으로 한 번에 와요.", icon: "bell", tone: "g" },
   { title: "집에서 온라인 검사", when: "마감 = 상담 7일 전", body: "나눠서 해도 괜찮아요. 남은 검사가 있으면 아침에 한 번 알려 드려요.", icon: "laptop", tone: "s" },
   { title: "보고서 준비", when: "상담 전 7일", body: "김태현 심리상담가가 결과와 접수면접지를 꼼꼼히 읽고 써요.", icon: "doc", tone: "g" },
   { title: "해석 상담 약 60분", when: "대면 3일 전 장소 · 하루 전 안내", body: "보고서를 함께 보며 묻고 답해요.", icon: "chat", tone: "c" },
@@ -46,7 +46,7 @@ export function ProcessSteps() {
 export const FLOW_COMPACT: { title: string; body?: string; when?: string }[] = [
   { title: "신청·결제", body: "결제하면 바로 확정돼요. 상담 일시는 아래에서 직접 골라요", when: "결제 즉시 알림톡" },
   { title: "접수면접지 작성", body: "지금의 나를 15~20분쯤 알려 주세요. 해석이 내 삶에 딱 맞게 돼요", when: "알림톡 속 링크로" },
-  { title: "검사 링크 받기", body: "MMPI-2 · TCI-RS · SCT 링크가 한 번에 와요", when: "접수면접지 낸 다음 날 아침 8시" },
+  { title: "검사 링크 받기", body: "MMPI-3 · TCI-RS · SCT 링크가 한 번에 와요", when: "접수면접지 낸 다음 날 아침 8시" },
   { title: "집에서 온라인 검사", body: "나눠서 해도 괜찮아요", when: "마감 = 해석 상담 7일 전" },
   { title: "보고서 준비", body: "김태현 심리상담가가 결과를 꼼꼼히 읽어요" },
   { title: "해석 상담 약 60분", when: "대면은 3일 전 장소 확정·하루 전 다시 안내 · 화상은 하루 전 접속 링크" },

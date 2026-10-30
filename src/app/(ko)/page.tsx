@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "심리상담실 현 — 나를 이해하는 공부, 편안한 속도로",
   description: SHOW_COURSES
     ? "김태현 심리상담가의 강의, 셀프 워크북, 상담·심리검사. 배우고, 스스로 해보고, 필요하면 함께 이야기합니다."
-    : "김태현 심리상담가의 종합심리검사(MMPI-2·TCI·SCT)와 해석 상담, 간이 무료 심리검사, 아티클. 나를 이해하는 첫걸음.",
+    : "김태현 심리상담가의 종합심리검사(TCI·MMPI-3·SCT)와 해석 상담, 간이 무료 심리검사, 아티클. 나를 이해하는 첫걸음.",
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ const ASSESS_CARDS = [
     ),
     title: "전문 심리검사",
     tag: "해석 상담 포함",
-    desc: "MMPI-2 · TCI · SCT 세 가지 검사와 김태현 심리상담가의 해석 상담. 나를 깊이 이해하는 출발점이에요.",
+    desc: "TCI · MMPI-3 · SCT 세 가지 검사와 김태현 심리상담가의 해석 상담. 나를 깊이 이해하는 출발점이에요.",
     href: "/assessment",
     cta: "검사 안내",
   },
@@ -132,7 +132,7 @@ export default function HomePage() {
             <p className="rise rise-3 mt-6 max-w-lg text-[1.05rem] leading-relaxed text-[var(--foreground-muted)] sm:text-lg">
               {SHOW_COURSES
                 ? "김태현 심리상담가가 만드는 강의와 셀프 워크북. 배우고, 스스로 해보고, 필요하면 함께 이야기합니다."
-                : "김태현 심리상담가가 MMPI-2·TCI·SCT 세 가지 검사를 직접 읽고, 해석 상담으로 함께 정리해 드려요. 가볍게는 무료 자가 검사와 아티클부터."}
+                : "김태현 심리상담가가 TCI·MMPI-3·SCT 세 가지 검사를 직접 읽고, 해석 상담으로 함께 정리해 드려요. 가볍게는 무료 자가 검사와 아티클부터."}
             </p>
             <div className="rise rise-4 mt-8 flex flex-wrap items-center gap-3">
               <Link
@@ -394,7 +394,7 @@ function Check() {
 function AssessPreview() {
   const rows = [
     { t: "접수면접지", d: "제출 완료", done: true },
-    { t: "온라인 검사", d: "MMPI-2 ✓ · TCI ✓ · SCT 진행 중", done: false, now: true },
+    { t: "온라인 검사", d: "TCI ✓ · MMPI-3 ✓ · SCT 진행 중", done: false, now: true },
     { t: "해석 상담", d: "화상 50분 · 상담 날짜 확정", done: false },
   ];
   return (
