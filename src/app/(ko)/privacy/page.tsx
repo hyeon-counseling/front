@@ -78,7 +78,7 @@ export default function PrivacyPage() {
           <li>솔라피 (알림톡·문자 발송 · 한국) — 이름, 휴대폰 번호, 알림 본문. 알림톡은 솔라피를 거쳐 카카오(한국)로 전달됩니다.</li>
           <li>MongoDB Atlas (데이터베이스 · 저장 위치 대한민국, AWS 서울 리전) — 회원·학습·주문·검사 신청·접수면접지·알림 이력 저장. 운영사: MongoDB, Inc. (privacy@mongodb.com)</li>
           <li>Vercel Inc. (웹 호스팅 · 서버 처리 대한민국, 서울 리전) — 사이트 화면 제공, 접속 기록. 연락처 privacy@vercel.com</li>
-          <li>Cloudflare, Render — 아래 6번(국외 이전)</li>
+          <li>Render — 아래 6번(국외 이전)</li>
         </ul>
       </Section>
 
@@ -87,9 +87,6 @@ export default function PrivacyPage() {
           아래 업체는 국외에 서버가 있어, 서비스를 이용할 때 네트워크를 통해 정보가 해당 국가로 전송됩니다. 보유 기간은 위탁 계약이 끝나거나 위 3번의 보관 기간이 끝날 때까지입니다. 국외 이전을 원하지 않으면 support@hyeon-counseling.com 으로 거부할 수 있으나, 이 업체들 없이는 사이트를 운영할 수 없어 서비스 이용(회원 가입·결제·검사 신청)이 어렵습니다.
         </p>
         <ul className={`mt-2 ${LI}`}>
-          <li>
-            Cloudflare, Inc. (파일·동영상 저장·전송 · 국가: 확인 중) · 강의 영상, 해석 보고서·영상 파일 · 파일을 올리고 볼 때 전송 · 연락처 privacyquestions@cloudflare.com
-          </li>
           <li>Render Inc. (서버 · 싱가포르) · 사이트 서버를 지나는 모든 정보 · 서비스 이용 시 실시간 전송 · 연락처 privacy@render.com</li>
         </ul>
       </Section>
