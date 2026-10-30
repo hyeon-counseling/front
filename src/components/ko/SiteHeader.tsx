@@ -33,10 +33,12 @@ function visibleNav(admin: boolean): NavItem[] {
   return NAV.filter((n) => admin || ((SHOW_COURSES || n.href !== "/courses") && (SHOW_COUNSELING || n.href !== "/counseling")));
 }
 
-/** 마이페이지 하위 메뉴 — 상담을 숨긴 동안(lib/site.ts) 「심리상담 현황」은 관리자에게만 */
+/** 마이페이지 하위 메뉴 — 숨긴 동안(lib/site.ts) 「내 학습」(강의)·「심리상담 현황」(상담)은 관리자에게만 */
 export function myNav(admin: boolean) {
-  return MY_NAV.filter((m) => admin || SHOW_COUNSELING || m.href !== "/my/counseling");
+  return MY_NAV.filter((m) => admin || ((SHOW_COURSES || m.href !== "/my") && (SHOW_COUNSELING || m.href !== "/my/counseling")));
 }
+/** 「마이페이지」 링크가 여는 첫 탭 */
+export const myHome = (admin: boolean) => myNav(admin)[0]?.href ?? "/my";
 
 /** 마이페이지 하위 메뉴 (모바일 메뉴에서도 씀) */
 export const MY_NAV = [
@@ -135,7 +137,7 @@ export default function SiteHeader() {
                 </Link>
               )}
               <Link
-                href="/my"
+                href={myHome(user.role === "admin")}
                 className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--brand-hover)]"
               >
                 마이페이지
@@ -198,7 +200,7 @@ export default function SiteHeader() {
           <div className="my-2 border-t border-[var(--border-light)]" />
           {loading ? null : user ? (
             <>
-              <Link href="/my" onClick={() => setOpen(false)} className="block rounded-xl px-4 py-3 text-[0.95rem] font-medium text-[var(--foreground)]">
+              <Link href={myHome(user.role === "admin")} onClick={() => setOpen(false)} className="block rounded-xl px-4 py-3 text-[0.95rem] font-medium text-[var(--foreground)]">
                 마이페이지
               </Link>
               {myNav(user.role === "admin").map((m) => (

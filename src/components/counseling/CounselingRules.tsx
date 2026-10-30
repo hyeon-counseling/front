@@ -8,11 +8,23 @@ export const PRICE = 60_000; // 1회기 50분, 화상·대면 같음
 export const OPEN_PRICE_UNTIL = "2026년 12월 31일";
 
 export const PLANS = [
-  { key: "first", name: "첫 상담 패키지", sessions: 2, total: 60_000, valid: "2개월", note: "첫 2회기를 함께 결제하면 1회 가격" },
-  { key: "single", name: "회기별", sessions: 1, total: 60_000, valid: "", note: "3회기부터 한 번씩" },
-  { key: "five", name: "5회 묶음", sessions: 5, total: 270_000, valid: "4개월", note: "10% 할인" },
-  { key: "ten", name: "10회 묶음", sessions: 10, total: 480_000, valid: "8개월", note: "20% 할인" },
+  { key: "single", name: "1회", sessions: 1, total: 60_000, valid: "", note: "한 번씩 편하게" },
+  { key: "first", name: "첫 상담 패키지", sessions: 2, total: 60_000, valid: "2개월", note: "처음 오시는 분의 첫 2회기를 1회 가격으로" },
+  { key: "five", name: "5회", sessions: 5, total: 270_000, valid: "4개월", note: "10% 할인" },
+  { key: "ten", name: "10회", sessions: 10, total: 480_000, valid: "8개월", note: "20% 할인" },
 ] as const;
+export type PlanKey = (typeof PLANS)[number]["key"];
+
+/** 여러 회기 옵션(2·5·10회) 공통 안내 */
+export const MULTI_NOTE = "첫 상담에서 이후 상담 일정을 함께 조율해요.";
+
+/**
+ * 신청·결제는 아직 카페24 — 옵션별 카페24 상품 주소를 넣으면 그 상품으로 바로 간다 (비우면 쇼핑몰 첫 화면)
+ * 예: single: "https://hyeoncounseling.cafe24.com/product/개인상담/12/"
+ */
+export const SHOP_HOME = process.env.NEXT_PUBLIC_SHOP_URL ?? "https://hyeoncounseling.cafe24.com";
+export const SHOP_URLS: Record<PlanKey, string> = { single: "", first: "", five: "", ten: "" };
+export const shopUrl = (key: PlanKey) => SHOP_URLS[key] || SHOP_HOME;
 
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 
