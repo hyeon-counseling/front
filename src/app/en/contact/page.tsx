@@ -100,7 +100,7 @@ export default function ContactPage() {
             </div>
             <div className="flex gap-2">
               <dt className="min-w-[160px] font-medium text-[var(--foreground)]">Business Reg. No.</dt>
-              <dd>185-25-02396</dd>
+              <dd>186-25-02396</dd>
             </div>
             <div className="flex gap-2">
               <dt className="min-w-[160px] font-medium text-[var(--foreground)]">Email</dt>

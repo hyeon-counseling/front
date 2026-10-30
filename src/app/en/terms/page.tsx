@@ -20,7 +20,7 @@ export default function TermsPage() {
             </p>
             <p className="mt-3">
               The Service is operated by Hyeon Counseling, located at 16, Sangdo-ro 15da-gil, Dongjak-gu,
-              Seoul 06951, Republic of Korea (Business Registration No. 185-25-02396).
+              Seoul 06951, Republic of Korea (Business Registration No. 186-25-02396).
             </p>
           </section>
 
