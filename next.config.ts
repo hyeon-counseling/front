@@ -7,6 +7,10 @@ import type { NextConfig } from "next";
 // - 관리자: /admin/kr/*, /admin/en/* → /admin/shop/kr/*, /admin/shop/en/*
 // 쿼리스트링은 자동으로 유지된다.
 // ─────────────────────────────────────────────────────────────────
+// 카페24 쇼핑몰 기본 도메인과 카페24가 쓰는 경로 (우리 사이트 경로와 겹치지 않음 — /articles·/my/orders 등은 다른 이름)
+const CAFE24 = "https://hyeoncounseling.cafe24.com";
+const CAFE24_PATHS = ["product", "category", "board", "article", "member", "myshop", "order", "exec", "shopinfo", "web"];
+
 const nextConfig: NextConfig = {
   async redirects() {
     return [
@@ -25,6 +29,11 @@ const nextConfig: NextConfig = {
       { source: "/workbook/:slug/:day", destination: "/learn/:slug/:day", permanent: false },
       { source: "/my/workbooks/:slug", destination: "/my/courses/:slug/records", permanent: false },
       { source: "/admin/workbooks/:path*", destination: "/admin/lms/courses", permanent: false },
+      // 자체 도메인 교체(10/30) — hyeon-counseling.com 이 카페24에서 이 사이트로 옮겨 와도, 이미 퍼진 쇼핑몰 링크·QR
+      // (무료 PDF 의 /product/list.html?cate_no=45 등)이 깨지지 않게 카페24 기본 도메인으로 넘긴다. 경로·쿼리 그대로, 308.
+      ...CAFE24_PATHS.map((p) => ({ source: `/${p}/:path*`, destination: `${CAFE24}/${p}/:path*`, permanent: true })),
+      { source: "/:skin(skin-[^/]+)/:path*", destination: `${CAFE24}/:skin/:path*`, permanent: true },
+      { source: "/index.html", destination: `${CAFE24}/index.html`, permanent: true },
     ];
   },
 };
