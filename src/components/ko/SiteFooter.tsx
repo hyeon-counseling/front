@@ -83,7 +83,7 @@ export default function SiteFooter() {
               .map((b) => (b.label === "상호" ? b.value : `${b.label} ${b.value}`))
               .join(" · ")}
           </p>
-          <p>이 사이트의 콘텐츠는 심리 교육을 목적으로 하며 의학적 진단이나 치료를 대체하지 않습니다. 위급한 상황이라면 자살예방상담전화 109, 정신건강위기상담 1577-0199로 연락해 주세요.</p>
+          <p>이 사이트의 콘텐츠는 심리 교육을 목적으로 하며 의학적 진단이나 치료를 대체하지 않습니다.</p>
           <p>© {year} Hyeon Counseling. All rights reserved.</p>
         </div>
       </div>

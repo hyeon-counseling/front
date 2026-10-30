@@ -82,7 +82,8 @@ export const TossWidget = forwardRef<TossWidgetHandle, { clientKey: string; cust
       async requestPayment(o) {
         if (!widgets.current) throw new Error("not_ready");
         const origin = window.location.origin;
-        await widgets.current.requestPayment({ ...o, successUrl: `${origin}/checkout/success`, failUrl: `${origin}/checkout/fail` });
+        // 결제창에서 취소(PAY_PROCESS_CANCELED)하면 토스가 orderId를 붙여 주지 않으므로 failUrl에 직접 넣는다
+        await widgets.current.requestPayment({ ...o, successUrl: `${origin}/checkout/success`, failUrl: `${origin}/checkout/fail?orderId=${encodeURIComponent(o.orderId)}` });
       },
     }));
 

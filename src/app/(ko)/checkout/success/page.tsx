@@ -16,7 +16,7 @@ function SuccessInner() {
   const params = useSearchParams();
   const { user, loading } = useAuth();
   const sent = useRef(false);
-  const [result, setResult] = useState<{ ok: true; order: OrderSummary } | { ok: false; message: string; retry?: string } | null>(null);
+  const [result, setResult] = useState<{ ok: true; order: OrderSummary } | { ok: false; message: string; retry?: string; again?: boolean } | null>(null);
 
   useEffect(() => {
     if (loading || !user || sent.current) return;
@@ -33,7 +33,9 @@ function SuccessInner() {
       if (res.ok && res.data) return setResult({ ok: true, order: res.data });
       // 결제 직전에 쿠폰을 못 쓰게 된 경우 — 주문은 그대로, 결제 페이지로 돌아가 쿠폰을 빼고 다시
       const couponGone = (res.data as { reason?: string } | null)?.reason === "coupon_unavailable";
-      setResult({ ok: false, message: res.message || "결제 승인에 실패했어요.", retry: couponGone ? `/checkout/${orderId}` : undefined });
+      // 토스 응답을 못 받은 경우 — 주문은 대기 중이라 이 화면을 다시 열면 한 번 더 확인한다
+      const again = (res.data as { retryable?: boolean } | null)?.retryable === true;
+      setResult({ ok: false, message: res.message || "결제 승인에 실패했어요.", retry: couponGone ? `/checkout/${orderId}` : undefined, again });
     });
   }, [loading, user, params]);
 
@@ -57,6 +59,11 @@ function SuccessInner() {
         <p className="mt-2 text-[var(--foreground-muted)]">{result.message}</p>
         <p className="mt-1 text-sm text-[var(--foreground-subtle)]">금액이 빠져나갔다면 자동으로 취소되거나, 문의해 주시면 바로 확인해 드려요.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
+          {result.again && (
+            <button onClick={() => window.location.reload()} className="inline-flex h-12 cursor-pointer items-center rounded-xl bg-[var(--brand)] px-6 font-semibold text-white">
+              다시 확인하기
+            </button>
+          )}
           {result.retry && (
             <Link href={result.retry} className="inline-flex h-12 items-center rounded-xl bg-[var(--brand)] px-6 font-semibold text-white">결제 페이지로 돌아가기</Link>
           )}
