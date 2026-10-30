@@ -26,6 +26,8 @@ function usePlan() {
 
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 const perSession = (p: Plan) => Math.round(p.total / p.sessions);
+/** 「첫 상담 때만 · 유효기간 2개월」 */
+const validLine = (p: Plan) => [p.key === "first" ? "첫 상담 때만" : "", p.valid ? `유효기간 ${p.valid}` : ""].filter(Boolean).join(" · ");
 
 /** 옵션 선택 — 라디오 카드 */
 export function OptionCards({ name }: { name: string }) {
@@ -60,11 +62,7 @@ export function OptionCards({ name }: { name: string }) {
                 <span className="mt-0.5 block text-[13px] text-[var(--foreground-muted)]">
                   {p.sessions > 1 ? `${p.sessions}회기 · 회당 ${won(perSession(p))}` : "1회기 50분"}
                 </span>
-                {(p.valid || p.key === "first") && (
-                  <span className="block text-[13px] text-[var(--foreground-subtle)]">
-                    {[p.key === "first" ? "첫 상담 때만" : "", p.valid ? `유효기간 ${p.valid}` : ""].filter(Boolean).join(" · ")}
-                  </span>
-                )}
+                {validLine(p) && <span className="block text-[13px] text-[var(--foreground-subtle)]">{validLine(p)}</span>}
               </span>
             </label>
           );
