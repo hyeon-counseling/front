@@ -11,6 +11,7 @@
  *   assessment { answers: (number | null)[], score?, band? }
  */
 
+import { SHOW_COUNSELING } from "@/lib/site";
 import type {
   AssessmentConfig,
   ChoiceConfig,
@@ -274,7 +275,7 @@ function AssessmentInput({ value, onChange, cfg, disabled }: { value: { answers?
             {band?.note && <p className="mt-2 text-sm text-[var(--foreground-muted)]">{band.note}</p>}
             {band?.alert && (
               <p className="mt-3 text-sm font-medium text-amber-800">
-                혼자 진행하기 어렵게 느껴지면 <a href="/counseling" className="underline">상담 안내</a>를 확인해 주세요. 위급할 땐 109(자살예방상담전화).
+                혼자 진행하기 어렵게 느껴지면 {SHOW_COUNSELING ? <><a href="/counseling" className="underline">상담 안내</a>를 확인해 주세요</> : "전문가와 이야기해 보세요"}. 위급할 땐 109(자살예방상담전화).
               </p>
             )}
           </>

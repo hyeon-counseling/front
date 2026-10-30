@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { SHOW_COURSES } from "@/lib/site";
 import { apiRequest } from "@/lib/api";
 import type { MyCourse } from "@/lib/course";
 import type { MyProgram } from "@/lib/program";
@@ -36,6 +37,7 @@ export default function MyPage() {
   if (loading || !user) return null;
 
   // 과정에 든 과목은 '내 과정' 카드에서 보여 주고, '내 강의'에는 과정 밖 과목만
+  const browse = SHOW_COURSES || user?.role === "admin";
   const inPrograms = new Set((programs ?? []).flatMap((p) => p.courses.map((c) => c.slug)));
   const soloCourses = courses?.filter((c) => !inPrograms.has(c.slug)) ?? null;
 
@@ -88,11 +90,12 @@ export default function MyPage() {
           </section>
         )}
 
-        {/* 강의 */}
+        {/* 강의 — 강의를 숨긴 동안(lib/site.ts)은 듣는 강의가 있을 때만 */}
+        {(browse || soloCourses === null || programs === null || soloCourses.length > 0 || inPrograms.size > 0) && (
         <section className="mt-10">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-bold text-[var(--foreground)]">내 강의</h2>
-            <Link href="/courses" className="text-sm font-semibold text-[var(--brand)]">강의 둘러보기 →</Link>
+            {browse && <Link href="/courses" className="text-sm font-semibold text-[var(--brand)]">강의 둘러보기 →</Link>}
           </div>
           {soloCourses === null || programs === null ? (
             <Skeleton className="h-28" />
@@ -100,7 +103,7 @@ export default function MyPage() {
             <div className="card p-6">
               <p className="font-semibold text-[var(--foreground)]">{inPrograms.size ? "과정 밖에서 따로 듣는 강의가 없어요" : "수강 중인 강의가 없어요"}</p>
               <p className="mt-1 text-sm text-[var(--foreground-muted)]">{inPrograms.size ? "과정에 든 과목은 위 '내 과정'에서 볼 수 있어요." : "무료 체험 차시로 편하게 시작해 보세요."}</p>
-              {!inPrograms.size && (
+              {!inPrograms.size && browse && (
                 <Link href="/courses" className="mt-4 inline-flex h-11 items-center rounded-xl bg-[var(--brand)] px-5 text-sm font-semibold text-white">
                   강의 둘러보기
                 </Link>
@@ -141,6 +144,7 @@ export default function MyPage() {
             </div>
           )}
         </section>
+        )}
 
         {/* 심리검사 기록 */}
         <section className="mt-10">

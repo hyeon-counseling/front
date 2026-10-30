@@ -1,3 +1,4 @@
+import { SHOW_COUNSELING } from "@/lib/site";
 import Link from "next/link";
 
 /** 위기 안내 — 자살 사고 문항에 응답했거나 결과가 심할 때 결과 맨 위에 */
@@ -23,8 +24,13 @@ export function CrisisBox({ strong }: { strong?: boolean }) {
         </li>
       </ul>
       <p className="mt-3 text-xs text-[var(--foreground-muted)]">
-        위급한 상황이면 112·119에 연락해 주세요. ·{" "}
-        <Link href="/counseling" className="underline">심리상담실 현 상담 안내</Link>
+        위급한 상황이면 112·119에 연락해 주세요.
+        {SHOW_COUNSELING && (
+          <>
+            {" "}·{" "}
+            <Link href="/counseling" className="underline">심리상담실 현 상담 안내</Link>
+          </>
+        )}
       </p>
     </div>
   );

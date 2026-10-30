@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { SHOW_COUNSELING, SHOW_COURSES } from "@/lib/site";
 
 // ─────────────────────────────────────────────────────────────────
 // 한국어 사이트 헤더 — 흰 바탕·굵은 로고·둥근 CTA (한국형 SaaS 톤)
@@ -26,6 +27,11 @@ const NAV: NavItem[] = [
   { href: "/articles", label: "아티클" },
   { href: "/about", label: "소개" },
 ];
+
+/** 당분간 숨긴 메뉴(lib/site.ts)는 관리자에게만 */
+function visibleNav(admin: boolean): NavItem[] {
+  return NAV.filter((n) => admin || ((SHOW_COURSES || n.href !== "/courses") && (SHOW_COUNSELING || n.href !== "/counseling")));
+}
 
 /** 마이페이지 하위 메뉴 (모바일 메뉴에서도 씀) */
 export const MY_NAV = [
@@ -60,6 +66,7 @@ export default function SiteHeader() {
   const router = useRouter();
   const { user, logout, loading } = useAuth();
   const [open, setOpen] = useState(false);
+  const nav = visibleNav(user?.role === "admin");
 
   const handleLogout = () => {
     logout();
@@ -80,7 +87,7 @@ export default function SiteHeader() {
         <div className="flex items-center gap-8">
           <Logo />
           <nav className="hidden items-center gap-1 md:flex">
-            {NAV.map((n) =>
+            {nav.map((n) =>
               n.children ? (
                 <div key={n.href} className="group relative">
                   <Link href={n.href} className={`${linkCls(n.href, n)} inline-flex items-center gap-1`} aria-haspopup="true">
@@ -162,7 +169,7 @@ export default function SiteHeader() {
 
       {open && (
         <nav className="border-t border-[var(--border-light)] bg-white px-3 py-3 md:hidden">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <div key={n.href}>
               <Link
                 href={n.href}

@@ -8,6 +8,7 @@
  * 힘들 때 버튼: 109 · 1577-0199 안전 안내.
  */
 
+import { SHOW_COUNSELING } from "@/lib/site";
 import Link from "next/link";
 import {
   useCallback,
@@ -1133,9 +1134,11 @@ function CounselBox() {
           </a>{" "}
           · 무료 상담
         </li>
-        <li>
-          <Link href="/counseling" className="font-semibold text-[var(--brand)] underline-offset-2 hover:underline">심리상담실 현 상담 알아보기</Link> · 유료 · 화상·대면
-        </li>
+        {SHOW_COUNSELING && (
+          <li>
+            <Link href="/counseling" className="font-semibold text-[var(--brand)] underline-offset-2 hover:underline">심리상담실 현 상담 알아보기</Link> · 유료 · 화상·대면
+          </li>
+        )}
       </ul>
     </div>
   );
