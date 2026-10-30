@@ -1,5 +1,6 @@
 "use client";
 
+import { SHOW_COURSES } from "@/lib/site";
 import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -48,7 +49,7 @@ function LoginForm() {
         <div className="mb-8 text-center">
           <p className="mb-3"><span className="eyebrow">로그인</span></p>
           <h1 className="font-display text-3xl text-[var(--foreground)]">다시 만나서 반가워요</h1>
-          <p className="mt-2 text-sm text-[var(--foreground-muted)]">강의·워크북·주문 내역을 이어서 볼 수 있어요.</p>
+          <p className="mt-2 text-sm text-[var(--foreground-muted)]">{SHOW_COURSES ? "강의·워크북·주문 내역을 이어서 볼 수 있어요." : "심리검사 진행과 검사 기록, 주문 내역을 이어서 볼 수 있어요."}</p>
         </div>
 
         <div className="card p-8 shadow-soft">

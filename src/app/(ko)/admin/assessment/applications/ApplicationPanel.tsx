@@ -79,13 +79,13 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
   const patch = async (body: Record<string, unknown>, done: string) => {
     setSaving(true);
     setMsg("");
-    const r = await apiRequest<{ hold: string; memo: string }>(`/api/admin/assessment/applications/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+    const r = await apiRequest<{ hold: string; memo: string; isTester: boolean }>(`/api/admin/assessment/applications/${id}`, { method: "PATCH", body: JSON.stringify(body) });
     setSaving(false);
     if (!r.ok || !r.data) {
       setMsg(r.message || "저장하지 못했어요.");
       return;
     }
-    setD((x) => (x ? { ...x, hold: r.data!.hold as Detail["hold"], memo: r.data!.memo } : x));
+    setD((x) => (x ? { ...x, hold: r.data!.hold as Detail["hold"], memo: r.data!.memo, isTester: r.data!.isTester } : x));
     setMsg(done);
     onChanged();
   };
@@ -115,6 +115,17 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
               {d.name}
               {d.isTester && <span className="ml-2 rounded bg-[var(--surface-muted)] px-1.5 py-0.5 text-xs font-bold text-[var(--foreground-muted)]">테스터</span>}
             </h2>
+            <button
+              disabled={saving}
+              onClick={() => {
+                const next = !d.isTester;
+                if (!confirm(next ? "이 신청을 테스터로 표시할까요? (실제 고객과 구분돼요. 변경 기록이 남아요)" : "테스터 표시를 해제할까요? (실제 고객 신청으로 바뀌어요)")) return;
+                void patch({ isTester: next }, next ? "테스터로 표시했어요." : "테스터 표시를 해제했어요.");
+              }}
+              className="mt-1 cursor-pointer text-xs font-semibold text-[var(--foreground-subtle)] underline-offset-2 hover:text-[var(--foreground)] hover:underline disabled:opacity-40"
+            >
+              {d.isTester ? "테스터 표시 해제" : "테스터로 표시"}
+            </button>
             <p className="mt-1 text-sm text-[var(--foreground-muted)]">
               {d.sessionText} · {d.methodText}
               {d.method === "offline" && d.regions[1] && ` (2순위 ${d.regions[1]})`}

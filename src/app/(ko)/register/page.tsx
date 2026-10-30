@@ -1,5 +1,6 @@
 "use client";
 
+import { SHOW_COURSES } from "@/lib/site";
 import Link from "next/link";
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
@@ -64,7 +65,7 @@ export default function RegisterPage() {
         <div className="mb-8 text-center">
           <p className="mb-3"><span className="eyebrow">회원가입</span></p>
           <h1 className="font-display text-3xl text-[var(--foreground)]">이메일 하나면 충분해요</h1>
-          <p className="mt-2 text-sm text-[var(--foreground-muted)]">워크북 1주차는 가입만 하면 무료로 시작할 수 있어요.</p>
+          <p className="mt-2 text-sm text-[var(--foreground-muted)]">{SHOW_COURSES ? "워크북 1주차는 가입만 하면 무료로 시작할 수 있어요." : "가입하면 무료 자가 검사 기록을 모아 보고, 종합심리검사를 신청할 수 있어요."}</p>
         </div>
 
         <div className="card p-8 shadow-soft">

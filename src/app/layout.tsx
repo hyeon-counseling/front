@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { SITE_URL } from "@/lib/site";
+import { SHOW_COURSES, SITE_URL } from "@/lib/site";
 
 // ─────────────────────────────────────────────────────────────────
 // 루트 레이아웃 — html/body + 전역 상태만.
@@ -17,7 +17,9 @@ export const metadata: Metadata = {
     template: "%s | 심리상담실 현",
   },
   description:
-    "김태현 심리상담가의 강의(영상·오디오·직접 써 보는 실습)와 과정, 심리검사, 상담. 나를 이해하는 공부를 편안한 속도로.",
+    SHOW_COURSES
+      ? "김태현 심리상담가의 강의(영상·오디오·직접 써 보는 실습)와 과정, 심리검사, 상담. 나를 이해하는 공부를 편안한 속도로."
+      : "김태현 심리상담가의 종합심리검사(MMPI-3·TCI·SCT)와 해석 상담, 간이 무료 심리검사, 아티클. 나를 이해하는 첫걸음.",
   openGraph: {
     siteName: "심리상담실 현",
     locale: "ko_KR",

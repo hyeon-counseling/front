@@ -1,3 +1,4 @@
+import { SHOW_COUNSELING, SHOW_COURSES } from "@/lib/site";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -6,9 +7,9 @@ export const metadata: Metadata = {
 };
 
 const KINDS = [
-  { t: "수강·기록", d: "강의 재생, 쓰기 기록 저장, 계정 관련 문제" },
+  SHOW_COURSES ? { t: "수강·기록", d: "강의 재생, 쓰기 기록 저장, 계정 관련 문제" } : { t: "검사·기록", d: "자가 검사 결과, 검사 기록, 계정 관련 문제" },
   { t: "결제·환불", d: "결제 오류, 중복 결제, 환불 요청 (결제 후 7일 이내)" },
-  { t: "상담·검사", d: "상담 신청 방법, 일정 변경, 검사 문의" },
+  SHOW_COUNSELING ? { t: "상담·검사", d: "상담 신청 방법, 일정 변경, 검사 문의" } : { t: "종합심리검사", d: "신청 방법, 일정 변경, 검사 문의" },
 ];
 
 export default function ContactPage() {
