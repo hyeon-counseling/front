@@ -70,8 +70,8 @@ export default function TermsPage() {
             <p className="mt-3">
               Download links are time-limited for security purposes. If you experience difficulty accessing
               your purchase, please contact us at{' '}
-              <a href="mailto:support@hyeoncounseling.com" className="text-[var(--brand)] hover:underline">
-                support@hyeoncounseling.com
+              <a href="mailto:support@hyeon-counseling.com" className="text-[var(--brand)] hover:underline">
+                support@hyeon-counseling.com
               </a>.
             </p>
           </section>
@@ -155,8 +155,8 @@ export default function TermsPage() {
             <h2 className="mb-3 text-lg font-semibold text-[var(--foreground)]">13. Contact Us</h2>
             <p>
               For questions about these Terms, please contact us at{' '}
-              <a href="mailto:support@hyeoncounseling.com" className="text-[var(--brand)] hover:underline">
-                support@hyeoncounseling.com
+              <a href="mailto:support@hyeon-counseling.com" className="text-[var(--brand)] hover:underline">
+                support@hyeon-counseling.com
               </a>.
             </p>
           </section>

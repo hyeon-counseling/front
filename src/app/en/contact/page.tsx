@@ -29,10 +29,10 @@ export default function ContactPage() {
             Send us an email and we&apos;ll get back to you within 1–2 business days.
           </p>
           <a
-            href="mailto:support@hyeoncounseling.com"
+            href="mailto:support@hyeon-counseling.com"
             className="inline-block rounded-full bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
           >
-            support@hyeoncounseling.com
+            support@hyeon-counseling.com
           </a>
         </div>
 
@@ -105,8 +105,8 @@ export default function ContactPage() {
             <div className="flex gap-2">
               <dt className="min-w-[160px] font-medium text-[var(--foreground)]">Email</dt>
               <dd>
-                <a href="mailto:support@hyeoncounseling.com" className="text-[var(--brand)] hover:underline">
-                  support@hyeoncounseling.com
+                <a href="mailto:support@hyeon-counseling.com" className="text-[var(--brand)] hover:underline">
+                  support@hyeon-counseling.com
                 </a>
               </dd>
             </div>

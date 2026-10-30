@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 };
 
 // 당분간 신청·결제는 카페24 쇼핑몰에서 진행한다 (상담운영시스템은 추후).
-const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL ?? "https://hyeon-counseling.com";
+const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL ?? "https://hyeoncounseling.cafe24.com"; // 자체 도메인은 이 사이트로, 쇼핑몰은 카페24 기본 도메인 (10/30)
 
 const STEPS = [
   { t: "신청", d: "쇼핑몰에서 상담 상품을 선택하고 원하는 날짜·시간을 고릅니다. 결제가 끝나면 예약이 확정됩니다." },
@@ -39,7 +39,7 @@ export default function CounselingPage() {
             쇼핑몰에서 상담 신청하기
             <span aria-hidden>↗</span>
           </a>
-          <a href="mailto:support@hyeoncounseling.com" className="link-underline px-2 py-3 text-sm text-[var(--foreground)]">
+          <a href="mailto:support@hyeon-counseling.com" className="link-underline px-2 py-3 text-sm text-[var(--foreground)]">
             먼저 문의하기
           </a>
         </div>

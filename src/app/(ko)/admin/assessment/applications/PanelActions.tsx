@@ -198,7 +198,7 @@ const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 /**
  * 취소·환불 처리 (52-취소환불규정.md) — 고객 취소 요청이 있으면 맨 위에, 없으면 상담가가 직접 취소할 때.
  * 금액은 규정대로 계산된 값이 기본, 예외(상담가 사정 전액·진행 중단 실비만 공제·시작 여부 확인)는 고쳐서 확정.
- * 실제 돈은 결제 수단에서 상담가가 직접 돌려준다 — 여기서는 기록하고 슬롯을 다시 연다.
+ * 토스 결제면 [환불 완료 처리] 때 토스에 그 금액만큼(부분 환불 포함) 취소를 요청한다. 테스트 결제·쿠폰 0원은 기록만.
  */
 export function RefundBox({
   id,
@@ -237,7 +237,7 @@ export function RefundBox({
 
   const done = async () => {
     const n = Number(amount.replace(/\D/g, "") || 0);
-    if (!window.confirm(`${n > 0 ? `${won(n)} 환불 완료로` : "환불 없이 취소로"} 처리할까요? 잡아 둔 상담 시간이 다시 열려요. (실제 환불은 결제 수단에서 직접)`)) return;
+    if (!window.confirm(`${n > 0 ? `${won(n)} 환불 완료로` : "환불 없이 취소로"} 처리할까요? 토스 결제면 이 금액만큼 토스에서 바로 취소되고, 잡아 둔 상담 시간이 다시 열려요.`)) return;
     setBusy(true);
     setMsg("");
     const r = await apiRequest(`/api/admin/assessment/applications/${id}/refund`, { method: "POST", body: JSON.stringify({ amount: n, note }) });

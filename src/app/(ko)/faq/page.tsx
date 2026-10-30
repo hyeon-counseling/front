@@ -38,7 +38,7 @@ const FAQS = [
   },
   {
     q: "문의는 어디로 하나요?",
-    a: "support@hyeoncounseling.com 으로 보내 주세요. 영업일 기준 1~2일 안에 답변드립니다.",
+    a: "support@hyeon-counseling.com 으로 보내 주세요. 영업일 기준 1~2일 안에 답변드립니다.",
   },
 ];
 
@@ -65,6 +65,18 @@ export default function FaqPage() {
         <h1 className="font-display text-4xl leading-tight text-[var(--foreground)] sm:text-5xl">궁금한 것들</h1>
         <div className="mt-10 border-t border-[var(--border)]">
           {FAQS.map((f) => <Item key={f.q} {...f} />)}
+        </div>
+        <div className="mt-10 rounded-2xl bg-[var(--surface)] p-5">
+          <p className="font-semibold text-[var(--foreground)]">종합심리검사를 신청하셨다면</p>
+          <p className="mt-1 text-sm text-[var(--foreground-muted)]">진행 순서·검사 마감·검사 요령은 따로 모아 두었어요.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link href="/guide/apply" className="inline-flex h-10 items-center rounded-xl bg-white px-4 text-sm font-semibold text-[var(--foreground)] shadow-sm">
+              종합심리검사 신청 안내 →
+            </Link>
+            <Link href="/guide/tests" className="inline-flex h-10 items-center rounded-xl bg-white px-4 text-sm font-semibold text-[var(--foreground)] shadow-sm">
+              검사 안내 →
+            </Link>
+          </div>
         </div>
         <p className="mt-10 text-sm text-[var(--foreground-muted)]">
           찾는 답이 없다면{" "}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SITE_URL } from "@/lib/site";
 
 // ─────────────────────────────────────────────────────────────────
 // 루트 레이아웃 — html/body + 전역 상태만.
@@ -8,11 +9,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 //   (ko)/layout.tsx  한국어 사이트(기본)
 //   en/layout.tsx    영어 사이트(기존 페이지 이동)
 // ─────────────────────────────────────────────────────────────────
-
-// 사이트 주소 — 공유 미리보기 이미지를 절대 주소로 만들 때 쓴다 (없으면 Vercel 주소)
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

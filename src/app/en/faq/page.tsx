@@ -21,7 +21,7 @@ const faqs = [
   {
     question: 'Do you offer refunds?',
     answer:
-      'Due to the digital nature of our products, all sales are generally final once the product has been downloaded. However, we do consider refunds in cases of technical failure (e.g., corrupted file, delivery failure, or duplicate charge). Please contact us within 48 hours of purchase at support@hyeoncounseling.com. See our full Refund Policy for details.',
+      'Due to the digital nature of our products, all sales are generally final once the product has been downloaded. However, we do consider refunds in cases of technical failure (e.g., corrupted file, delivery failure, or duplicate charge). Please contact us within 48 hours of purchase at support@hyeon-counseling.com. See our full Refund Policy for details.',
   },
   {
     question: 'Is this content suitable for me if I have serious mental health issues?',
@@ -46,12 +46,12 @@ const faqs = [
   {
     question: 'I did not receive my purchase. What should I do?',
     answer:
-      'If you completed payment but cannot see your purchase in My Page, please first check your email for a confirmation message. If the issue persists, contact us at support@hyeoncounseling.com with your purchase details and we will resolve it promptly.',
+      'If you completed payment but cannot see your purchase in My Page, please first check your email for a confirmation message. If the issue persists, contact us at support@hyeon-counseling.com with your purchase details and we will resolve it promptly.',
   },
   {
     question: 'How can I contact you?',
     answer:
-      'You can reach us by email at support@hyeoncounseling.com. We aim to respond to all inquiries within 1–2 business days. For faster resolution, please include your account email and a description of your question or issue.',
+      'You can reach us by email at support@hyeon-counseling.com. We aim to respond to all inquiries within 1–2 business days. For faster resolution, please include your account email and a description of your question or issue.',
   },
 ];
 
@@ -107,7 +107,7 @@ export default function FAQPage() {
           <p className="mb-2 text-sm font-medium text-[var(--foreground)]">Still have questions?</p>
           <p className="mb-4 text-sm text-[var(--foreground-muted)]">We&apos;re here to help. Reach out to our support team.</p>
           <a
-            href="mailto:support@hyeoncounseling.com"
+            href="mailto:support@hyeon-counseling.com"
             className="inline-block rounded-full bg-[var(--brand)] px-6 py-2.5 text-xs font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
           >
             Email Us

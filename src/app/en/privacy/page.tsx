@@ -17,14 +17,14 @@ export default function PrivacyPage() {
             <p>
               Hyeon Counseling (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) is operated by a licensed psychological counselor and author
               based in Seoul, Republic of Korea. We provide educational psychological e-books and self-help guides
-              through our website at hyeoncounseling.com.
+              through our website at hyeon-counseling.com.
             </p>
             <p className="mt-3">
               <strong className="text-[var(--foreground)]">Business Address:</strong> 16, Sangdo-ro 15da-gil, Dongjak-gu, Seoul 06951, Republic of Korea<br />
               <strong className="text-[var(--foreground)]">Business Registration No.:</strong> 185-25-02396<br />
               <strong className="text-[var(--foreground)]">Contact:</strong>{' '}
-              <a href="mailto:support@hyeoncounseling.com" className="text-[var(--brand)] hover:underline">
-                support@hyeoncounseling.com
+              <a href="mailto:support@hyeon-counseling.com" className="text-[var(--brand)] hover:underline">
+                support@hyeon-counseling.com
               </a>
             </p>
           </section>
@@ -93,8 +93,8 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               To exercise any of these rights, please contact us at{' '}
-              <a href="mailto:support@hyeoncounseling.com" className="text-[var(--brand)] hover:underline">
-                support@hyeoncounseling.com
+              <a href="mailto:support@hyeon-counseling.com" className="text-[var(--brand)] hover:underline">
+                support@hyeon-counseling.com
               </a>.
             </p>
           </section>
@@ -120,8 +120,8 @@ export default function PrivacyPage() {
             <h2 className="mb-3 text-lg font-semibold text-[var(--foreground)]">10. Contact Us</h2>
             <p>
               For any questions about this Privacy Policy, please contact us at{' '}
-              <a href="mailto:support@hyeoncounseling.com" className="text-[var(--brand)] hover:underline">
-                support@hyeoncounseling.com
+              <a href="mailto:support@hyeon-counseling.com" className="text-[var(--brand)] hover:underline">
+                support@hyeon-counseling.com
               </a>.
             </p>
           </section>

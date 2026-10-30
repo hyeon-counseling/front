@@ -29,6 +29,21 @@ const COLS = [
   },
 ];
 
+/**
+ * 사업자 정보 (전자상거래법 표시 사항 · 토스페이먼츠 카드사 심사)
+ * 사업자등록증과 똑같이 적는다. 빈 값('')은 화면에 나오지 않는다. (10/30 상담가 값: 고객센터 전화, 통신판매업 신고번호)
+ */
+const BUSINESS: { label: string; value: string }[] = [
+  { label: "상호", value: "심리상담실 현 (Hyeon Counseling)" },
+  { label: "대표", value: "김태현" },
+  { label: "사업자등록번호", value: "185-25-02396" },
+  { label: "통신판매업 신고", value: "2026-서울동작-0798" },
+  { label: "주소", value: "서울특별시 동작구 상도로15다길 16" },
+  { label: "고객센터", value: "010-6478-1181" },
+  { label: "이메일", value: "support@hyeon-counseling.com" },
+  { label: "호스팅 제공", value: "Vercel Inc." },
+];
+
 export default function SiteFooter() {
   const year = new Date().getFullYear();
   return (
@@ -63,7 +78,11 @@ export default function SiteFooter() {
         <div className="my-8 border-t border-[var(--border)]" />
 
         <div className="space-y-1.5 text-xs leading-relaxed text-[var(--foreground-subtle)]">
-          <p>심리상담실 현 (Hyeon Counseling) · 대표 김태현 · 사업자등록번호 185-25-02396 · 서울특별시 동작구 상도로15다길 16 · support@hyeoncounseling.com</p>
+          <p>
+            {BUSINESS.filter((b) => b.value)
+              .map((b) => (b.label === "상호" ? b.value : `${b.label} ${b.value}`))
+              .join(" · ")}
+          </p>
           <p>이 사이트의 콘텐츠는 심리 교육을 목적으로 하며 의학적 진단이나 치료를 대체하지 않습니다. 위급한 상황이라면 자살예방상담전화 109, 정신건강위기상담 1577-0199로 연락해 주세요.</p>
           <p>© {year} Hyeon Counseling. All rights reserved.</p>
         </div>

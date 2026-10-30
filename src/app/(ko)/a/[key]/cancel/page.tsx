@@ -56,7 +56,7 @@ export default function CancelPage() {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <h1 className="text-xl font-bold text-[var(--foreground)]">{data.closed === "refunded" ? "환불 처리가 끝났어요" : "취소가 끝났어요"}</h1>
-        {data.refund && data.refund.amount > 0 && <p className="mt-2 text-[var(--foreground-muted)]">환불 {won(data.refund.amount)} · 결제한 수단으로 영업일 3~5일 안에 들어가요.</p>}
+        {data.refund && data.refund.amount > 0 && <p className="mt-2 text-[var(--foreground-muted)]">환불 {won(data.refund.amount)} · 결제한 수단으로 영업일 3~7일(카드사·결제수단에 따라 달라요) 안에 들어가요.</p>}
         {back}
       </div>
     );
@@ -68,7 +68,7 @@ export default function CancelPage() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--brand-light)] text-3xl text-[var(--brand)]">✓</div>
         <h1 className="mt-5 text-2xl font-bold text-[var(--foreground)]">취소 요청을 받았어요</h1>
         <p className="mt-2 leading-relaxed text-[var(--foreground-muted)]">
-          {data.request && data.request.quoteAmount > 0 ? `예상 환불 ${won(data.request.quoteAmount)} · ` : ""}김태현 심리상담가가 확인한 뒤 결제한 수단으로 영업일 3~5일 안에 처리해 드려요. 그동안 진행 안내는 보내지 않아요.
+          {data.request && data.request.quoteAmount > 0 ? `예상 환불 ${won(data.request.quoteAmount)} · ` : ""}김태현 심리상담가가 확인한 뒤 결제한 수단으로 영업일 3~7일(카드사·결제수단에 따라 달라요) 안에 처리해 드려요. 그동안 진행 안내는 보내지 않아요.
         </p>
         <p className="mt-3 text-sm text-[var(--foreground-subtle)]">마음이 바뀌었다면 카카오톡 채널 「심리상담실 현」으로 알려 주세요.</p>
         {back}

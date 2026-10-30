@@ -32,6 +32,9 @@ interface SolapiTemplate {
   name: string;
   status?: string;
   channelId?: string;
+  channelGroupId?: string;
+  /** 서버 기본 채널(SOLAPI_PFID) 템플릿인지 — 아니면 고를 때 그 채널 ID를 함께 채운다 */
+  sameChannel?: boolean;
   variables: string[]; // ["#{상품명}", ...]
 }
 
@@ -135,8 +138,9 @@ export default function KakaoTemplatesPage() {
     setSolapiLoading(true);
     setSolapiError("");
     try {
-      const data = await apiFetch("/api/admin/kakao-templates/solapi");
-      setSolapiList(data);
+      // all=1 — 다른 카카오 채널·채널 그룹에 등록한 템플릿도 (기본 채널 것이 위)
+      const data: SolapiTemplate[] = await apiFetch("/api/admin/kakao-templates/solapi?all=1");
+      setSolapiList([...data].sort((a, b) => Number(b.sameChannel !== false) - Number(a.sameChannel !== false)));
     } catch (err) {
       setSolapiError(err instanceof Error ? err.message : "Solapi 템플릿을 불러오지 못했습니다.");
     } finally {
@@ -151,6 +155,8 @@ export default function KakaoTemplatesPage() {
       ...prev,
       name: prev.name || t.name,
       templateId: t.templateId,
+      // 기본 채널이 아닌 템플릿은 그 채널로 보내야 하므로 채널 ID도 채운다
+      pfId: t.sameChannel === false && t.channelId ? t.channelId : prev.pfId,
       variables: vars.map((k) => ({ key: k, valueTemplate: guessMapping(k) })),
     }));
     setPickedSolapiId(t.templateId); // 선택 표시
@@ -289,11 +295,21 @@ export default function KakaoTemplatesPage() {
                           <span className="min-w-0 flex-1">
                             <span className="font-medium text-[var(--foreground)]">{t.name}</span>
                             <span className="ml-2 text-[var(--foreground-subtle)]">{t.status} · 변수 {(t.variables ?? []).length}개</span>
+                            {t.sameChannel === false && (
+                              <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                {t.channelId ? `다른 채널 ${t.channelId.slice(-6)}` : "채널 그룹"}
+                              </span>
+                            )}
                           </span>
                         </button>
                       );
                     })}
                   </div>
+                )}
+                {solapiList.some((t) => t.sameChannel === false) && (
+                  <p className="mt-2 text-[11px] text-[var(--foreground-subtle)]">
+                    &lsquo;다른 채널&rsquo; 템플릿은 서버 기본 채널(SOLAPI_PFID)과 다른 카카오 채널에 등록된 거예요. 고르면 그 채널 ID가 아래 칸에 함께 채워져 그 채널로 보내요. &lsquo;채널 그룹&rsquo; 템플릿은 보낼 채널 ID를 직접 넣어 주세요.
+                  </p>
                 )}
                 {pickedSolapiId && (
                   <p className="mt-2 text-xs text-[var(--brand)]">✓ 선택됨 — 아래 폼에 템플릿 ID와 변수가 채워졌습니다.</p>

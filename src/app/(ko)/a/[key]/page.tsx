@@ -19,7 +19,7 @@ function NextAction({ v }: { v: ProgressView }) {
     return (
       <div className="rounded-2xl bg-[var(--surface)] p-6">
         <p className="font-bold text-[var(--foreground)]">{v.closed === "refunded" ? "환불된 신청이에요." : "취소된 신청이에요."}</p>
-        {v.refund && v.refund.amount > 0 && <p className="mt-1 text-sm text-[var(--foreground-muted)]">환불 {v.refund.amount.toLocaleString("ko-KR")}원 · 결제한 수단으로 영업일 3~5일 안에 들어가요.</p>}
+        {v.refund && v.refund.amount > 0 && <p className="mt-1 text-sm text-[var(--foreground-muted)]">환불 {v.refund.amount.toLocaleString("ko-KR")}원 · 결제한 수단으로 영업일 3~7일(카드사·결제수단에 따라 달라요) 안에 들어가요.</p>}
         <p className="mt-1 text-sm text-[var(--foreground-muted)]">궁금한 점은 카카오톡 채널 「심리상담실 현」으로 물어봐 주세요.</p>
       </div>
     );
@@ -29,7 +29,7 @@ function NextAction({ v }: { v: ProgressView }) {
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
         <p className="font-bold text-[var(--foreground)]">취소 요청됨 · 상담가가 확인하고 있어요</p>
         <p className="mt-1 text-sm leading-relaxed text-[var(--foreground-muted)]">
-          {v.cancelRequest && v.cancelRequest.quoteAmount > 0 ? `예상 환불 ${v.cancelRequest.quoteAmount.toLocaleString("ko-KR")}원 · ` : ""}확인한 뒤 결제한 수단으로 영업일 3~5일 안에 처리해 드려요. 그동안 진행 안내는 보내지 않아요.
+          {v.cancelRequest && v.cancelRequest.quoteAmount > 0 ? `예상 환불 ${v.cancelRequest.quoteAmount.toLocaleString("ko-KR")}원 · ` : ""}확인한 뒤 결제한 수단으로 영업일 3~7일(카드사·결제수단에 따라 달라요) 안에 처리해 드려요. 그동안 진행 안내는 보내지 않아요.
         </p>
       </div>
     );
