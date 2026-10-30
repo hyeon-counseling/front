@@ -134,6 +134,13 @@ function guessNoticeCode(name: string, codes: string[]): string {
 const fmt = (iso: string) => new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
 const PHONE_KEY = "kakao-test-phone";
 
+interface TesterApp {
+  applicationNo: string;
+  name: string;
+  sessionAt?: string | null;
+}
+const isNoticeCode = (code?: string | null) => !!code && code !== "GIFT";
+
 export default function KakaoTemplatesPage() {
   const [templates, setTemplates] = useState<KakaoTemplate[]>([]);
   const [overview, setOverview] = useState<Overview | null>(null);
@@ -163,6 +170,9 @@ export default function KakaoTemplatesPage() {
     }
   });
   const [testMsg, setTestMsg] = useState<Record<string, string>>({});
+  // 검사 알림 테스트: 테스터 신청(쿠폰 0원)을 고르면 그 신청의 실제 링크로 보내 버튼까지 확인할 수 있다
+  const [testerApps, setTesterApps] = useState<TesterApp[] | null>(null);
+  const [testApp, setTestApp] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -316,15 +326,26 @@ export default function KakaoTemplatesPage() {
       setTestMsg((m) => ({ ...m, [t._id]: "받을 번호를 010으로 시작하게 적어 주세요." }));
       return;
     }
-    if (!confirm(`"${t.name}"을 예시 값으로 ${testPhone}에 1건 보낼까요? (실제 알림톡이 가요)`)) return;
+    const appNo = isNoticeCode(t.assessmentCode) ? testApp : "";
+    if (!confirm(`"${t.name}"을 ${appNo ? `테스터 신청 ${appNo} 값` : "예시 값"}으로 ${testPhone}에 1건 보낼까요? (실제 알림톡이 가요)`)) return;
     try {
       localStorage.setItem(PHONE_KEY, testPhone);
     } catch {
       /* 저장 못 해도 보내기는 계속 */
     }
     setTestMsg((m) => ({ ...m, [t._id]: "보내는 중…" }));
-    const r = await apiRequest(`/api/admin/kakao-templates/${t._id}/test`, { method: "POST", body: JSON.stringify({ to }) });
-    setTestMsg((m) => ({ ...m, [t._id]: r.ok ? "보냈어요. 1~2분 안에 도착해요. (결과는 솔라피 메시지 내역에서도 볼 수 있어요)" : r.message || "보내지 못했어요." }));
+    const r = await apiRequest<{ sample?: boolean }>(`/api/admin/kakao-templates/${t._id}/test`, { method: "POST", body: JSON.stringify({ to, applicationNo: appNo || undefined }) });
+    const note = r.data?.sample && isNoticeCode(t.assessmentCode) ? " 예시 링크라 버튼을 누르면 「링크를 다시 눌러 주세요」 화면이 떠요." : "";
+    setTestMsg((m) => ({ ...m, [t._id]: r.ok ? `보냈어요. 1~2분 안에 도착해요.${note} (결과는 솔라피 메시지 내역에서도 볼 수 있어요)` : r.message || "보내지 못했어요." }));
+  };
+
+  const openTest = (t: KakaoTemplate) => {
+    const next = testFor === t._id ? null : t._id;
+    setTestFor(next);
+    if (next && isNoticeCode(t.assessmentCode) && testerApps === null) {
+      setTesterApps([]);
+      apiRequest<TesterApp[]>("/api/admin/assessment/applications?tester=1").then((r) => setTesterApps(r.ok && r.data ? r.data : []));
+    }
   };
 
   const updateVar = (idx: number, patch: Partial<KakaoVariable>) => setForm((prev) => ({ ...prev, variables: prev.variables.map((v, i) => (i === idx ? { ...v, ...patch } : v)) }));
@@ -461,7 +482,7 @@ export default function KakaoTemplatesPage() {
                               {openPreview === t._id ? "미리보기 닫기" : "미리보기"}
                             </button>
                           )}
-                          <button onClick={() => setTestFor(testFor === t._id ? null : t._id)} className="text-[var(--foreground-muted)] hover:underline">
+                          <button onClick={() => openTest(t)} className="text-[var(--foreground-muted)] hover:underline">
                             테스트 발송
                           </button>
                           <button onClick={() => openEdit(t)} className="text-[var(--brand)] hover:underline">
@@ -488,12 +509,30 @@ export default function KakaoTemplatesPage() {
                       )}
                       {testFor === t._id && (
                         <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-[var(--surface)] p-3 text-xs">
-                          <span className="text-[var(--foreground-muted)]">예시 값(이름 &lsquo;테스트&rsquo; 등)으로 1건 보내 봐요 — 받을 번호</span>
+                          {isNoticeCode(t.assessmentCode) ? (
+                            <>
+                              <span className="text-[var(--foreground-muted)]">보낼 값</span>
+                              <select value={testApp} onChange={(e) => setTestApp(e.target.value)} className="h-8 rounded-lg border border-[var(--border)] bg-white px-2">
+                                <option value="">예시 값 (버튼은 열리지 않아요)</option>
+                                {(testerApps ?? []).map((a) => (
+                                  <option key={a.applicationNo} value={a.applicationNo}>
+                                    테스터 신청 {a.applicationNo} · {a.name}
+                                  </option>
+                                ))}
+                              </select>
+                              <span className="text-[var(--foreground-muted)]">받을 번호</span>
+                            </>
+                          ) : (
+                            <span className="text-[var(--foreground-muted)]">예시 값(이름 &lsquo;테스트&rsquo; 등)으로 1건 보내 봐요 — 받을 번호</span>
+                          )}
                           <input value={testPhone} onChange={(e) => setTestPhone(e.target.value)} inputMode="tel" placeholder="010-0000-0000" className="h-8 w-36 rounded-lg border border-[var(--border)] bg-white px-2" />
                           <button onClick={() => sendTest(t)} className="h-8 rounded-lg bg-[var(--brand)] px-3 font-semibold text-white">
                             보내기
                           </button>
                           {testMsg[t._id] && <span className="text-[var(--foreground)]">{testMsg[t._id]}</span>}
+                          {isNoticeCode(t.assessmentCode) && testerApps?.length === 0 && (
+                            <span className="w-full text-[var(--foreground-subtle)]">버튼까지 눌러 보려면 쿠폰(100%)으로 검사를 한 번 신청해 테스터 신청을 만들어 두세요. 실제 고객 신청은 고를 수 없어요.</span>
+                          )}
                         </div>
                       )}
                     </div>
