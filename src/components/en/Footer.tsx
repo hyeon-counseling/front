@@ -96,7 +96,7 @@ export default function Footer() {
         {/* 회사 정보 */}
         <div className="mb-4 text-xs leading-relaxed text-[var(--foreground-subtle)]">
           <p>Hyeon Counseling &nbsp;|&nbsp; 16, Sangdo-ro 15da-gil, Dongjak-gu, Seoul 06951, Republic of Korea</p>
-          <p className="mt-1">Business Registration No. 185-25-02396</p>
+          <p className="mt-1">Business Registration No. 186-25-02396</p>
         </div>
 
         {/* 면책 고지 */}

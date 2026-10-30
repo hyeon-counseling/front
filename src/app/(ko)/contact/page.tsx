@@ -39,7 +39,7 @@ export default function ContactPage() {
         <dl className="mt-10 space-y-2 rounded-2xl border border-[var(--border-light)] p-6 text-sm text-[var(--foreground-muted)]">
           <div className="flex gap-3"><dt className="min-w-[120px] font-medium text-[var(--foreground)]">상호</dt><dd>심리상담실 현 (Hyeon Counseling)</dd></div>
           <div className="flex gap-3"><dt className="min-w-[120px] font-medium text-[var(--foreground)]">대표</dt><dd>김태현</dd></div>
-          <div className="flex gap-3"><dt className="min-w-[120px] font-medium text-[var(--foreground)]">사업자등록번호</dt><dd>185-25-02396</dd></div>
+          <div className="flex gap-3"><dt className="min-w-[120px] font-medium text-[var(--foreground)]">사업자등록번호</dt><dd>186-25-02396</dd></div>
           <div className="flex gap-3"><dt className="min-w-[120px] font-medium text-[var(--foreground)]">주소</dt><dd>서울특별시 동작구 상도로15다길 16</dd></div>
         </dl>
       </div>

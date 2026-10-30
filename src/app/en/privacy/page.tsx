@@ -21,7 +21,7 @@ export default function PrivacyPage() {
             </p>
             <p className="mt-3">
               <strong className="text-[var(--foreground)]">Business Address:</strong> 16, Sangdo-ro 15da-gil, Dongjak-gu, Seoul 06951, Republic of Korea<br />
-              <strong className="text-[var(--foreground)]">Business Registration No.:</strong> 185-25-02396<br />
+              <strong className="text-[var(--foreground)]">Business Registration No.:</strong> 186-25-02396<br />
               <strong className="text-[var(--foreground)]">Contact:</strong>{' '}
               <a href="mailto:support@hyeon-counseling.com" className="text-[var(--brand)] hover:underline">
                 support@hyeon-counseling.com
