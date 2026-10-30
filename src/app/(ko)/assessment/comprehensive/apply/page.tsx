@@ -695,7 +695,7 @@ export default function ApplyPage() {
                   <div className="mx-[18px] mt-2 flex items-start gap-2.5 rounded-[14px] bg-[var(--sct-light)] px-3 py-[11px] text-[14.5px] leading-[1.55]">
                     <Icon name="coupon" className="mt-0.5 h-5 w-5 text-[var(--coral-ink)]" strokeWidth={2} />
                     <span>
-                      결제는 다음 화면에서 해요. 받은 쿠폰이 있으면 <b>[내 쿠폰 선택]</b>을 눌러 바로 적용할 수 있어요. 지금은 쿠폰으로 신청을 마칠 수 있어요.
+                      결제는 다음 화면에서 <b>카드·간편결제</b>로 해요. 받은 쿠폰이 있으면 <b>[내 쿠폰 선택]</b>을 눌러 함께 쓸 수 있어요.
                     </span>
                   </div>
                   <p className="px-[18px] pb-4 pt-3 text-[14.5px] text-[var(--foreground-muted)]">
