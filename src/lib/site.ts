@@ -14,3 +14,11 @@ export const SITE_URL = (
  */
 export const MAIL_ORDER_NO = "2026-서울동작-0798";
 export const SHOW_MAIL_ORDER_NO = false;
+
+/**
+ * 강의·개인 상담 공개 여부 — 10/30 상담가: 당분간 관리자에게만 보인다
+ * false 면 메뉴·홈·안내 링크에서 빠지고, 관리자가 아니면 /courses·/programs·/counseling 에서 「준비 중이에요」가 보인다.
+ * 이미 이용권이 있는 회원은 자기 강의·과정 화면과 학습 화면(/learn)·마이페이지를 그대로 쓴다. true 로 바꾸면 모두 다시 열린다.
+ */
+export const SHOW_COURSES = false;
+export const SHOW_COUNSELING = false;

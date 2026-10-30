@@ -1,13 +1,18 @@
 import Link from "next/link";
-import { MAIL_ORDER_NO, SHOW_MAIL_ORDER_NO } from "@/lib/site";
+import { MAIL_ORDER_NO, SHOW_COUNSELING, SHOW_COURSES, SHOW_MAIL_ORDER_NO } from "@/lib/site";
 
 const COLS = [
   {
     title: "서비스",
     links: [
-      { href: "/courses", label: "강의" },
-      { href: "/courses?has=practice", label: "쓰기 실습 강의" },
-      { href: "/counseling", label: "상담·심리검사" },
+      // 강의·상담은 당분간 숨김 (lib/site.ts)
+      ...(SHOW_COURSES
+        ? [
+            { href: "/courses", label: "강의" },
+            { href: "/courses?has=practice", label: "쓰기 실습 강의" },
+          ]
+        : []),
+      SHOW_COUNSELING ? { href: "/counseling", label: "상담·심리검사" } : { href: "/assessment", label: "심리검사" },
       { href: "/articles", label: "아티클" },
     ],
   },

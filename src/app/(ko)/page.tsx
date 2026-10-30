@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Character } from "@/components/character/Character";
+import { SHOW_COUNSELING, SHOW_COURSES } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "심리상담실 현 — 나를 이해하는 공부, 편안한 속도로",
@@ -46,6 +47,41 @@ const SERVICES = [
   },
 ];
 
+// 강의·상담을 숨긴 동안(lib/site.ts) 「세 가지 길」 카드는 검사·아티클로
+const ASSESS_CARDS = [
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+    ),
+    title: "전문 심리검사",
+    tag: "해석 상담 포함",
+    desc: "TCI · MMPI-3 · SCT 세 가지 검사와 김태현 심리상담가의 해석 상담. 나를 깊이 이해하는 출발점이에요.",
+    href: "/assessment",
+    cta: "검사 안내",
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+    ),
+    title: "간이 무료 심리검사",
+    tag: "무료",
+    desc: "지금 마음을 2~3분 만에 가볍게 살펴보는 자가 검사예요. 진단이 아니라 나를 비춰 보는 거울이에요.",
+    href: "/tests",
+    cta: "바로 해 보기",
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
+    ),
+    title: "아티클",
+    tag: "읽기",
+    desc: "심리상담가가 쓴 마음 이야기. 먼저 읽어 보며 내 마음의 언어를 찾아보세요.",
+    href: "/articles",
+    cta: "아티클 읽기",
+  },
+];
+const CARDS = SHOW_COURSES && SHOW_COUNSELING ? SERVICES : SHOW_COURSES ? SERVICES.filter((s) => s.href !== "/counseling") : ASSESS_CARDS;
+
 const STEPS = [
   { n: "01", t: "가입은 이메일 하나", d: "카드 없이 시작. 워크북 1주차는 누구나 무료예요." },
   { n: "02", t: "하루 10분, 내 속도로", d: "강의는 10분 단위, 워크북은 하루 한 장. 보던 곳부터 이어집니다." },
@@ -89,10 +125,10 @@ export default function HomePage() {
                 무료로 시작하기
               </Link>
               <Link
-                href="/courses"
+                href={SHOW_COURSES ? "/courses" : "/assessment"}
                 className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-[var(--surface)] px-6 text-[0.95rem] font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--surface-muted)]"
               >
-                강의 둘러보기
+                {SHOW_COURSES ? "강의 둘러보기" : "심리검사 보기"}
                 <span aria-hidden>→</span>
               </Link>
             </div>
@@ -167,10 +203,12 @@ export default function HomePage() {
           <div className="mb-10 max-w-2xl">
             <span className="eyebrow">세 가지 길</span>
             <h2 className="font-display mt-4 text-3xl text-[var(--foreground)] sm:text-4xl">어디서 시작해도 괜찮아요</h2>
-            <p className="mt-3 text-[var(--foreground-muted)]">지금 필요한 것부터. 배우거나, 직접 해보거나, 함께 이야기하거나.</p>
+            <p className="mt-3 text-[var(--foreground-muted)]">
+              {SHOW_COURSES ? "지금 필요한 것부터. 배우거나, 직접 해보거나, 함께 이야기하거나." : "지금 필요한 것부터. 검사로 깊이 살펴보거나, 가볍게 해 보거나, 글로 먼저 읽어 보거나."}
+            </p>
           </div>
           <div className="grid gap-5 md:grid-cols-3">
-            {SERVICES.map((s, i) => (
+            {CARDS.map((s, i) => (
               <Link key={s.title} href={s.href} className={`card card-hover group flex flex-col p-7 rise rise-${i + 1}`}>
                 <div className="flex items-center justify-between">
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--brand-light)] text-[var(--brand)]">{s.icon}</span>
@@ -272,7 +310,8 @@ export default function HomePage() {
       </section>
 
       {/* ── 숨이 소개 (작게) ─────────────────────── */}
-      {/* 마스코트 한 줄 카드 — 연습 친구로서 숨이를 소개. 홈 페이지를 크게 바꾸지 않는다. */}
+      {/* 마스코트 한 줄 카드 — 연습 친구로서 숨이를 소개. 홈 페이지를 크게 바꾸지 않는다. 강의를 숨긴 동안은 뺀다. */}
+      {SHOW_COURSES && (
       <section className="px-4 py-10 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <div className="card flex flex-wrap items-center gap-5 p-6 sm:p-7">
@@ -297,6 +336,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ── CTA ─────────────────────────────────── */}
       <section className="px-4 py-16 sm:px-6 sm:py-24">

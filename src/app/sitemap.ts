@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/site";
+import { SHOW_COUNSELING, SHOW_COURSES, SITE_URL } from "@/lib/site";
 
 // 사이트맵 — 로그인 없이 보이는 고정 페이지 (강의·아티클 개별 주소는 나중에 DB 에서 더한다)
 const PAGES = [
@@ -24,5 +24,5 @@ const PAGES = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return PAGES.map((p) => ({ url: `${SITE_URL}${p}`, changeFrequency: "weekly", priority: p === "/" ? 1 : 0.6 }));
+  return PAGES.filter((p) => (SHOW_COURSES || p !== "/courses") && (SHOW_COUNSELING || p !== "/counseling")).map((p) => ({ url: `${SITE_URL}${p}`, changeFrequency: "weekly", priority: p === "/" ? 1 : 0.6 }));
 }
