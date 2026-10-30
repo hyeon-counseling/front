@@ -17,7 +17,7 @@ export interface TestDetail {
 }
 
 const TESTS = [
-  { key: "mmpi3", label: "MMPI-3", site: "마음사랑", ph: "https://mtest.kr/?u=…" },
+  { key: "mmpi3", label: "MMPI-2", site: "마음사랑", ph: "https://mtest.kr/?u=…" },
   { key: "tci", label: "TCI", site: "마음사랑", ph: "https://mtest.kr/?u=…" },
   { key: "sct", label: "SCT", site: "인싸이트", ph: "https://www.inpsyt.co.kr/inpsyt/testing/…" },
 ] as const;

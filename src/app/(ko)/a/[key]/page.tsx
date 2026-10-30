@@ -77,7 +77,7 @@ function NextAction({ v }: { v: ProgressView }) {
         <p className="text-sm font-semibold text-[var(--brand)]">다음 단계</p>
         <p className="mt-1 text-lg font-bold text-[var(--foreground)]">아침 8시에 검사 링크가 와요</p>
         <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-          MMPI-3 · TCI · SCT 링크를 알림톡으로 한 번에 보내 드려요. 검사 마감은 {v.testDeadlineText} 밤 12시예요.
+          MMPI-2 · TCI · SCT 링크를 알림톡으로 한 번에 보내 드려요. 검사 마감은 {v.testDeadlineText} 밤 12시예요.
         </p>
       </div>
     );

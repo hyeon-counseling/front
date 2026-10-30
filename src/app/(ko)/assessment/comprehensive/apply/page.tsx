@@ -43,7 +43,7 @@ const CONSENTS: { key: "privacy" | "sensitive" | "testing" | "notice"; title: st
     rows: [
       ["항목", "이름, 휴대폰 번호, 성별, 태어난 해, 해석 상담 방식·지역·일시, 검사 받는 이유(적은 경우)"],
       ["목적", "신청 확인, 일정 안내, 검사·해석 상담 진행 안내"],
-      ["처리 위탁", "검사 실시: 마음사랑(MMPI-3·TCI-RS), 인싸이트(SCT) — 이름·성별·태어난 해 / 알림톡·문자 발송: 솔라피(카카오) — 이름·휴대폰 번호·알림 내용 / 결제: 토스페이먼츠 — 이름·이메일·주문 정보. 자세한 내용은 개인정보처리방침에 있어요."],
+      ["처리 위탁", "검사 실시: 마음사랑(MMPI-2·TCI-RS), 인싸이트(SCT) — 이름·성별·태어난 해 / 알림톡·문자 발송: 솔라피(카카오) — 이름·휴대폰 번호·알림 내용 / 결제: 토스페이먼츠 — 이름·이메일·주문 정보. 자세한 내용은 개인정보처리방침에 있어요."],
       ["보관 기간", "10년 (해석 상담이 끝난 날 또는 신청이 취소·환불된 날부터, 탈퇴해도 이 기간 동안 보관 후 파기)"],
       ["거부할 권리", "동의하지 않을 수 있어요. 다만 이 정보 없이는 검사를 진행할 수 없어요."],
     ],
@@ -668,7 +668,7 @@ export default function ApplyPage() {
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-1 text-[13.5px] text-[var(--foreground-subtle)]">검사 링크 3개(MMPI-3·TCI-RS·SCT)는 접수면접지를 낸 다음 날 아침 8시에 알림톡으로 한 번에 보내 드려요.</p>
+                  <p className="mt-1 text-[13.5px] text-[var(--foreground-subtle)]">검사 링크 3개(MMPI-2·TCI-RS·SCT)는 접수면접지를 낸 다음 날 아침 8시에 알림톡으로 한 번에 보내 드려요.</p>
                   {errText("agree", "필수 동의 4가지에 모두 체크해 주세요.")}
                 </div>
 
@@ -782,7 +782,7 @@ const PROG: { kind: "tci" | "mmpi" | "sct"; label: string }[] = [
 ];
 
 const INC: { icon: IconName; tile: string; title: string; sub: string; gift?: string }[] = [
-  { icon: "laptop", tile: "bg-[var(--brand-light)] text-[var(--tci)]", title: "온라인 심리검사 3종", sub: "MMPI-3 · TCI-RS · SCT" },
+  { icon: "laptop", tile: "bg-[var(--brand-light)] text-[var(--tci)]", title: "온라인 심리검사 3종", sub: "MMPI-2 · TCI-RS · SCT" },
   { icon: "doc", tile: "bg-[#D5EFE4] text-[var(--mmpi-ink)]", title: "종합 해석 보고서", sub: "세 검사와 접수면접지를 함께 읽고 써요" },
   { icon: "chat", tile: "bg-[var(--brand-light)] text-[var(--tci)]", title: "해석 상담 약 60분", sub: "대면 또는 화상" },
   { icon: "play", tile: "bg-[var(--sct-light)] text-[var(--sct-ink)]", title: "해석 영상", sub: "영상으로도 다시 봐요", gift: "3만 원 상당" },

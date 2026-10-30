@@ -406,7 +406,7 @@ export default function IntakePage() {
             </div>
             <div className="rounded-2xl bg-[var(--brand-light)] p-5">
               <p className="font-semibold text-[var(--foreground)]">내일 아침 8시, 검사 링크</p>
-              <p className="mt-1 text-sm text-[var(--foreground-muted)]">MMPI-3 · TCI-RS · SCT 링크 3개가 알림톡으로 한 번에 와요. 검사 마감(해석 상담 7일 전)까지 나눠서 해도 괜찮아요.</p>
+              <p className="mt-1 text-sm text-[var(--foreground-muted)]">MMPI-2 · TCI-RS · SCT 링크 3개가 알림톡으로 한 번에 와요. 검사 마감(해석 상담 7일 전)까지 나눠서 해도 괜찮아요.</p>
             </div>
           </div>
         )}
@@ -567,7 +567,7 @@ export default function IntakePage() {
           ))}
           {last && (
             <p className="text-xs text-[var(--foreground-muted)]">
-              검사는 마음사랑(MMPI-3·TCI-RS)과 인싸이트(SCT) 온라인 검사로 집에서 받아요. 제출하면 이 기기에 임시 저장된 내용은 지워져요.
+              검사는 마음사랑(MMPI-2·TCI-RS)과 인싸이트(SCT) 온라인 검사로 집에서 받아요. 제출하면 이 기기에 임시 저장된 내용은 지워져요.
             </p>
           )}
         </section>

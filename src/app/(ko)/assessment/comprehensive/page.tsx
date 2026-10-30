@@ -11,7 +11,7 @@ import { DETAIL_FAQ } from "@/content/assessmentGuide";
 import { DiffArt, HeroLayersArt, SpreadLayersArt, VideoSceneArt } from "@/components/assessment/AssessArt";
 
 export const metadata: Metadata = {
-  title: "종합심리검사 TCI + MMPI-3 + SCT",
+  title: "종합심리검사 MMPI-2 + TCI + SCT",
   description: "온라인 심리검사 3종 + 종합 해석 보고서 + 해석 상담 약 60분 + 해석 영상. 150,000원.",
 };
 
@@ -59,10 +59,10 @@ const LAYERS: { kind: "sct" | "mmpi" | "tci"; lv: string; lvColor: string; name:
     kind: "mmpi",
     lv: "가운데 · 지금의 나",
     lvColor: "text-[var(--mmpi-ink)]",
-    name: "MMPI-3",
+    name: "MMPI-2",
     full: "다면적 인성검사",
     body: "요즘의 내가 어떤 마음으로 지내는지, 스트레스가 올 때 어떻게 대처하는지 넓게 살펴봐요. 솔직하게 답했는지도 함께 확인해서 결과를 더 믿고 볼 수 있어요.",
-    meta: ["335문항 · 예/아니오", "약 35~50분", "2026년 10월 새로 나온 한국판"],
+    meta: ["567문항 · 예/아니오", "약 60~90분"],
   },
   {
     kind: "tci",
@@ -93,7 +93,7 @@ const DIFF: { n: 1 | 2 | 3; title: string; body: string }[] = [
 const FAQ = DETAIL_FAQ;
 
 const INCLUDED: { title: string; sub: string; gift?: string }[] = [
-  { title: "온라인 심리검사 3종", sub: "TCI · MMPI-3 · SCT, 집에서" },
+  { title: "온라인 심리검사 3종", sub: "MMPI-2 · TCI · SCT, 집에서" },
   { title: "종합 해석 보고서", sub: "김태현 심리상담가가 직접 써요" },
   { title: "해석 상담 약 60분", sub: "대면(서울 5개 지역) 또는 화상" },
   { title: "해석 영상", sub: "상담 뒤 내 페이지에서 다시 보기", gift: "3만 원 상당" },
@@ -146,7 +146,7 @@ export default function ComprehensivePage() {
                 타고난 <span className="text-[var(--tci)]">나</span>,<br />
                 지금의 <span className="text-[#3F9C7E]">나</span>,<br />내 말 속의 <span className="text-[#E0704F]">나</span>
               </h1>
-              <p className="text-lg font-extrabold tracking-[-0.01em] text-[var(--tci)]">TCI · MMPI-3 · SCT</p>
+              <p className="text-lg font-extrabold tracking-[-0.01em] text-[var(--tci)]">MMPI-2 · TCI · SCT</p>
               <p className="mt-3.5 max-w-[520px] text-[17px] text-[var(--foreground-muted)] lg:text-lg">
                 세 가지 검사로 <b className="text-[var(--tci-dark)]">&apos;나 사용 설명서&apos;</b>를 함께 써 보는 시간이에요. 김태현 심리상담가가 세 겹을 하나로 읽고, 60분 동안 같이 풀어 드려요. 고민이 없어도 괜찮아요.
               </p>
@@ -264,7 +264,7 @@ export default function ComprehensivePage() {
                 <b className="mb-1 block text-[13px] font-extrabold text-[#BDE7D6]">바탕 · TCI</b>먼저 살피고, 한번 맡으면 끝까지 가는 결
               </div>
               <div className="rounded-2xl bg-[var(--mmpi-light)] px-4 py-3.5">
-                <b className="mb-1 block text-[13px] font-extrabold text-[var(--mmpi-ink)]">지금 · MMPI-3</b>요즘은 쉬어도 개운하지 않은 날씨
+                <b className="mb-1 block text-[13px] font-extrabold text-[var(--mmpi-ink)]">지금 · MMPI-2</b>요즘은 쉬어도 개운하지 않은 날씨
               </div>
               <div className="rounded-2xl bg-[var(--sct-light)] px-4 py-3.5">
                 <b className="mb-1 block text-[13px] font-extrabold text-[var(--sct-ink)]">내 말 · SCT</b>&quot;내가 조금 더 하면 다들 편해진다.&quot;

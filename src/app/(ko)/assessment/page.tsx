@@ -5,7 +5,7 @@ import { TestsTabs } from "@/components/assessment/TestsTabs";
 
 export const metadata: Metadata = {
   title: "전문 심리검사",
-  description: "TCI · MMPI-3 · SCT 세 가지 검사와 김태현 심리상담가의 종합 해석 보고서, 해석 상담까지 한 번에.",
+  description: "MMPI-2 · TCI · SCT 세 가지 검사와 김태현 심리상담가의 종합 해석 보고서, 해석 상담까지 한 번에.",
 };
 
 // 전문 심리검사 — 쇼핑몰식 상품 목록 (지금은 종합심리검사 1종)
@@ -15,7 +15,7 @@ const PRODUCTS = [
     // 상품 이미지(16:9) — 10/29 상담가 확정 A안. 없으면 그린 머리로
     cover: "/assessment/comprehensive-cover.png" as string | null,
     badge: "대표",
-    title: "종합심리검사 TCI + MMPI-3 + SCT",
+    title: "종합심리검사 MMPI-2 + TCI + SCT",
     summary: "타고난 기질, 지금의 마음 상태, 내 문장 속 이야기까지. 세 검사를 함께 읽고 해석 상담으로 풀어 드려요.",
     tags: ["검사 3종", "종합 해석 보고서", "해석 상담 약 60분", "해석 영상"],
     price: 150000,
@@ -47,7 +47,7 @@ export default function AssessmentListPage() {
                 <div className="relative flex h-40 items-end bg-[var(--brand)] p-5 text-white">
                   <span className="absolute right-4 top-4 rounded-full bg-white/20 px-2.5 py-1 text-xs font-semibold">{p.badge}</span>
                   <div className="flex gap-2 text-sm font-bold">
-                    {["TCI", "MMPI-3", "SCT"].map((t) => (
+                    {["MMPI-2", "TCI", "SCT"].map((t) => (
                       <span key={t} className="rounded-lg bg-white/15 px-2.5 py-1">
                         {t}
                       </span>

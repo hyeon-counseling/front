@@ -3,10 +3,10 @@ import { Plate } from "./Plate";
 
 const FONT = "Pretendard Variable, Pretendard, sans-serif";
 
-/** 첫 화면 — 썸네일 C: 아래부터 TCI(진한 그린) · MMPI-3(민트) · SCT(코랄) 판 세 장 */
+/** 첫 화면 — 썸네일 C: 아래부터 TCI(진한 그린) · MMPI-2(민트) · SCT(코랄) 판 세 장 */
 export function HeroLayersArt({ className }: { className?: string }) {
   return (
-    <svg viewBox="40 60 640 690" className={className} role="img" aria-label="아래부터 TCI 타고난 기질, MMPI-3 지금의 나, SCT 내 말로 쓴 마음 판 세 장이 쌓인 그림">
+    <svg viewBox="40 60 640 690" className={className} role="img" aria-label="아래부터 TCI 타고난 기질, MMPI-2 지금의 나, SCT 내 말로 쓴 마음 판 세 장이 쌓인 그림">
       <g>
         <polygon points="120,580 350,695 350,719 120,604" fill="#24564a" />
         <polygon points="580,580 350,695 350,719 580,604" fill="#1f3a33" />
@@ -38,7 +38,7 @@ export function HeroLayersArt({ className }: { className?: string }) {
         <rect x="168" y="366" width="364" height="64" rx="32" fill="#1f3a33" opacity=".12" transform="translate(0 6)" />
         <rect x="168" y="366" width="364" height="64" rx="32" fill="#fff" />
         <text x="350" y="410" fontSize="36" fill="#1f3a33">
-          <tspan fill="#3f9c7e" fontWeight="900">MMPI-3</tspan> 지금의 나
+          <tspan fill="#3f9c7e" fontWeight="900">MMPI-2</tspan> 지금의 나
         </text>
         <rect x="186" y="556" width="328" height="64" rx="32" fill="#1f3a33" opacity=".12" transform="translate(0 6)" />
         <rect x="186" y="556" width="328" height="64" rx="32" fill="#fff" />
@@ -69,7 +69,7 @@ function SpreadPlate({ dy, l, r, top, lines }: { dy: number; l: string; r: strin
 /** '세 겹' 섹션 — 같은 판 세 장을 위아래로 벌려 놓은 그림 */
 export function SpreadLayersArt({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 360 446" className={className} role="img" aria-label="판 세 장을 위아래로 벌려 놓은 그림: 위 SCT 내 말, 가운데 MMPI-3 지금, 아래 TCI 바탕">
+    <svg viewBox="0 0 360 446" className={className} role="img" aria-label="판 세 장을 위아래로 벌려 놓은 그림: 위 SCT 내 말, 가운데 MMPI-2 지금, 아래 TCI 바탕">
       <g stroke="#2F6B5A" strokeOpacity=".35" strokeWidth="2" strokeDasharray="3 7" strokeLinecap="round">
         <line x1="40" y1="96" x2="40" y2="346" />
         <line x1="320" y1="96" x2="320" y2="346" />
@@ -82,7 +82,7 @@ export function SpreadLayersArt({ className }: { className?: string }) {
         <rect x="128" y="70" width="104" height="36" rx="18" fill="#fff" />
         <text x="180" y="95" fill="#e0704f">SCT</text>
         <rect x="118" y="200" width="124" height="36" rx="18" fill="#fff" />
-        <text x="180" y="225" fill="#237A5E">MMPI-3</text>
+        <text x="180" y="225" fill="#237A5E">MMPI-2</text>
         <rect x="133" y="330" width="94" height="36" rx="18" fill="#fff" />
         <text x="180" y="355" fill="#2F6B5A">TCI</text>
       </g>

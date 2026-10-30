@@ -30,7 +30,7 @@ interface AppRow {
   name: string;
 }
 
-const LABEL: Record<string, string> = { mmpi3: "MMPI-3", tci: "TCI", sct: "SCT" };
+const LABEL: Record<string, string> = { mmpi3: "MMPI-2", tci: "TCI", sct: "SCT" };
 const GENDER: Record<string, string> = { female: "여", male: "남", other: "기타", undisclosed: "—" };
 
 export default function CodesPage() {

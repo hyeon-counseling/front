@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description:
     SHOW_COURSES
       ? "김태현 심리상담가의 강의(영상·오디오·직접 써 보는 실습)와 과정, 심리검사, 상담. 나를 이해하는 공부를 편안한 속도로."
-      : "김태현 심리상담가의 종합심리검사(TCI·MMPI-3·SCT)와 해석 상담, 간이 무료 심리검사, 아티클. 나를 이해하는 첫걸음.",
+      : "김태현 심리상담가의 종합심리검사(MMPI-2·TCI·SCT)와 해석 상담, 간이 무료 심리검사, 아티클. 나를 이해하는 첫걸음.",
   openGraph: {
     siteName: "심리상담실 현",
     locale: "ko_KR",
