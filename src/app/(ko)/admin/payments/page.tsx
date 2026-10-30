@@ -37,6 +37,7 @@ interface Config {
   mockOpen: boolean;
   mockTesters: number;
   tossConfigured: boolean;
+  tossTestKey?: boolean;
 }
 
 const TONE: Record<Status, "brand" | "neutral" | "warning" | "error"> = { paid: "brand", pending: "warning", failed: "neutral", refunded: "error" };
@@ -99,7 +100,15 @@ export default function AdminPaymentsPage() {
             </>
           ) : (
             <>
-              <strong>토스페이먼츠</strong> 실제 결제 모드 {config.tossConfigured ? "" : "— ⚠️ 키가 설정되지 않았어요"}
+              {config.tossTestKey ? (
+                <>
+                  <strong>토스페이먼츠 테스트 키</strong> — 실제 돈이 결제되지 않아요. 결제창은 누구나 볼 수 있고, 결제 완료(이용권)는 관리자와 등록된 테스터만 돼요.
+                </>
+              ) : (
+                <>
+                  <strong>토스페이먼츠</strong> 실제 결제 모드 {config.tossConfigured ? "" : "— ⚠️ 키가 설정되지 않았어요"}
+                </>
+              )}
             </>
           )}
         </div>
