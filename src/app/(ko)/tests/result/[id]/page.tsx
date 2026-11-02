@@ -192,7 +192,7 @@ export default function TestResultPage() {
             다른 검사 해보기
           </Link>
         </div>
-        <Link href="/my" className="mt-2 flex h-12 items-center justify-center rounded-xl text-sm font-semibold text-[var(--foreground-muted)] hover:text-[var(--foreground)]">
+        <Link href="/my/tests" className="mt-2 flex h-12 items-center justify-center rounded-xl text-sm font-semibold text-[var(--foreground-muted)] hover:text-[var(--foreground)]">
           내 검사 기록 보기
         </Link>
 

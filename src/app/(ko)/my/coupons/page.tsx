@@ -35,7 +35,7 @@ export default function MyCouponsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-      <Link href="/my" className="text-sm text-[var(--foreground-muted)] hover:text-[var(--foreground)]">← 내 학습</Link>
+      <Link href="/my" className="text-sm text-[var(--foreground-muted)] hover:text-[var(--foreground)]">← 마이페이지</Link>
       <h1 className="font-display mt-3 text-3xl text-[var(--foreground)]">쿠폰함</h1>
       <p className="mt-2 text-[var(--foreground-muted)]">결제 페이지에서 쿠폰을 고르면 할인된 금액으로 결제돼요.</p>
 

@@ -8,20 +8,24 @@ import { SHOW_COURSES } from "@/lib/site";
 import { apiRequest } from "@/lib/api";
 import type { MyCourse } from "@/lib/course";
 import type { MyProgram } from "@/lib/program";
-import type { MyTestItem } from "@/lib/psychTest";
 import { Skeleton } from "@/components/ui";
 import { StampCard } from "@/components/my/StampCard";
 import { ForestCard } from "@/components/my/ForestCard";
+import { MyTestRecords } from "@/components/my/MyTestRecords";
+import { myHome } from "@/components/ko/SiteHeader";
 
 // ─────────────────────────────────────────────────────────────────
 // 내 학습(마이페이지) — 내 과정 · 내 강의(무료 체험 포함, 이어보기 · 쓰기 기록) · 심리검사 · 주문 내역
+// 강의를 숨긴 동안(lib/site.ts) 회원은 기본 화면(주문 내역)으로 보낸다. 이미 듣는 강의·과정이 있는 회원은 그 강의를 볼 수 있게 남긴다.
 // ─────────────────────────────────────────────────────────────────
 export default function MyPage() {
   const router = useRouter();
   const { user, logout, loading } = useAuth();
   const [courses, setCourses] = useState<MyCourse[] | null>(null);
   const [programs, setPrograms] = useState<MyProgram[] | null>(null);
-  const [tests, setTests] = useState<MyTestItem[] | null>(null);
+  const home = myHome(user?.role === "admin");
+  const hasLearning = !!courses?.length || !!programs?.length;
+  const learningLoaded = courses !== null && programs !== null;
 
   useEffect(() => {
     if (loading) return;
@@ -31,10 +35,14 @@ export default function MyPage() {
     }
     apiRequest<MyCourse[]>("/api/my/courses").then((res) => setCourses(res.ok && res.data ? res.data : []));
     apiRequest<MyProgram[]>("/api/my/programs").then((res) => setPrograms(res.ok && res.data ? res.data : []));
-    apiRequest<MyTestItem[]>("/api/my/tests").then((res) => setTests(res.ok && res.data ? res.data : []));
   }, [loading, user, router]);
 
+  useEffect(() => {
+    if (home !== "/my" && learningLoaded && !hasLearning) router.replace(home);
+  }, [home, learningLoaded, hasLearning, router]);
+
   if (loading || !user) return null;
+  if (home !== "/my" && !hasLearning) return null;
 
   // 과정에 든 과목은 '내 과정' 카드에서 보여 주고, '내 강의'에는 과정 밖 과목만
   const browse = SHOW_COURSES || user?.role === "admin";
@@ -152,33 +160,7 @@ export default function MyPage() {
             <h2 className="text-lg font-bold text-[var(--foreground)]">내 심리검사 기록</h2>
             <Link href="/tests" className="text-sm font-semibold text-[var(--brand)]">검사 하러 가기 →</Link>
           </div>
-          {tests === null ? (
-            <Skeleton className="h-20" />
-          ) : tests.length === 0 ? (
-            <div className="card p-6">
-              <p className="font-semibold text-[var(--foreground)]">아직 해 본 검사가 없어요</p>
-              <p className="mt-1 text-sm text-[var(--foreground-muted)]">3분이면 지금의 마음을 살펴볼 수 있어요.</p>
-            </div>
-          ) : (
-            <ul className="card divide-y divide-[var(--border-light)] overflow-hidden">
-              {tests.slice(0, 8).map((t) => (
-                <li key={t.id}>
-                  <Link href={`/tests/result/${t.id}`} className="flex items-center gap-3 px-5 py-4 hover:bg-[var(--surface)]">
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-semibold text-[var(--foreground)]">{t.testTitle}</span>
-                      <span className="block text-xs text-[var(--foreground-subtle)]">{new Date(t.createdAt).toLocaleDateString("ko-KR")}</span>
-                    </span>
-                    <span className="text-right text-sm">
-                      <span className="block font-bold text-[var(--foreground)]">{t.bandLabel}</span>
-                      <span className="block text-xs text-[var(--foreground-subtle)]">
-                        {t.scaleScores.length ? t.scaleScores.map((s) => `${s.label} ${s.score}`).join(" · ") : `${Number.isInteger(t.score) ? t.score : t.score.toFixed(2)} / ${t.maxScore}`}
-                      </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
+          <MyTestRecords limit={8} />
         </section>
 
         {/* 주문 */}
