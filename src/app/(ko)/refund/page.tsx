@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage, Section } from "@/components/ko/LegalPage";
 import { RefundRules } from "@/components/assessment/RefundRules";
 import { CounselingRefundRules } from "@/components/counseling/CounselingRules";
-import { SHOW_COUNSELING, SHOW_COURSES } from "@/lib/site";
+import { ASSESSMENT_SERVICE_PERIOD, SHOW_COUNSELING, SHOW_COURSES } from "@/lib/site";
 
 export const metadata: Metadata = { title: "환불 규정" };
 
@@ -21,7 +21,7 @@ export default function RefundPage() {
             </li>
           )}
           <li>
-            <b className="text-[var(--foreground)]">종합심리검사 + 해석 상담</b>: 결제하면 바로 신청이 확정됩니다. 접수면접지 작성 → 온라인 검사(해석 상담 7일 전까지) → 해석 상담 순서로 진행합니다. 결제부터 상담까지 보통 2~4주이며, 상담 날짜는 신청할 때 직접 고릅니다.
+            <b className="text-[var(--foreground)]">종합심리검사 + 해석 상담</b>: 결제하면 바로 신청이 확정됩니다. 접수면접지 작성 → 온라인 검사(해석 상담 7일 전까지) → 해석 상담 순서로 진행합니다. 결제부터 상담까지 보통 2~4주이며, 상담 날짜는 신청할 때 직접 고릅니다. <b className="text-[var(--foreground)]">{ASSESSMENT_SERVICE_PERIOD}</b>
           </li>
           {SHOW_COUNSELING && (
             <li>

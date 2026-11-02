@@ -1,3 +1,4 @@
+import { ASSESSMENT_SERVICE_PERIOD } from "@/lib/site";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TestsTabs } from "@/components/assessment/TestsTabs";
@@ -171,6 +172,7 @@ export default function ComprehensivePage() {
                   150,000원
                   <small className="block text-[13.5px] font-semibold tracking-normal text-[var(--foreground-muted)]">검사 · 보고서 · 상담 · 해석 영상 모두 포함</small>
                 </p>
+                <p className="mt-2 text-[14px] font-semibold text-[var(--foreground-muted)]">{ASSESSMENT_SERVICE_PERIOD}</p>
                 <div className="mt-3.5 flex flex-wrap gap-2.5">
                   <Link href={APPLY} className="as-btn flex-auto sm:flex-none">
                     신청하기 <Icon name="arrow" className="h-5 w-5" />
@@ -554,7 +556,8 @@ export default function ComprehensivePage() {
                   </li>
                 ))}
               </ul>
-              <Link href={APPLY} className="as-btn mt-5 w-full">
+              <p className="mt-5 text-center text-[14px] font-semibold text-[var(--foreground-muted)]">{ASSESSMENT_SERVICE_PERIOD}</p>
+              <Link href={APPLY} className="as-btn mt-3 w-full">
                 신청하기 <Icon name="arrow" className="h-5 w-5" />
               </Link>
               <details className="mt-4 rounded-2xl bg-[var(--ivory)]">

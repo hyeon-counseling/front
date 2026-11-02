@@ -22,3 +22,6 @@ export const SHOW_MAIL_ORDER_NO = false;
  */
 export const SHOW_COURSES = false;
 export const SHOW_COUNSELING = false;
+
+/** 종합심리검사 서비스 제공기간 — 토스페이먼츠 카드사 심사 표시 사항 (상담가 확정, 상품 상세·환불 규정이 함께 쓴다) */
+export const ASSESSMENT_SERVICE_PERIOD = "서비스 제공기간: 결제일로부터 최대 1개월";
