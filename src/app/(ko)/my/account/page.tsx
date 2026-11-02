@@ -89,6 +89,9 @@ export default function MyAccountPage() {
             ) : (
               <>
                 <DeletionSummary preview={preview} />
+                {preview.kept.some((k) => k.label.startsWith("종합심리검사") && k.count > 0) && (
+                  <Alert tone="info">탈퇴 후에는 검사 진행 화면과 보고서를 볼 수 없어요. 보고서가 필요하면 탈퇴 전에 문의해 주세요.</Alert>
+                )}
 
                 {assessmentBlock || adminBlock ? (
                   <div className="rounded-xl bg-[var(--surface)] px-4 py-4 text-sm leading-relaxed text-[var(--foreground-muted)]">
