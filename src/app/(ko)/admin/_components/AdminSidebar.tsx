@@ -61,7 +61,8 @@ function groups(s: Summary | null): NavGroup[] {
       label: "판매·결제",
       items: [
         { label: "판매 요약", href: "/admin/sales" },
-        { label: "결제·주문", href: "/admin/payments" },
+        { label: "결제·주문", href: "/admin/payments", exact: true },
+        { label: "결제 통계", href: "/admin/payments/stats" },
         { label: "쿠폰", href: "/admin/coupons", exact: true },
         { label: "쿠폰 보내기·선물", href: "/admin/coupons/send" },
       ],
