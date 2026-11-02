@@ -39,14 +39,14 @@ function VerifyEmailHandler() {
 
         if (data.success) {
           setStatus("success");
-          setMessage(data.message ?? "이메일 인증이 완료되었습니다!");
+          setMessage(data.message ?? "이메일 인증이 끝났어요.");
         } else {
           setStatus("error");
-          setMessage(data.message ?? "인증에 실패했습니다.");
+          setMessage(data.message ?? "인증하지 못했어요.");
         }
       } catch {
         setStatus("error");
-        setMessage("서버와 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+        setMessage("서버와 연결할 수 없어요. 잠시 후 다시 시도해 주세요.");
       }
     };
 
