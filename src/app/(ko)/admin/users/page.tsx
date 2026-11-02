@@ -68,6 +68,10 @@ const AUDIT_LABEL: Record<string, string> = {
   "member.send_password_reset": "비밀번호 재설정 메일 발송",
   "member.delete": "회원 삭제",
   "member.self_delete": "본인 탈퇴",
+  "report.upload": "보고서 올림",
+  "report.video": "해석 영상 링크 변경",
+  "report.publish": "보고서·영상 전달 완료",
+  "report.unpublish": "보고서·영상 전달 취소",
 };
 const CHANGED_LABEL: Record<string, string> = { name: "이름", email: "이메일", birthDate: "생년월일", gender: "성별" };
 
@@ -458,6 +462,7 @@ export default function AdminUsersPage() {
             {me?.id !== selected._id && selected.role !== "admin" && (
               <div className="border-t border-[var(--border-light)] pt-5">
                 <p className="mb-2 text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">회원 삭제</p>
+                <p className="mb-2 text-xs text-[var(--foreground-muted)]">해석 영상을 전달한 회원이면 유튜브 영상은 직접 지워 주세요.</p>
                 {!deleteOpen ? (
                   <Button size="md" variant="danger" disabled={saving} onClick={openDeletion}>
                     삭제 안내 보기

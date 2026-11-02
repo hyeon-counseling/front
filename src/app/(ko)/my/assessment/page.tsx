@@ -72,6 +72,11 @@ export default function MyAssessmentPage() {
                       <span key={i} className="h-1.5 flex-1 rounded-full bg-[var(--surface-muted)]" />
                     ))}
                   </div>
+                  {a.reportPublished && (
+                    <Link href={`/a/${a.linkKey}/report`} className="mt-4 inline-flex h-10 items-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white">
+                      보고서·영상 보기
+                    </Link>
+                  )}
                   <p className="mt-3 text-xs text-[var(--foreground-subtle)]">끝난 신청이에요. 궁금한 점은 카카오톡 채널 「심리상담실 현」으로 물어봐 주세요.</p>
                 </div>
               ) : (
@@ -90,6 +95,11 @@ export default function MyAssessmentPage() {
                 </div>
                 <StageTracker stage={a.stage} hold={a.hold} compact />
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
+                  {a.reportPublished && (
+                    <Link href={`/a/${a.linkKey}/report`} className="inline-flex h-10 items-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white">
+                      보고서·영상 보기
+                    </Link>
+                  )}
                   <Link href={`/a/${a.linkKey}`} className="inline-flex h-10 items-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white">
                     진행 상황 보기
                   </Link>
