@@ -94,7 +94,7 @@ const ASSESS_STEPS = [
   { n: "01", t: "날짜를 고르고 신청", d: "해석 상담 날짜를 직접 고르고 결제하면 신청이 바로 확정돼요." },
   { n: "02", t: "접수면접지와 온라인 검사", d: "요즘의 고민을 적고, 해석 상담 7일 전까지 세 가지 검사를 내 속도로 해요." },
   { n: "03", t: "상담가가 직접 읽어요", d: "김태현 심리상담가가 검사 결과와 접수면접지를 함께 꼼꼼히 봐요." },
-  { n: "04", t: "해석 상담으로 정리", d: "화상 또는 서울 대면 50분. 결과를 쉬운 말로 함께 정리해요." },
+  { n: "04", t: "해석 상담으로 정리", d: "화상 또는 서울 대면 약 60분. 결과를 쉬운 말로 함께 정리해요." },
 ];
 const STEPS = SHOW_COURSES ? COURSE_STEPS : ASSESS_STEPS;
 
@@ -395,7 +395,7 @@ function AssessPreview() {
   const rows = [
     { t: "접수면접지", d: "제출 완료", done: true },
     { t: "온라인 검사", d: "MMPI-3 ✓ · TCI ✓ · SCT 진행 중", done: false, now: true },
-    { t: "해석 상담", d: "화상 50분 · 상담 날짜 확정", done: false },
+    { t: "해석 상담", d: "화상 약 60분 · 상담 날짜 확정", done: false },
   ];
   return (
     <div className="rise rise-3 relative mx-auto w-full max-w-md lg:max-w-none">
