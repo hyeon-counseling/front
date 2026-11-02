@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/assessment/Icon";
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 /**
  * 개인 상담 상품 상세 — 종합심리검사 상세(/assessment/comprehensive)와 같은 디자인 체계(.assess)
  * 첫 화면(옵션·가격·신청) → 이런 분께 → 만나는 방식 → 진행 순서 → 상담가 → FAQ → 가격 → 마지막 신청
- * 상품·가격·취소 규정은 결정 #56(10/30), 신청·결제는 카페24
+ * 상품·가격·취소 규정은 결정 #56(10/30), 신청·결제는 사이트(토스)
  */
 const TILE = {
   g: "bg-[var(--brand-light)] text-[var(--tci)]",
@@ -43,9 +44,9 @@ const NEEDS: { icon: IconName; tone: keyof typeof TILE; title: string; body: str
 ];
 
 const STEPS: { title: string; when: string; body: string; icon: IconName; tone: "g" | "c" | "s" }[] = [
-  { title: "옵션 고르고 신청", when: "이 페이지에서", body: "1회·첫 상담 패키지·5회·10회 중에서 골라 쇼핑몰에서 신청해요.", icon: "heart", tone: "g" },
-  { title: "결제", when: "쇼핑몰 결제", body: "결제가 끝나면 상담 세부 신청서 안내를 보내 드려요.", icon: "check", tone: "s" },
-  { title: "상담 세부 신청서", when: "5~10분", body: "요즘의 고민과 희망 일시, 대면이면 희망 지역 1·2순위를 적어요.", icon: "pencil", tone: "c" },
+  { title: "옵션 고르고 신청", when: "이 페이지에서", body: "1회·첫 상담 패키지·5회·10회 중에서 골라 신청해요.", icon: "heart", tone: "g" },
+  { title: "결제", when: "카드·간편결제", body: "결제가 끝나면 심리상담 현황에서 세부 신청서를 작성할 수 있어요.", icon: "check", tone: "s" },
+  { title: "상담 세부 신청서", when: "5~10분", body: "다루고 싶은 이야기와 희망 시간, 대면이면 희망 지역을 적어요.", icon: "pencil", tone: "c" },
   { title: "일정 확정·안내", when: "대면 장소는 3일 전", body: "일정을 확정해 알려 드려요. 화상은 접속 안내를 미리 보내 드려요.", icon: "bell", tone: "g" },
   { title: "상담 50분", when: "예약한 날", body: "편하게 이야기해요. 여러 회기라면 첫 상담에서 이후 일정을 함께 조율해요.", icon: "chat", tone: "c" },
 ];
@@ -63,7 +64,7 @@ const FAQ: { q: string; a: string[] }[] = [
   { q: "유효기간이 지나면 남은 회기는 어떻게 되나요?", a: ["남은 회기를 돌려받거나, 1회 연장을 신청할 수 있어요."] },
   { q: "상담 내용은 비밀이 지켜지나요?", a: ["네. 상담에서 나눈 이야기는 법이 정한 예외(본인이나 다른 사람의 안전이 위험할 때 등)를 빼고 밖으로 나가지 않아요."] },
   { q: "정신과 진료와는 어떻게 다른가요?", a: ["개인 상담은 마음을 함께 들여다보고 정리하는 시간이에요. 진단이나 약 처방은 하지 않으며, 의학적 진료를 대체하지 않아요. 필요하면 전문 기관과 함께 다니는 방법도 같이 찾아봐요."] },
-  { q: "결제는 어디서 하나요?", a: ["지금은 「심리상담실 현」 쇼핑몰(카페24)에서 결제해요. [신청하기]를 누르면 쇼핑몰로 이어져요."] },
+  { q: "결제는 어디서 하나요?", a: ["이 사이트에서 카드·간편결제로 해요. [신청하기]를 누르면 결제 화면으로 이어져요."] },
 ];
 
 const INCLUDED: { title: string; sub: string }[] = [
@@ -133,8 +134,10 @@ export default function IndividualCounselingPage() {
                   김태현 심리상담가와 1:1로 만나요. 정답을 건네기보다, 지금 내 마음이 어디에 걸려 있는지 <b className="text-[var(--tci-dark)]">함께 천천히</b> 찾아가요.
                 </p>
               </div>
-              <div className="floaty mx-auto mt-1 w-full max-w-[240px] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:max-w-[420px]">
-                <TalkArt className="block h-auto w-full" />
+              <div className="floaty mx-auto mt-1 w-full max-w-[420px] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:max-w-[420px]">
+                <div className="relative aspect-video overflow-hidden rounded-2xl bg-[var(--surface)] shadow-[var(--shadow-md)]">
+                  <Image src="/counseling/individual-cover.png" alt="개인 상담" fill priority sizes="(min-width: 1024px) 420px, 100vw" className="object-cover" />
+                </div>
               </div>
               <div>
                 <ul className="mt-6 grid gap-2.5">
@@ -158,7 +161,7 @@ export default function IndividualCounselingPage() {
                         진행 순서 보기
                       </a>
                     </div>
-                    <p className="mt-2.5 text-[13px] text-[var(--foreground-subtle)]">{OPEN_PRICE_UNTIL}까지 오픈 가격이에요. 신청·결제는 「심리상담실 현」 쇼핑몰에서 해요.</p>
+                    <p className="mt-2.5 text-[13px] text-[var(--foreground-subtle)]">{OPEN_PRICE_UNTIL}까지 오픈 가격이에요.</p>
                   </div>
                 </div>
               </div>
@@ -362,7 +365,7 @@ export default function IndividualCounselingPage() {
                   ))}
                 </ul>
                 <ApplyButton className="mt-5 w-full" />
-                <p className="mt-2.5 text-center text-[13px] text-[var(--foreground-subtle)]">{OPEN_PRICE_UNTIL}까지 오픈 가격 · 신청·결제는 쇼핑몰(카페24)에서</p>
+                <p className="mt-2.5 text-center text-[13px] text-[var(--foreground-subtle)]">{OPEN_PRICE_UNTIL}까지 오픈 가격에서</p>
                 <details className="mt-4 rounded-2xl bg-[var(--ivory)]">
                   <summary className="flex min-h-[52px] cursor-pointer items-center gap-2.5 px-4 py-3.5 text-[15.5px] font-bold">
                     취소·환불 규정 한눈에

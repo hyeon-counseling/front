@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { OPEN_PRICE_UNTIL, PRICE } from "@/components/counseling/CounselingRules";
 
@@ -11,8 +12,8 @@ export const metadata: Metadata = {
 const PRODUCTS = [
   {
     href: "/counseling/individual",
+    cover: "/counseling/individual-cover.png",
     badge: "대표",
-    chips: ["1:1", "50분", "화상·대면"],
     title: "개인 상담",
     summary: "김태현 심리상담가와 1:1로 만나요. 지금 내 마음이 어디에 걸려 있는지 함께 천천히 찾아가요.",
     tags: ["1회기 50분", "화상·대면 같은 가격", "첫 상담 패키지", "5·10회 할인"],
@@ -35,15 +36,9 @@ export default function CounselingListPage() {
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {PRODUCTS.map((p) => (
             <Link key={p.href} href={p.href} className="card card-hover group flex flex-col overflow-hidden">
-              <div className="relative flex h-40 items-end bg-[linear-gradient(135deg,var(--brand)_0%,#3E8C72_100%)] p-5 text-white">
-                <span className="absolute right-4 top-4 rounded-full bg-white/20 px-2.5 py-1 text-xs font-semibold">{p.badge}</span>
-                <div className="flex gap-2 text-sm font-bold">
-                  {p.chips.map((t) => (
-                    <span key={t} className="rounded-lg bg-white/15 px-2.5 py-1">
-                      {t}
-                    </span>
-                  ))}
-                </div>
+              <div className="relative aspect-video bg-[var(--surface)]">
+                <Image src={p.cover} alt={p.title} fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
+                <span className="absolute right-3 top-3 rounded-full bg-[var(--brand)] px-2.5 py-1 text-xs font-semibold text-white">{p.badge}</span>
               </div>
               <div className="flex flex-1 flex-col p-6">
                 <h2 className="text-lg font-bold leading-snug text-[var(--foreground)] group-hover:text-[var(--brand)]">{p.title}</h2>

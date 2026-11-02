@@ -61,6 +61,7 @@ export default function MyAccountPage() {
 
   const assessmentBlock = preview?.blockers.find((b) => b.code === "assessment");
   const adminBlock = preview?.blockers.find((b) => b.code === "admin");
+  const counselingBlock = preview?.blockers.find((b) => b.code === "counseling");
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
@@ -90,10 +91,18 @@ export default function MyAccountPage() {
               <>
                 <DeletionSummary preview={preview} />
 
-                {assessmentBlock || adminBlock ? (
+                {assessmentBlock || adminBlock || counselingBlock ? (
                   <div className="rounded-xl bg-[var(--surface)] px-4 py-4 text-sm leading-relaxed text-[var(--foreground-muted)]">
                     <p className="font-bold text-[var(--foreground)]">지금은 탈퇴할 수 없어요</p>
                     {adminBlock && <p className="mt-1">{adminBlock.message}</p>}
+                    {counselingBlock && (
+                      <>
+                        <p className="mt-1">{counselingBlock.message}</p>
+                        <Link href="/contact" className="mt-3 inline-flex h-10 items-center rounded-xl border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--foreground)]">
+                          문의하기
+                        </Link>
+                      </>
+                    )}
                     {assessmentBlock && (
                       <>
                         <p className="mt-1">{assessmentBlock.message}</p>
