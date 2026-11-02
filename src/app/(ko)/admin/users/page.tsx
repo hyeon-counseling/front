@@ -5,9 +5,10 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge, Button, Input, Modal, Skeleton, Toast } from "@/components/ui";
 import { stageName } from "@/lib/attendance";
+import { DeletionSummary, type DeletionPreview } from "@/components/my/DeletionSummary";
 
 // ─────────────────────────────────────────────────────────────────
-// 회원 관리 — 목록·검색·역할 필터·상세(주문)·역할 변경·정보 수정·이메일 인증 처리·메일 발송
+// 회원 관리 — 목록·검색·역할 필터·상세(주문)·역할 변경·정보 수정·이메일 인증 처리·메일 발송·삭제·작업 기록
 // 비밀번호는 관리자가 보거나 입력하지 않는다 (재설정 메일만 보낼 수 있다)
 // 카페24 구매자 "고객(CRM)"과는 별개: 여기서는 사이트 로그인 계정을 다룬다.
 // ─────────────────────────────────────────────────────────────────
@@ -50,6 +51,26 @@ const loginMethod = (u: AdminUser) => (u.googleId ? "구글" : u.kakaoId ? "카�
 const isSocial = (u: AdminUser) => loginMethod(u) !== "이메일";
 const GENDER_LABEL: Record<Gender, string> = { female: "여성", male: "남성", other: "기타" };
 
+interface AuditRow {
+  id: string;
+  action: string;
+  status: "done" | "started";
+  changed: string[];
+  by: string | null;
+  target: string | null;
+  createdAt: string;
+}
+const AUDIT_LABEL: Record<string, string> = {
+  "member.update": "정보 수정",
+  "member.role": "역할 변경",
+  "member.verify_email": "이메일 인증 처리",
+  "member.send_verification": "인증 메일 발송",
+  "member.send_password_reset": "비밀번호 재설정 메일 발송",
+  "member.delete": "회원 삭제",
+  "member.self_delete": "본인 탈퇴",
+};
+const CHANGED_LABEL: Record<string, string> = { name: "이름", email: "이메일", birthDate: "생년월일", gender: "성별" };
+
 interface EditForm {
   name: string;
   email: string;
@@ -74,6 +95,12 @@ export default function AdminUsersPage() {
   const [hasPassword, setHasPassword] = useState(false);
   const [edit, setEdit] = useState<EditForm | null>(null);
   const [editError, setEditError] = useState("");
+  const [deletion, setDeletion] = useState<DeletionPreview | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteEmail, setDeleteEmail] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [audit, setAudit] = useState<AuditRow[] | null>(null);
+  const [auditOpen, setAuditOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -101,6 +128,10 @@ export default function AdminUsersPage() {
     setEdit(null);
     setEditError("");
     setHasPassword(false);
+    setDeletion(null);
+    setDeleteOpen(false);
+    setDeleteEmail("");
+    setDeleteError("");
     setDetailLoading(true);
     try {
       const data = await apiFetch(`/api/admin/users/${u._id}`);
@@ -127,6 +158,46 @@ export default function AdminUsersPage() {
       setToast(err instanceof Error ? err.message : "변경에 실패했어요.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const openDeletion = async () => {
+    if (!selected) return;
+    setDeleteOpen(true);
+    setDeleteError("");
+    try {
+      setDeletion(await apiFetch(`/api/admin/users/${selected._id}/deletion-preview`));
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "안내를 불러오지 못했어요.");
+    }
+  };
+
+  const deleteMember = async () => {
+    if (!selected) return;
+    if (!confirm(`${selected.name}님을 삭제할까요? 되돌릴 수 없어요.`)) return;
+    setSaving(true);
+    setDeleteError("");
+    try {
+      await apiFetch(`/api/admin/users/${selected._id}`, { method: "DELETE", body: JSON.stringify({ confirmEmail: deleteEmail }) });
+      setUsers((prev) => prev.filter((u) => u._id !== selected._id));
+      setTotal((n) => n - 1);
+      setSelected(null);
+      setToast("회원을 삭제했어요.");
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "삭제하지 못했어요.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openAudit = async () => {
+    setAuditOpen(true);
+    setAudit(null);
+    try {
+      setAudit(await apiFetch("/api/admin/users/audit-log"));
+    } catch (err) {
+      setAudit([]);
+      setToast(err instanceof Error ? err.message : "기록을 불러오지 못했어요.");
     }
   };
 
@@ -199,7 +270,12 @@ export default function AdminUsersPage() {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl text-[var(--foreground)]">회원</h1>
-          <p className="mt-1 text-sm text-[var(--foreground-muted)]">사이트 로그인 계정 {loading ? "" : `${total}명`}</p>
+          <p className="mt-1 text-sm text-[var(--foreground-muted)]">
+            사이트 로그인 계정 {loading ? "" : `${total}명`} ·{" "}
+            <button type="button" onClick={openAudit} className="cursor-pointer font-semibold text-[var(--foreground)] underline-offset-2 hover:underline">
+              작업 기록
+            </button>
+          </p>
         </div>
         <form
           onSubmit={(e) => {
@@ -377,7 +453,75 @@ export default function AdminUsersPage() {
                 </ul>
               )}
             </div>
+
+            {/* 회원 삭제 — 자기 자신과 관리자 계정은 지울 수 없다 */}
+            {me?.id !== selected._id && selected.role !== "admin" && (
+              <div className="border-t border-[var(--border-light)] pt-5">
+                <p className="mb-2 text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">회원 삭제</p>
+                {!deleteOpen ? (
+                  <Button size="md" variant="danger" disabled={saving} onClick={openDeletion}>
+                    삭제 안내 보기
+                  </Button>
+                ) : (
+                  <div className="space-y-4">
+                    {deleteError && <p className="text-sm text-[var(--error)]">{deleteError}</p>}
+                    {!deletion ? (
+                      !deleteError && <Skeleton className="h-40" />
+                    ) : (
+                      <>
+                        <DeletionSummary preview={deletion} />
+                        {deletion.blockers.length > 0 ? (
+                          <div className="rounded-xl bg-[var(--surface)] px-4 py-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                            <p className="font-bold text-[var(--foreground)]">지금은 삭제할 수 없어요</p>
+                            {deletion.blockers.map((b) => (
+                              <p key={b.code} className="mt-1">
+                                {b.message} {b.applicationNos?.length ? `(신청 ${b.applicationNos.join(", ")})` : ""}
+                              </p>
+                            ))}
+                            <p className="mt-1">검사 신청 관리에서 취소·환불을 먼저 처리해 주세요.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <Input id="delete-confirm" label={`확인을 위해 ${selected.email} 를 그대로 입력해 주세요`} value={deleteEmail} onChange={(e) => setDeleteEmail(e.target.value)} autoComplete="off" />
+                            <Button size="md" variant="danger" className="w-full" loading={saving} disabled={deleteEmail.trim().toLowerCase() !== selected.email} onClick={deleteMember}>
+                              회원 삭제
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+        )}
+      </Modal>
+
+      <Modal open={auditOpen} onClose={() => setAuditOpen(false)} title="작업 기록" wide>
+        <p className="mb-3 text-xs text-[var(--foreground-subtle)]">최근 100건. 삭제된 회원은 이름이 남지 않아요. 수정한 값은 기록하지 않고 항목 이름만 남겨요.</p>
+        {audit === null ? (
+          <Skeleton className="h-40" />
+        ) : audit.length === 0 ? (
+          <p className="text-sm text-[var(--foreground-muted)]">아직 기록이 없어요.</p>
+        ) : (
+          <ul className="divide-y divide-[var(--border-light)] rounded-xl border border-[var(--border-light)]">
+            {audit.map((r) => (
+              <li key={r.id} className="px-4 py-3 text-sm">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-semibold text-[var(--foreground)]">
+                    {AUDIT_LABEL[r.action] ?? r.action}
+                    {r.status === "started" && <span className="ml-2 text-xs text-[var(--warning)]">중간에 멈춤</span>}
+                  </span>
+                  <span className="text-xs text-[var(--foreground-subtle)]">{new Date(r.createdAt).toLocaleString("ko-KR")}</span>
+                </div>
+                <p className="mt-0.5 text-xs text-[var(--foreground-muted)]">
+                  대상 {r.target ?? "(삭제된 회원)"} · 처리 {r.by ?? (r.action === "member.self_delete" ? "본인" : "(없음)")}
+                  {r.changed.length > 0 && ` · ${r.changed.map((c) => CHANGED_LABEL[c] ?? c).join(", ")}`}
+                </p>
+              </li>
+            ))}
+          </ul>
         )}
       </Modal>
 

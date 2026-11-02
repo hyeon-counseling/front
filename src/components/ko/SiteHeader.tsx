@@ -48,6 +48,7 @@ export const MY_NAV = [
   { href: "/my/tests", label: "무료 검사 기록" },
   { href: "/my/counseling", label: "심리상담 현황" },
   { href: "/my/coupons", label: "쿠폰함" },
+  { href: "/my/account", label: "내 계정" },
 ];
 
 function isActive(pathname: string, href: string) {
