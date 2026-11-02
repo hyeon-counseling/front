@@ -85,3 +85,22 @@ export function expireSession(opts: { redirect?: boolean } = {}): void {
 export function shouldExpire(status: number, hadToken: boolean, path: string): boolean {
   return status === 401 && hadToken && !isAuthEntryPath(path);
 }
+
+const UNVERIFIED_KEY = "unverifiedEmail";
+
+/** 이메일 인증 안내 화면으로 넘길 주소 — 주소창에 개인정보를 넣지 않으려고 이 탭의 저장소에만 둔다 */
+export function saveUnverifiedEmail(email: string) {
+  try {
+    sessionStorage.setItem(UNVERIFIED_KEY, email);
+  } catch {
+    // 저장이 막힌 브라우저면 안내 화면이 로그인으로 돌려보낸다
+  }
+}
+
+export function readUnverifiedEmail(): string | null {
+  try {
+    return sessionStorage.getItem(UNVERIFIED_KEY);
+  } catch {
+    return null;
+  }
+}

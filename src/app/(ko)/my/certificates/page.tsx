@@ -25,7 +25,7 @@ export default function MyCertificatesPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-      <Link href="/my" className="text-sm text-[var(--foreground-muted)] hover:text-[var(--foreground)]">← 내 학습</Link>
+      <Link href="/my" className="text-sm text-[var(--foreground-muted)] hover:text-[var(--foreground)]">← 마이페이지</Link>
       <h1 className="font-display mt-3 text-3xl text-[var(--foreground)]">수료증</h1>
       <p className="mt-2 text-[var(--foreground-muted)]">강의·과정을 수료하거나 워크북을 95% 이상 완주하면 자동으로 발급돼요.</p>
       {!list ? (

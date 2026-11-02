@@ -6,7 +6,7 @@ import { myNav } from "@/components/ko/SiteHeader";
 import { useAuth } from "@/contexts/AuthContext";
 
 // ─────────────────────────────────────────────────────────────────
-// 마이페이지 공통 — 하위 메뉴 탭 (내 학습 · 심리검사 진행 · 심리상담 현황 · 주문 내역 · 쿠폰함)
+// 마이페이지 공통 — 하위 메뉴 탭 (내 학습 · 주문 내역 · 심리검사 진행 · 무료 검사 기록 · 심리상담 현황 · 쿠폰함)
 // 강의 기록처럼 깊은 화면에서는 탭을 숨긴다.
 // ─────────────────────────────────────────────────────────────────
 export default function MyLayout({ children }: { children: React.ReactNode }) {

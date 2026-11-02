@@ -37,15 +37,16 @@ function visibleNav(admin: boolean): NavItem[] {
 export function myNav(admin: boolean) {
   return MY_NAV.filter((m) => admin || ((SHOW_COURSES || m.href !== "/my") && (SHOW_COUNSELING || m.href !== "/my/counseling")));
 }
-/** 「마이페이지」 링크가 여는 첫 탭 */
+/** 「마이페이지」가 여는 기본 화면 — 첫 탭. 강의를 숨긴 동안 회원은 주문 내역, SHOW_COURSES를 켜면 다시 /my */
 export const myHome = (admin: boolean) => myNav(admin)[0]?.href ?? "/my";
 
 /** 마이페이지 하위 메뉴 (모바일 메뉴에서도 씀) */
 export const MY_NAV = [
   { href: "/my", label: "내 학습" },
-  { href: "/my/assessment", label: "심리검사 진행" },
-  { href: "/my/counseling", label: "심리상담 현황" },
   { href: "/my/orders", label: "주문 내역" },
+  { href: "/my/assessment", label: "심리검사 진행" },
+  { href: "/my/tests", label: "무료 검사 기록" },
+  { href: "/my/counseling", label: "심리상담 현황" },
   { href: "/my/coupons", label: "쿠폰함" },
 ];
 

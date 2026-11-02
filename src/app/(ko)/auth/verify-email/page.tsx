@@ -39,14 +39,14 @@ function VerifyEmailHandler() {
 
         if (data.success) {
           setStatus("success");
-          setMessage(data.message ?? "이메일 인증이 완료되었습니다!");
+          setMessage(data.message ?? "이메일 인증이 끝났어요.");
         } else {
           setStatus("error");
-          setMessage(data.message ?? "인증에 실패했습니다.");
+          setMessage(data.message ?? "인증하지 못했어요.");
         }
       } catch {
         setStatus("error");
-        setMessage("서버와 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+        setMessage("서버와 연결할 수 없어요. 잠시 후 다시 시도해 주세요.");
       }
     };
 
@@ -99,10 +99,7 @@ function VerifyEmailHandler() {
                   로그인으로
                 </Link>
                 <p className="text-xs text-[var(--foreground-subtle)]">
-                  메일을 못 받으셨나요?{" "}
-                  <Link href="/register" className="text-[var(--brand)] hover:underline">
-                    다시 가입하기
-                  </Link>
+                  링크가 지났다면, 로그인하면 나오는 화면에서 인증 메일을 다시 받을 수 있어요.
                 </p>
               </div>
             </>

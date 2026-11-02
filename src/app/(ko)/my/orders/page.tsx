@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiRequest } from "@/lib/api";
+import { SHOW_COURSES } from "@/lib/site";
 import { MyPaymentOrders } from "@/components/checkout/MyPaymentOrders";
 
 // 백엔드 주문 데이터 타입
@@ -150,6 +151,17 @@ export default function MyPage() {
     }
   };
 
+  // 내 학습(/my)으로 가는 링크 — 강의를 숨긴 동안 회원은 이미 듣는 강의·과정이 있을 때만
+  const [hasLearning, setHasLearning] = useState(false);
+  useEffect(() => {
+    if (!user) return;
+    if (SHOW_COURSES || user.role === "admin") {
+      setHasLearning(true);
+      return;
+    }
+    Promise.all([apiRequest<unknown[]>("/api/my/courses"), apiRequest<unknown[]>("/api/my/programs")]).then(([c, p]) => setHasLearning(!!c.data?.length || !!p.data?.length));
+  }, [user]);
+
   // 인증 로딩 중이거나 로그인 안 된 상태 → 빈 화면 (리다이렉트 처리 중)
   if (authLoading || !user) {
     return null;
@@ -165,20 +177,20 @@ export default function MyPage() {
 
         {/* 페이지 헤더 */}
         <div className="mb-10">
-          <p className="mb-3"><span className="eyebrow">내 학습</span></p>
+          <p className="mb-3"><span className="eyebrow">마이페이지</span></p>
           <h1 className="font-display mb-1 text-3xl text-[var(--brand-ink)]">
             주문 내역
           </h1>
           <p className="text-sm text-[var(--foreground-muted)]">
             결제 내역과 구매한 전자책을 확인하고 내려받을 수 있어요.{" "}
-            <Link href="/my" className="link-underline text-[var(--foreground)]">내 학습으로</Link>
+            {hasLearning && <Link href="/my" className="link-underline text-[var(--foreground)]">내 학습으로</Link>}
           </p>
         </div>
 
         {/* 강의·워크북 결제 (사이트 결제) */}
         <section className="mb-10">
           <h2 className="mb-4 text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">
-            강의 · 워크북
+            {SHOW_COURSES ? "강의 · 워크북" : "심리검사 · 사이트 결제"}
           </h2>
           <MyPaymentOrders />
         </section>
