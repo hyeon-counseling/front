@@ -40,7 +40,7 @@ const COLS = [
  * 사업자등록증과 똑같이 적는다. 빈 값('')은 화면에 나오지 않는다. (10/30 상담가 값: 고객센터 전화, 통신판매업 신고번호)
  */
 const BUSINESS: { label: string; value: string }[] = [
-  { label: "상호", value: "심리상담실 현 (Hyeon Counseling)" },
+  { label: "상호", value: "심리상담실 현" },
   { label: "대표", value: "김태현" },
   { label: "사업자등록번호", value: "186-25-02396" },
   { label: "통신판매업 신고", value: SHOW_MAIL_ORDER_NO ? MAIL_ORDER_NO : "" }, // 켜고 끄기는 lib/site.ts
