@@ -44,7 +44,7 @@ const BUSINESS: { label: string; value: string }[] = [
   { label: "대표", value: "김태현" },
   { label: "사업자등록번호", value: "186-25-02396" },
   { label: "통신판매업 신고", value: SHOW_MAIL_ORDER_NO ? MAIL_ORDER_NO : "" }, // 켜고 끄기는 lib/site.ts
-  { label: "주소", value: "서울특별시 동작구 상도로15다길 16" },
+  { label: "주소", value: "서울특별시 동작구 상도로15다길 16, 301호(상도동, 더캐슬356)" },
   { label: "고객센터", value: "010-6478-1181" },
   { label: "이메일", value: "support@hyeon-counseling.com" },
   { label: "호스팅 제공", value: "Vercel Inc." },
