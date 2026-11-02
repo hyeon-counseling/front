@@ -4,11 +4,11 @@ import { SHOW_COURSES } from "@/lib/site";
 import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import { apiFetch } from "@/lib/api";
+import { useAuth, type AuthUser } from "@/contexts/AuthContext";
+import { apiRequest } from "@/lib/api";
 import { Alert, Button, Input } from "@/components/ui";
 import { SocialLoginButtons, socialErrorMessage } from "@/components/ko/SocialLoginButtons";
-import { EXPIRED_MESSAGE, safeNext } from "@/lib/authSession";
+import { EXPIRED_MESSAGE, safeNext, saveUnverifiedEmail } from "@/lib/authSession";
 import { pendingGiftPath } from "@/lib/gift";
 
 function LoginForm() {
@@ -30,7 +30,18 @@ function LoginForm() {
     setError("");
     setLoading(true);
     try {
-      const data = await apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+      const r = await apiRequest<{ token: string; user: AuthUser; emailUnverified?: boolean }>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+      // 비밀번호까지 맞았는데 이메일 인증 전 — 서버가 토큰을 주지 않으니 안내 화면으로
+      if (r.data?.emailUnverified) {
+        saveUnverifiedEmail(email.trim().toLowerCase());
+        router.push("/auth/verify-needed");
+        return;
+      }
+      if (!r.ok || !r.data) {
+        setError(r.message || "로그인에 실패했어요.");
+        return;
+      }
+      const data = r.data;
       login(data.token, data.user);
       // 돌아갈 곳이 따로 없으면, 받으러 온 쿠폰 선물(가입·인증을 거쳐 온 경우)로
       const dest = searchParams.get("next") ? next : pendingGiftPath() ?? next;

@@ -7,7 +7,7 @@ import { Badge, Button, Input, Modal, Skeleton, Toast } from "@/components/ui";
 import { stageName } from "@/lib/attendance";
 
 // ─────────────────────────────────────────────────────────────────
-// 회원 관리 — 목록·검색·역할 필터·상세(주문)·역할 변경
+// 회원 관리 — 목록·검색·역할 필터·상세(주문)·역할 변경·이메일 인증 처리·인증 메일 다시 보내기
 // 카페24 구매자 "고객(CRM)"과는 별개: 여기서는 사이트 로그인 계정을 다룬다.
 // ─────────────────────────────────────────────────────────────────
 
@@ -19,6 +19,9 @@ interface AdminUser {
   role: Role;
   isEmailVerified: boolean;
   googleId?: string;
+  kakaoId?: string;
+  naverId?: string;
+  appleId?: string;
   createdAt: string;
   /** 숨이 성장 정보 (참고용, 관리자 화면에서만) */
   sumi?: { drops: number; stage: number } | null;
@@ -37,6 +40,10 @@ interface UserOrder {
 
 const ROLE_LABEL: Record<Role, string> = { user: "회원", counselor: "상담사", admin: "관리자" };
 const ROLE_TONE: Record<Role, "neutral" | "brand" | "warning"> = { user: "neutral", counselor: "brand", admin: "warning" };
+
+/** 가입 방법 — 소셜이면 그 이름, 아니면 이메일 */
+const loginMethod = (u: AdminUser) => (u.googleId ? "구글" : u.kakaoId ? "카카오" : u.naverId ? "네이버" : u.appleId ? "애플" : "이메일");
+const isSocial = (u: AdminUser) => loginMethod(u) !== "이메일";
 
 export default function AdminUsersPage() {
   const { user: me } = useAuth();
@@ -103,6 +110,36 @@ export default function AdminUsersPage() {
     }
   };
 
+  const verifyEmail = async () => {
+    if (!selected) return;
+    if (!confirm(`${selected.email} 주소의 이메일 인증을 처리할까요?\n본인이 메일을 확인하지 않아도 바로 로그인할 수 있게 돼요.`)) return;
+    setSaving(true);
+    try {
+      await apiFetch(`/api/admin/users/${selected._id}/verify-email`, { method: "POST" });
+      setSelected({ ...selected, isEmailVerified: true });
+      setUsers((prev) => prev.map((u) => (u._id === selected._id ? { ...u, isEmailVerified: true } : u)));
+      setToast("이메일 인증을 처리했어요.");
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : "처리하지 못했어요.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const sendVerification = async () => {
+    if (!selected) return;
+    if (!confirm(`${selected.email} 주소로 인증 메일을 다시 보낼까요?`)) return;
+    setSaving(true);
+    try {
+      await apiFetch(`/api/admin/users/${selected._id}/send-verification`, { method: "POST" });
+      setToast("인증 메일을 보냈어요.");
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : "메일을 보내지 못했어요.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
@@ -155,8 +192,8 @@ export default function AdminUsersPage() {
                     <Badge tone={ROLE_TONE[u.role]}>{ROLE_LABEL[u.role]}</Badge>
                   </td>
                   <td className="px-5 py-3 text-[var(--foreground-muted)]">
-                    {u.googleId ? "구글" : "이메일"}
-                    {!u.isEmailVerified && !u.googleId && <span className="ml-1 text-xs text-[var(--warning)]">미인증</span>}
+                    {loginMethod(u)}
+                    {!u.isEmailVerified && !isSocial(u) && <span className="ml-1 text-xs text-[var(--warning)]">미인증</span>}
                   </td>
                   <td className="px-5 py-3 text-[var(--foreground-subtle)]">{new Date(u.createdAt).toLocaleDateString("ko-KR")}</td>
                 </tr>
@@ -172,7 +209,7 @@ export default function AdminUsersPage() {
             <div className="text-sm text-[var(--foreground-muted)]">
               <p>{selected.email}</p>
               <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
-                가입 {new Date(selected.createdAt).toLocaleDateString("ko-KR")} · {selected.googleId ? "구글 로그인" : selected.isEmailVerified ? "이메일 인증됨" : "이메일 미인증"}
+                가입 {new Date(selected.createdAt).toLocaleDateString("ko-KR")} · {isSocial(selected) ? `${loginMethod(selected)} 로그인` : selected.isEmailVerified ? "이메일 인증됨" : "이메일 미인증"}
               </p>
               {/* 숨이 성장 정보 (참고용) — 마음 날씨 등 민감 정보는 표시하지 않는다 */}
               {selected.sumi != null && (
@@ -181,6 +218,20 @@ export default function AdminUsersPage() {
                 </p>
               )}
             </div>
+
+            {!selected.isEmailVerified && !isSocial(selected) && (
+              <div>
+                <p className="mb-2 text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">이메일 인증</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="md" disabled={saving} onClick={verifyEmail}>
+                    이메일 인증 처리
+                  </Button>
+                  <Button size="md" variant="secondary" disabled={saving} onClick={sendVerification}>
+                    인증 메일 다시 보내기
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div>
               <p className="mb-2 text-xs font-semibold tracking-wider text-[var(--foreground-subtle)]">역할</p>

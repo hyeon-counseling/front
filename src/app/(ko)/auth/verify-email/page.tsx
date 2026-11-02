@@ -99,10 +99,7 @@ function VerifyEmailHandler() {
                   로그인으로
                 </Link>
                 <p className="text-xs text-[var(--foreground-subtle)]">
-                  메일을 못 받으셨나요?{" "}
-                  <Link href="/register" className="text-[var(--brand)] hover:underline">
-                    다시 가입하기
-                  </Link>
+                  링크가 지났다면, 로그인하면 나오는 화면에서 인증 메일을 다시 받을 수 있어요.
                 </p>
               </div>
             </>
