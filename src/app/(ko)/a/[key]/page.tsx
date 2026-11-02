@@ -94,6 +94,16 @@ function NextAction({ v }: { v: ProgressView }) {
       </div>
     );
   }
+  if (v.reportPublished) {
+    return (
+      <div className="rounded-2xl bg-[var(--brand-light)] p-6">
+        <p className="text-sm font-semibold text-[var(--brand)]">보고서와 해석 영상을 올려 두었어요</p>
+        <Link href={`/a/${key}/report`} className="mt-4 inline-flex h-11 items-center rounded-xl bg-[var(--brand)] px-5 text-sm font-semibold text-white">
+          보고서·영상 보기
+        </Link>
+      </div>
+    );
+  }
   if (v.stage >= 4 && v.stage <= 6 && (v.place || v.videoReady)) {
     return (
       <div className="rounded-2xl bg-[var(--brand-light)] p-6">

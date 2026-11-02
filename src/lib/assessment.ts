@@ -32,6 +32,7 @@ export interface ProgressView {
   cancelRequestedAt: string | null;
   cancelRequest: { reason: string; quoteAmount: number; quoteTier: string } | null;
   refund: { amount: number; processedAt: string } | null;
+  reportPublished: boolean; // 보고서·영상 전달 완료
 }
 
 export interface RefundQuote {
