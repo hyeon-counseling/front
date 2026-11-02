@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/api";
 import { ORDER_STATUS_LABEL, won, type OrderSummary } from "@/lib/payment";
 import { Badge, Skeleton, cx } from "@/components/ui";
+import { SHOW_COURSES } from "@/lib/site";
 
 /** 환불·취소 상태 배지 — 환불 완료 / 부분 환불 / 취소(환불 없음) / 취소 요청됨 */
 function refundTag(o: OrderSummary): { label: string; tone: "brand" | "neutral" | "warning" | "error" } {
@@ -24,7 +25,7 @@ export function MyPaymentOrders() {
 
   if (list === null) return <Skeleton className="h-20" />;
   if (list.length === 0) {
-    return <p className="rounded-2xl bg-[var(--surface)] px-5 py-4 text-sm text-[var(--foreground-muted)]">강의·워크북 결제 내역이 없어요.</p>;
+    return <p className="rounded-2xl bg-[var(--surface)] px-5 py-4 text-sm text-[var(--foreground-muted)]">{SHOW_COURSES ? "강의·워크북 결제 내역이 없어요." : "결제 내역이 없어요."}</p>;
   }
   return (
     <ul className="space-y-3">
