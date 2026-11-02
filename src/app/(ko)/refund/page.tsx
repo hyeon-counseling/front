@@ -3,40 +3,50 @@ import Link from "next/link";
 import { LegalPage, Section } from "@/components/ko/LegalPage";
 import { RefundRules } from "@/components/assessment/RefundRules";
 import { CounselingRefundRules } from "@/components/counseling/CounselingRules";
+import { SHOW_COUNSELING, SHOW_COURSES } from "@/lib/site";
 
 export const metadata: Metadata = { title: "환불 규정" };
 
 // 개정 2026-10-30 (상담가 확정). 강의·워크북은 PRD-V2 §5.4, 종합심리검사는 52-취소환불규정(RefundRules), 개인 상담은 결정 #56(CounselingRules)
+// 강의·개인 상담은 숨긴 동안(lib/site.ts) 규정도 보이지 않는다. 플래그를 켜면 그대로 돌아온다.
 export default function RefundPage() {
   return (
     <LegalPage eyebrow="약관" title="환불 규정" updated="2026년 10월 30일">
       <Section title="서비스 제공 방법과 기간 (배송 안내)">
         <p>모든 상품은 온라인으로 제공하거나 상담으로 진행하며, 실물 배송은 없습니다.</p>
         <ul className="mt-3 list-disc space-y-1.5 pl-5">
-          <li>
-            <b className="text-[var(--foreground)]">온라인 강의·워크북</b>: 결제하면 바로 이용할 수 있습니다. 이용 기간은 상품마다 상세 화면에 표시합니다(온라인 강의는 90일).
-          </li>
+          {SHOW_COURSES && (
+            <li>
+              <b className="text-[var(--foreground)]">온라인 강의·워크북</b>: 결제하면 바로 이용할 수 있습니다. 이용 기간은 상품마다 상세 화면에 표시합니다(온라인 강의는 90일).
+            </li>
+          )}
           <li>
             <b className="text-[var(--foreground)]">종합심리검사 + 해석 상담</b>: 결제하면 바로 신청이 확정됩니다. 접수면접지 작성 → 온라인 검사(해석 상담 7일 전까지) → 해석 상담 순서로 진행합니다. 결제부터 상담까지 보통 2~4주이며, 상담 날짜는 신청할 때 직접 고릅니다.
           </li>
-          <li>
-            <b className="text-[var(--foreground)]">개인 상담</b>: 결제 후 상담 세부 신청서를 받아 일정을 확정하고, 예약한 날에 50분 동안 진행합니다. 대면 상담 장소는 상담 3일 전에 알려 드립니다.
-          </li>
+          {SHOW_COUNSELING && (
+            <li>
+              <b className="text-[var(--foreground)]">개인 상담</b>: 결제 후 상담 세부 신청서를 받아 일정을 확정하고, 예약한 날에 50분 동안 진행합니다. 대면 상담 장소는 상담 3일 전에 알려 드립니다.
+            </li>
+          )}
         </ul>
       </Section>
-      <Section title="강의·워크북 (디지털 콘텐츠)">
-        <ul className="list-disc space-y-1.5 pl-5">
-          <li>결제 후 <strong className="text-[var(--foreground)]">7일 이내</strong>이고 진도가 <strong className="text-[var(--foreground)]">10% 미만</strong>이면 전액 환불합니다.</li>
-          <li>그 이후에는 콘텐츠 제공이 시작된 것으로 보아 환불이 제한됩니다. 다만 이용 기간이 남은 경우 잔여 기간에 비례해 환불할 수 있습니다.</li>
-          <li>파일 손상, 재생 불가, 중복 결제 등 회사 측 문제는 기간과 관계없이 전액 환불합니다.</li>
-        </ul>
-      </Section>
+      {SHOW_COURSES && (
+        <Section title="강의·워크북 (디지털 콘텐츠)">
+          <ul className="list-disc space-y-1.5 pl-5">
+            <li>결제 후 <strong className="text-[var(--foreground)]">7일 이내</strong>이고 진도가 <strong className="text-[var(--foreground)]">10% 미만</strong>이면 전액 환불합니다.</li>
+            <li>그 이후에는 콘텐츠 제공이 시작된 것으로 보아 환불이 제한됩니다. 다만 이용 기간이 남은 경우 잔여 기간에 비례해 환불할 수 있습니다.</li>
+            <li>파일 손상, 재생 불가, 중복 결제 등 회사 측 문제는 기간과 관계없이 전액 환불합니다.</li>
+          </ul>
+        </Section>
+      )}
       <Section title="종합심리검사 + 해석 상담 (150,000원)">
         <RefundRules />
       </Section>
-      <Section title="개인 상담 (1회기 60,000원)">
-        <CounselingRefundRules />
-      </Section>
+      {SHOW_COUNSELING && (
+        <Section title="개인 상담 (1회기 60,000원)">
+          <CounselingRefundRules />
+        </Section>
+      )}
       <Section title="환불 방법">
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
