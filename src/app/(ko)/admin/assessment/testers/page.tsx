@@ -7,7 +7,7 @@ import { Skeleton, cx } from "@/components/ui";
 
 /**
  * 관리자 · 테스터 명단 (54-테스터-프로그램 R1·R2·R5·R8)
- * 등록 → 안내(T1 또는 개인 메시지) → 동의·쿠폰(자동) → 신청 → 진행 → 설문 → 종료 / 철회.
+ * 신청 답을 받은 사람 등록 = 신청 접수 → 접수 안내(T1 또는 개인 메시지) → 동의·쿠폰(자동) → 신청 → 진행 → 설문 → 종료 / 철회.
  * 승인된 T 템플릿이 없으면 알림은 나가지 않는다 — 링크를 복사해 개인 메시지로 보낸다.
  */
 interface Row {
@@ -20,6 +20,7 @@ interface Row {
   inviteKey: string;
   stopped: boolean;
   createdAt: string;
+  requestedAt: string | null;
   t1SentAt: string | null;
   declinedAt: string | null;
   consent: { version: string; at: string; items: Record<string, string> } | null;
@@ -69,8 +70,8 @@ const CHECKLIST: { title: string; items: [string, string][] }[] = [
   {
     title: "안내",
     items: [
-      ["b1", "거절하기 쉽게 메시지로 물었고, 본인이 먼저 하겠다고 답했다"],
-      ["b2", "하겠다는 답을 받은 뒤 명단에 올렸다"],
+      ["b1", "거절하기 쉽게 메시지로 물었고, 본인이 「테스트 신청합니다」라고 답했다"],
+      ["b2", "신청 답을 받은 뒤 명단에 올렸다"],
       ["b3", "동의 페이지를 본인이 직접 완료했다 (쿠폰 발급 확인)"],
       ["b4", "「이 시간에는 상담가로 앉음」을 미리 말했다"],
       ["b5", "돈·선물을 받지 않는다고 말했다"],
@@ -122,6 +123,7 @@ export default function TestersPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [acquaintance, setAcquaintance] = useState(true);
+  const [requestedAt, setRequestedAt] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -153,9 +155,11 @@ export default function TestersPage() {
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (await call("", "POST", { name, phone, acquaintance }, (r) => `${r.code}로 등록했어요.`)) {
+    const res = (r: Row) => `${r.code}로 신청을 접수했어요. ${r.sendResult?.sent ? "T1 접수 안내를 보냈어요." : "T1이 나가지 않았어요. 링크를 복사해 개인 메시지로 보내 주세요."}`;
+    if (await call("", "POST", { name, phone, acquaintance, requestedAt: requestedAt || undefined }, res)) {
       setName("");
       setPhone("");
+      setRequestedAt("");
     }
   };
 
@@ -172,7 +176,7 @@ export default function TestersPage() {
     <div className="px-4 py-8 sm:px-6">
       <p className="text-xs font-semibold text-[var(--foreground-subtle)]">전문 심리검사</p>
       <h1 className="font-display text-2xl text-[var(--foreground)]">테스터 명단</h1>
-      <p className="mt-1 text-sm text-[var(--foreground-muted)]">하겠다고 답한 사람만 올려 주세요. 승인된 T 템플릿이 없으면 알림은 나가지 않아요. 그때는 링크를 복사해 개인 메시지로 보내 주세요.</p>
+      <p className="mt-1 text-sm text-[var(--foreground-muted)]">개인 메시지로 물어봐서 「테스트 신청합니다」라고 답한 사람만 올려 주세요. 올리면 신청 접수로 처리되고 T1이 나가요. 승인된 T 템플릿이 없으면 알림은 나가지 않으니, 링크를 복사해 개인 메시지로 보내 주세요.</p>
 
       <form onSubmit={create} className="card mt-5 flex flex-wrap items-end gap-3 p-5">
         <label className="text-sm font-semibold">
@@ -183,11 +187,16 @@ export default function TestersPage() {
           휴대폰 번호
           <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="numeric" required placeholder="01012345678" className="mt-1 block h-10 w-44 rounded-lg border border-[var(--border)] px-3 font-normal" />
         </label>
+        <label className="text-sm font-semibold">
+          신청 답을 받은 날
+          <input type="date" value={requestedAt} onChange={(e) => setRequestedAt(e.target.value)} className="mt-1 block h-10 w-40 rounded-lg border border-[var(--border)] px-3 font-normal" />
+          <span className="mt-1 block text-xs font-normal text-[var(--foreground-subtle)]">비우면 오늘</span>
+        </label>
         <label className="flex h-10 items-center gap-2 text-sm font-semibold">
           <input type="checkbox" checked={acquaintance} onChange={(e) => setAcquaintance(e.target.checked)} className="h-4 w-4 accent-[var(--brand)]" /> 아는 사이
         </label>
         <button disabled={busy} className="h-10 cursor-pointer rounded-xl bg-[var(--brand)] px-5 text-sm font-semibold text-white disabled:opacity-50">
-          명단에 올리기
+          신청 접수
         </button>
       </form>
 
@@ -225,17 +234,17 @@ export default function TestersPage() {
                   <div className="flex flex-wrap gap-2">
                     {!r.withdrawnAt && (
                       <>
-                        <button onClick={() => copy(link, "안내 링크")} className="h-9 cursor-pointer rounded-lg bg-[var(--surface)] px-3 font-semibold">
-                          안내 링크 복사
+                        <button onClick={() => copy(link, "참여 안내 링크")} className="h-9 cursor-pointer rounded-lg bg-[var(--surface)] px-3 font-semibold">
+                          참여 안내 링크 복사
                         </button>
                         {!r.consent && (
                           <>
                             <button
                               disabled={busy}
-                              onClick={() => call(`/${r.id}/send-t1`, "POST", undefined, (x) => (x.sendResult?.sent ? "T1 안내를 보냈어요." : x.sendResult?.reason === "no_template" ? "T1 템플릿이 아직 승인·연결되지 않아 보내지 않았어요. 링크를 복사해 개인 메시지로 보내 주세요." : x.sendResult?.reason === "duplicate" ? "이 링크로 이미 보냈어요." : "보내지 못했어요. 알림 기록을 확인해 주세요."))}
+                              onClick={() => call(`/${r.id}/send-t1`, "POST", undefined, (x) => (x.sendResult?.sent ? "T1 접수 안내를 보냈어요." : x.sendResult?.reason === "no_template" ? "T1 템플릿이 아직 승인·연결되지 않아 보내지 않았어요. 링크를 복사해 개인 메시지로 보내 주세요." : x.sendResult?.reason === "duplicate" ? "이 링크로 이미 보냈어요." : "보내지 못했어요. 알림 기록을 확인해 주세요."))}
                               className="h-9 cursor-pointer rounded-lg bg-[var(--brand)] px-3 font-semibold text-white disabled:opacity-50"
                             >
-                              T1 안내 보내기
+                              T1 접수 안내 다시 보내기
                             </button>
                             <button disabled={busy} onClick={() => call(`/${r.id}/mark-sent`, "POST")} className="h-9 cursor-pointer rounded-lg bg-[var(--surface)] px-3 font-semibold disabled:opacity-50">
                               개인 메시지로 보냈어요
@@ -277,7 +286,8 @@ export default function TestersPage() {
 
                   <dl className="grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
                     <Info k="휴대폰" v={r.phone} />
-                    <Info k="안내" v={r.t1SentAt ? fmt(r.t1SentAt) : "아직"} />
+                    <Info k="신청 답" v={r.requestedAt ? new Date(r.requestedAt).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" }) : "기록 없음"} />
+                    <Info k="접수 안내" v={r.t1SentAt ? fmt(r.t1SentAt) : "아직"} />
                     <Info k="동의" v={r.consent ? `${fmt(r.consent.at)} · 문안 ${r.consent.version}` : r.declinedAt ? `넘어감 ${fmt(r.declinedAt)}` : "아직"} />
                     <Info k="쿠폰" v={r.coupon ? `${fmt(r.coupon.until)}까지 · ${r.coupon.claimed ? "계정에 붙음" : "받기 전"}` : "없음"} />
                     <Info k="선택 동의" v={`후기 ${on(r.optional.review)} · 사례 ${on(r.optional.case)}`} />

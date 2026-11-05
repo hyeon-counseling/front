@@ -37,7 +37,7 @@ export function ConsentDoc({ name, acquaintance }: { name: string; acquaintance:
         <p className="mt-3 text-[15px] leading-relaxed text-[var(--foreground-muted)]">
           {name}님, 심리상담실 현의 김태현 심리상담가예요.
           <br />
-          해 보겠다고 말씀해 주셔서 자세한 내용을 적어 두었어요. 천천히 읽어 보시고, 내키지 않으면 그냥 닫으셔도 돼요. 따로 연락드리지 않아요.
+          테스트 참여를 신청해 주셔서 자세한 내용을 적어 두었어요. 천천히 읽어 보시고, 내키지 않으면 그냥 닫으셔도 돼요. 따로 연락드리지 않아요.
         </p>
       </header>
 

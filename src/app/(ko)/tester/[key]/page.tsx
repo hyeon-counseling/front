@@ -9,7 +9,7 @@ import { TesterGate } from "@/components/tester/TesterGate";
 import { testerApplyPath, testerRequest, type TesterView } from "@/lib/tester";
 
 /**
- * 테스터 안내·동의 (/tester/:key) — T1 [안내 읽기], T2 [동의 내용 보기]
+ * 테스터 안내·동의 (/tester/:key) — T1 [참여 안내 보기], T2 [동의 내용 보기]
  * 동의 전: 안내를 읽고 듣고 싶지 않은 영역·필수·선택 동의 → 쿠폰 발급.
  * 동의 뒤: 다음 단계, 동의 내용 다시 보기, 영역·선택 동의 바꾸기, [테스트 그만두기].
  */
@@ -132,7 +132,7 @@ export default function TesterPage() {
                 <p className="mt-3 leading-relaxed text-[var(--foreground-muted)]">신청에 쓰는 쿠폰을 보내 드렸어요. 쿠폰은 동의를 마치신 분께만 발급돼요.</p>
                 <ol className="mt-4 list-decimal space-y-1.5 pl-5 text-[15px] leading-relaxed text-[var(--foreground-muted)]">
                   <li>알림톡으로 쿠폰 안내가 가요.</li>
-                  <li>알림톡의 [신청하기]를 누르고 로그인해요. 계정이 없으면 회원가입을 해요.</li>
+                  <li>알림톡의 [신청서 쓰기]를 누르고 로그인해요. 계정이 없으면 회원가입을 해요.</li>
                   <li>신청 페이지에서 일정과 방식을 고르고, 결제 화면에서 쿠폰을 쓰면 0원으로 신청돼요.</li>
                   <li>그다음은 알림톡이 한 걸음씩 안내해요.</li>
                 </ol>
@@ -142,7 +142,7 @@ export default function TesterPage() {
                       {view.coupon.name} · {view.coupon.untilText}까지
                     </p>
                     <Link href={testerApplyPath(key)} className="mt-4 flex h-12 items-center justify-center rounded-xl bg-[var(--brand)] font-semibold text-white hover:bg-[var(--brand-hover)]">
-                      신청하기
+                      신청서 쓰기
                     </Link>
                   </>
                 ) : (

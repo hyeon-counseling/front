@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { clearPendingTester, rememberTester, testerApplyPath, testerRequest, type TesterView } from "@/lib/tester";
 
 /**
- * T2 [신청하기] (/tester/:key/apply) — 휴대폰 뒤 4자리 확인 → 로그인(없으면 회원가입) → 쿠폰을 그 계정에 붙이고 신청 페이지로.
+ * T2 [신청서 쓰기] (/tester/:key/apply) — 휴대폰 뒤 4자리 확인 → 로그인(없으면 회원가입) → 쿠폰을 그 계정에 붙이고 신청 페이지로.
  * 가입·인증을 거쳐도 돌아오도록 이 기기에 기억하고, 인증 메일 링크에도 돌아올 주소를 싣는다.
  */
 export default function TesterApplyPage() {
@@ -94,7 +94,7 @@ export default function TesterApplyPage() {
           처음이에요 · 회원가입
         </Link>
       </div>
-      <p className="mt-4 text-xs leading-relaxed text-[var(--foreground-subtle)]">중간에 화면을 닫으셨다면 알림톡의 [신청하기]를 다시 누르면 이어져요.</p>
+      <p className="mt-4 text-xs leading-relaxed text-[var(--foreground-subtle)]">중간에 화면을 닫으셨다면 알림톡의 [신청서 쓰기]를 다시 누르면 이어져요.</p>
     </>
   );
 }
