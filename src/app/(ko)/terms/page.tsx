@@ -76,6 +76,9 @@ export default function TermsPage() {
             <b className="text-[var(--foreground)]">보고서의 성격</b> — 종합 해석 보고서와 해석 상담은 자기 이해를 위한 자료이며 의학적 진단이나 소견서가 아닙니다.
           </li>
           <li>
+            <b className="text-[var(--foreground)]">보고서·영상 열람 기간</b> — 종합 해석 보고서와 해석 영상은 해석 상담 후 14일 동안 볼 수 있으며, 보고서는 그 기간 안에 PDF로 저장할 수 있습니다.
+          </li>
+          <li>
             <b className="text-[var(--foreground)]">진행 중단</b> — 상담가가 회원에게 의료적 도움이 먼저 필요하다고 판단하면 검사·상담 진행을 멈추고 적절한 기관을 안내할 수 있습니다. 이때 환불은 환불 규정을 따릅니다.
           </li>
         </ul>

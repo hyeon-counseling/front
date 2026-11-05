@@ -14,13 +14,16 @@ interface Props {
   publishedAt: string | null;
   sessionAt: string | null;
   closed: string | null;
+  reportEndsAt: string | null;
+  reportExpired: boolean;
   onChanged: () => void;
   onToast: (m: string) => void;
 }
 
 const fmt = (iso: string) => new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+const fmtDay = (iso: string) => new Date(iso).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric", weekday: "short" });
 
-export function ReportBox({ id, report, interpretVideoUrl, publishedAt, sessionAt, closed, onChanged, onToast }: Props) {
+export function ReportBox({ id, report, interpretVideoUrl, publishedAt, sessionAt, closed, reportEndsAt, reportExpired, onChanged, onToast }: Props) {
   const base = `/api/admin/assessment/applications/${id}`;
   const [video, setVideo] = useState(interpretVideoUrl ?? "");
   const [busy, setBusy] = useState(false);
@@ -67,7 +70,9 @@ export function ReportBox({ id, report, interpretVideoUrl, publishedAt, sessionA
 
   const publish = async () => {
     const missing = [!report && "보고서", !interpretVideoUrl && "해석 영상"].filter(Boolean).join("");
-    const ask = `${missing ? `⚠️ ${missing}이 없어요. 그래도 ` : ""}전달 완료할까요?\n고객에게 공개되고${closed ? "" : " 보고서 전달 알림(N9)이 나가요"}. 알림은 되돌릴 수 없어요.`;
+    const left = reportEndsAt ? Math.ceil((new Date(reportEndsAt).getTime() - Date.now()) / 86_400_000) : null;
+    const period = reportEndsAt && left !== null ? `\n\n⚠️ 고객은 ${fmtDay(reportEndsAt)}까지 볼 수 있어요 (앞으로 ${left}일). 기준은 상담일이라 늦게 전달할수록 줄어요.` : "";
+    const ask = `${missing ? `⚠️ ${missing}이 없어요. 그래도 ` : ""}전달 완료할까요?${period}\n고객에게 공개되고${closed ? "" : " 보고서 전달 알림(N9)이 나가요"}. 알림은 되돌릴 수 없어요.`;
     if (!confirm(ask)) return;
     setBusy(true);
     const r = await apiRequest<{ notice: { sent: boolean; reason?: string } | null }>(`${base}/publish`, { method: "POST" });
@@ -98,6 +103,16 @@ export function ReportBox({ id, report, interpretVideoUrl, publishedAt, sessionA
         <span className={publishedAt ? "text-xs font-bold text-[var(--brand)]" : "text-xs text-[var(--foreground-subtle)]"}>{publishedAt ? `전달 완료 ${fmt(publishedAt)}` : "고객에게 아직 안 보여요"}</span>
       </div>
 
+      {reportEndsAt && (
+        <p className={reportExpired ? "mb-3 rounded-xl bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--foreground-muted)]" : "mb-3 rounded-xl bg-[var(--brand-light)] px-3 py-2 text-xs font-semibold text-[var(--brand)]"}>
+          {reportExpired ? `고객 열람 기간 종료 (${fmtDay(reportEndsAt)}까지였어요). 관리자는 계속 볼 수 있어요.` : `고객 열람 만료일: ${fmtDay(reportEndsAt)} (상담일 + 14일)`}
+        </p>
+      )}
+      {reportExpired && !!interpretVideoUrl && (
+        <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold leading-relaxed text-[var(--error)]">
+          기간 종료, 유튜브 영상 비공개·삭제 필요. 사이트에서는 닫혔지만 유튜브 링크는 살아 있어요. 유튜브에서 처리한 뒤 아래 영상 링크를 지우고 저장하면 이 표시가 사라져요.
+        </p>
+      )}
       <p className="mb-1.5 text-xs font-semibold text-[var(--foreground-muted)]">보고서 (HTML 파일, 5MB까지)</p>
       {report && (
         <p className="mb-2 text-xs text-[var(--foreground-subtle)]">
@@ -134,12 +149,13 @@ export function ReportBox({ id, report, interpretVideoUrl, publishedAt, sessionA
             전달 취소
           </button>
         ) : (
-          <button type="button" disabled={busy || early || (!report && !interpretVideoUrl) || closed === "refunded"} onClick={publish} className="h-11 cursor-pointer rounded-xl bg-[var(--brand)] px-5 text-sm font-semibold text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">
+          <button type="button" disabled={busy || early || (!report && !interpretVideoUrl) || closed === "refunded" || (reportExpired && !!sessionAt)} onClick={publish} className="h-11 cursor-pointer rounded-xl bg-[var(--brand)] px-5 text-sm font-semibold text-white hover:bg-[var(--brand-hover)] disabled:opacity-50">
             전달 완료
           </button>
         )}
         {!publishedAt && early && <span className="text-xs text-[var(--foreground-subtle)]">해석 상담이 끝난 뒤에 누를 수 있어요.</span>}
-        {!publishedAt && !early && !!(report || interpretVideoUrl) && !(report && interpretVideoUrl) && <span className="text-xs text-amber-700">{report ? "해석 영상" : "보고서"}이 아직 없어요. 하나만 있어도 전달할 수 있어요.</span>}
+        {!publishedAt && reportExpired && !!sessionAt && <span className="text-xs text-[var(--error)]">상담일로부터 14일이 지나 전달할 수 없어요. 고객이 볼 수 없어요.</span>}
+        {!publishedAt && !early && !reportExpired && !!(report || interpretVideoUrl) && !(report && interpretVideoUrl) && <span className="text-xs text-amber-700">{report ? "해석 영상" : "보고서"}이 아직 없어요. 하나만 있어도 전달할 수 있어요.</span>}
       </div>
     </section>
   );

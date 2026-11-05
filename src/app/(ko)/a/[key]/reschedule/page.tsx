@@ -24,7 +24,7 @@ export default function ReschedulePage() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    apiRequest<{ fromText: string; slots: SlotView[] }>("/api/assessment/slots").then((r) => {
+    apiRequest<{ fromText: string; slots: SlotView[] }>("/api/assessment/slots?for=reschedule").then((r) => {
       setSlots(r.ok && r.data ? r.data.slots : []);
       setFromText(r.data?.fromText ?? "");
     });

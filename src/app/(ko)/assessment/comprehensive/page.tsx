@@ -1,4 +1,4 @@
-import { ASSESSMENT_SERVICE_PERIOD } from "@/lib/site";
+import { ASSESSMENT_REPORT_PERIOD, ASSESSMENT_SERVICE_PERIOD } from "@/lib/site";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TestsTabs } from "@/components/assessment/TestsTabs";
@@ -87,7 +87,7 @@ const SCENE_NUM = ["bg-[var(--brand-light)] text-[var(--brand)]", "bg-[var(--mmp
 const DIFF: { n: 1 | 2 | 3; title: string; body: string }[] = [
   { n: 1, title: "세 검사를 한 이야기로", body: "검사마다 따로 풀지 않아요. 세 결과가 겹치는 곳을 찾아, 한 사람의 이야기로 엮은 통합 해석을 드려요." },
   { n: 2, title: "강점에서 시작해요", body: "이런 사람 → 이런 강점 → 이런 상황이 오면 → 같은 힘, 다른 방향. 어려움은 고장이 아니라, 좋은 힘이 조금 과하게 켜진 순간으로 읽어요." },
-  { n: 3, title: "읽고, 듣고, 다시 봐요", body: "보고서로 읽고, 60분 대화로 묻고, 해석 영상으로 다시 봐요. 결과를 혼자 받아 들고 막막해지는 일이 없어요." },
+  { n: 3, title: "읽고, 듣고, 정리해요", body: "보고서로 읽고, 60분 대화로 묻고, 해석 영상으로 정리해요. 결과를 혼자 받아 들고 막막해지는 일이 없어요." },
 ];
 
 // 자주 묻는 질문 8개 — 문안은 src/content/assessmentGuide.ts (관리자 '안내·FAQ' 칸에서도 보인다)
@@ -97,7 +97,7 @@ const INCLUDED: { title: string; sub: string; gift?: string }[] = [
   { title: "온라인 심리검사 3종", sub: "MMPI-3 · TCI · SCT, 집에서" },
   { title: "종합 해석 보고서", sub: "김태현 심리상담가가 직접 써요" },
   { title: "해석 상담 약 60분", sub: "대면(서울 5개 지역) 또는 화상" },
-  { title: "해석 영상", sub: "상담 뒤 내 페이지에서 다시 보기", gift: "3만 원 상당" },
+  { title: "해석 영상", sub: "상담 후 14일 동안 볼 수 있어요", gift: "3만 원 상당" },
 ];
 
 const CALENDAR: { d: string; t: string; tone?: "on" | "hot" }[] = [
@@ -173,6 +173,7 @@ export default function ComprehensivePage() {
                   <small className="block text-[13.5px] font-semibold tracking-normal text-[var(--foreground-muted)]">검사 · 보고서 · 상담 · 해석 영상 모두 포함</small>
                 </p>
                 <p className="mt-2 text-[14px] font-semibold text-[var(--foreground-muted)]">{ASSESSMENT_SERVICE_PERIOD}</p>
+                <p className="mt-1 text-[14px] text-[var(--foreground-muted)]">{ASSESSMENT_REPORT_PERIOD}</p>
                 <div className="mt-3.5 flex flex-wrap gap-2.5">
                   <Link href={APPLY} className="as-btn flex-auto sm:flex-none">
                     신청하기 <Icon name="arrow" className="h-5 w-5" />
@@ -291,7 +292,7 @@ export default function ComprehensivePage() {
             <br />
             이렇게 받아요
           </h2>
-          <p className={LEAD}>결과를 혼자 받아 들지 않아요. 읽고, 함께 이야기하고, 나중에 다시 볼 수 있게 세 가지로 드려요.</p>
+          <p className={LEAD}>결과를 혼자 받아 들지 않아요. 읽고, 함께 이야기하고, 영상으로 정리할 수 있게 세 가지로 드려요.</p>
 
           <div className="mt-[34px] grid gap-[22px]">
             {/* 보고서 */}
@@ -317,7 +318,7 @@ export default function ComprehensivePage() {
                 </div>
                 <ReportPreview />
               </div>
-              <p className="mx-0.5 mb-0 mt-3 text-[12.5px] text-[var(--foreground-subtle)]">미리보기는 가상 인물 이서윤(가명)의 샘플 보고서 일부예요. 실제 보고서는 상담에서 함께 본 뒤 내 페이지에 올려 드려요.</p>
+              <p className="mx-0.5 mb-0 mt-3 text-[12.5px] text-[var(--foreground-subtle)]">미리보기는 가상 인물 이서윤(가명)의 샘플 보고서 일부예요. 실제 보고서는 상담에서 함께 본 뒤 내 페이지에 올려 드려요. {ASSESSMENT_REPORT_PERIOD}</p>
             </article>
 
             <div className="grid gap-[22px] md:grid-cols-2">
@@ -330,7 +331,7 @@ export default function ComprehensivePage() {
                     <Tag tone="c">3만 원 상당 포함</Tag>
                   </span>
                 </div>
-                <p className="text-[var(--foreground-muted)]">내 해석을 그림 동화처럼 다시 보는 약 3분짜리 영상이에요. &quot;어려움은 고장이 아니라, 좋은 힘이 너무 열심히 일한 것&quot;이라는 이야기를 그림으로 풀어요.</p>
+                <p className="text-[var(--foreground-muted)]">내 해석을 그림 동화처럼 풀어 주는 약 3분짜리 영상이에요. &quot;어려움은 고장이 아니라, 좋은 힘이 너무 열심히 일한 것&quot;이라는 이야기를 그림으로 풀어요.</p>
                 <div className="relative mt-4 overflow-hidden rounded-[18px] shadow-[var(--shadow-sm)]">
                   <VideoSceneArt className="block h-auto w-full" />
                   <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3.5 py-1.5 text-sm font-extrabold text-[var(--foreground-muted)]" aria-label="샘플 영상은 곧 공개돼요">
@@ -346,7 +347,7 @@ export default function ComprehensivePage() {
                     상담에서 함께 본 뒤 공개
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <Icon name="check" className="h-[18px] w-[18px] text-[var(--brand-bright)]" />내 페이지에서 언제든 다시
+                    <Icon name="check" className="h-[18px] w-[18px] text-[var(--brand-bright)]" />상담 후 14일 동안 볼 수 있어요
                   </span>
                 </div>
               </article>
@@ -397,7 +398,7 @@ export default function ComprehensivePage() {
             <br />
             여덟 걸음이에요
           </h2>
-          <p className={LEAD}>결제하면 그 자리에서 일정이 확정되고, 그다음부터는 알림톡이 한 걸음씩 안내해요. 해석 상담은 신청일로부터 14일 뒤부터 고를 수 있어요.</p>
+          <p className={LEAD}>결제하면 그 자리에서 일정이 확정되고, 그다음부터는 알림톡이 한 걸음씩 안내해요. 해석 상담은 결제일로부터 14일 뒤부터 6주 안에서 고를 수 있어요.</p>
           <div className="mt-[22px] grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap" aria-label="날짜 예시">
             {CALENDAR.map((c, i) => (
               <span key={c.d} className="contents">
@@ -557,6 +558,7 @@ export default function ComprehensivePage() {
                 ))}
               </ul>
               <p className="mt-5 text-center text-[14px] font-semibold text-[var(--foreground-muted)]">{ASSESSMENT_SERVICE_PERIOD}</p>
+              <p className="mt-1 text-center text-[14px] text-[var(--foreground-muted)]">{ASSESSMENT_REPORT_PERIOD}</p>
               <Link href={APPLY} className="as-btn mt-3 w-full">
                 신청하기 <Icon name="arrow" className="h-5 w-5" />
               </Link>

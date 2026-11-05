@@ -25,3 +25,4 @@ export const SHOW_COUNSELING = false;
 
 /** 종합심리검사 서비스 제공기간 — 토스페이먼츠 카드사 심사 표시 사항 (상담가 확정, 상품 상세·환불 규정이 함께 쓴다) */
 export const ASSESSMENT_SERVICE_PERIOD = "서비스 제공기간: 결제일로부터 최대 2개월";
+export const ASSESSMENT_REPORT_PERIOD = "보고서·해석 영상은 해석 상담 후 14일 동안 볼 수 있어요. 보고서는 그 안에 PDF로 저장할 수 있어요.";

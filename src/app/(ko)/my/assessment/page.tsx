@@ -72,7 +72,7 @@ export default function MyAssessmentPage() {
                       <span key={i} className="h-1.5 flex-1 rounded-full bg-[var(--surface-muted)]" />
                     ))}
                   </div>
-                  {a.reportPublished && (
+                  {a.reportPublished && !a.reportExpired && (
                     <Link href={`/a/${a.linkKey}/report`} className="mt-4 inline-flex h-10 items-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white">
                       보고서·영상 보기
                     </Link>
@@ -95,7 +95,7 @@ export default function MyAssessmentPage() {
                 </div>
                 <StageTracker stage={a.stage} hold={a.hold} compact />
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
-                  {a.reportPublished && (
+                  {a.reportPublished && !a.reportExpired && (
                     <Link href={`/a/${a.linkKey}/report`} className="inline-flex h-10 items-center rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white">
                       보고서·영상 보기
                     </Link>

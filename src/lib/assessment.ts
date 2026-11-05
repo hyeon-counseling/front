@@ -33,6 +33,8 @@ export interface ProgressView {
   cancelRequest: { reason: string; quoteAmount: number; quoteTier: string } | null;
   refund: { amount: number; processedAt: string } | null;
   reportPublished: boolean; // 보고서·영상 전달 완료
+  reportEndsAt: string | null; // 볼 수 있는 마지막 날 (상담일 + 14일)
+  reportExpired: boolean;
 }
 
 export interface RefundQuote {
