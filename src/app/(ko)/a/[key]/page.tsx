@@ -94,10 +94,21 @@ function NextAction({ v }: { v: ProgressView }) {
       </div>
     );
   }
+  if (v.reportPublished && v.reportExpired) {
+    return (
+      <div className="rounded-2xl bg-[var(--surface)] p-6">
+        <p className="text-sm font-semibold text-[var(--foreground)]">보고서와 해석 영상을 볼 수 있는 기간이 끝났어요</p>
+        <Link href="/contact" className="mt-3 inline-block text-sm font-semibold text-[var(--brand)]">
+          문의하기
+        </Link>
+      </div>
+    );
+  }
   if (v.reportPublished) {
     return (
       <div className="rounded-2xl bg-[var(--brand-light)] p-6">
         <p className="text-sm font-semibold text-[var(--brand)]">보고서와 해석 영상을 올려 두었어요</p>
+        {v.reportEndsAt && <p className="mt-1 text-sm text-[var(--foreground-muted)]">{new Date(v.reportEndsAt).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric" })}까지 볼 수 있어요. 보고서는 그 안에 PDF로 저장해 주세요.</p>}
         <Link href={`/a/${key}/report`} className="mt-4 inline-flex h-11 items-center rounded-xl bg-[var(--brand)] px-5 text-sm font-semibold text-white">
           보고서·영상 보기
         </Link>

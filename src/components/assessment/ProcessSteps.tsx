@@ -9,7 +9,7 @@ const STEPS: { title: string; when: string; body: string; icon: IconName; tone: 
   { title: "집에서 온라인 검사", when: "마감 = 상담 7일 전", body: "나눠서 해도 괜찮아요. 남은 검사가 있으면 아침에 한 번 알려 드려요.", icon: "laptop", tone: "s" },
   { title: "보고서 준비", when: "상담 전 7일", body: "김태현 심리상담가가 결과와 접수면접지를 꼼꼼히 읽고 써요.", icon: "doc", tone: "g" },
   { title: "해석 상담 약 60분", when: "대면 3일 전 장소 · 하루 전 안내", body: "보고서를 함께 보며 묻고 답해요.", icon: "chat", tone: "c" },
-  { title: "보고서·해석 영상 받기", when: "상담 뒤 내 페이지", body: "언제든 다시 열어 볼 수 있어요.", icon: "gift", tone: "g" },
+  { title: "보고서·해석 영상 받기", when: "상담 뒤 내 페이지", body: "해석 상담 후 14일 동안 볼 수 있어요. 보고서는 그 안에 PDF로 저장할 수 있어요.", icon: "gift", tone: "g" },
   { title: "후기와 1주 뒤 체크", when: "다음 날 · 7일 뒤", body: "짧은 만족도 설문, 그리고 1주 뒤 마음 컨디션을 한 번 더 재 봐요.", icon: "sprout", tone: "s" },
 ];
 
@@ -50,7 +50,7 @@ export const FLOW_COMPACT: { title: string; body?: string; when?: string }[] = [
   { title: "집에서 온라인 검사", body: "나눠서 해도 괜찮아요", when: "마감 = 해석 상담 7일 전" },
   { title: "보고서 준비", body: "김태현 심리상담가가 결과를 꼼꼼히 읽어요" },
   { title: "해석 상담 약 60분", when: "대면은 3일 전 장소 확정·하루 전 다시 안내 · 화상은 하루 전 접속 링크" },
-  { title: "보고서·해석 영상 받기", body: "회원 페이지에서 언제든 다시 봐요" },
+  { title: "보고서·해석 영상 받기", body: "회원 페이지에서 해석 상담 후 14일 동안 볼 수 있어요" },
 ];
 
 export function ProcessStepsCompact() {

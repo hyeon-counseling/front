@@ -27,13 +27,13 @@ interface Summary {
   unpaid: number;
 }
 
-type FilterKey = "all" | "safety" | "intake" | "issue" | "reschedule" | "place" | "cancel" | "unpaid" | "tester" | "closed" | `s${number}`;
-const FILTERS = new Set(["all", "safety", "intake", "issue", "reschedule", "place", "cancel", "unpaid", "tester", "closed", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]);
+type FilterKey = "all" | "safety" | "intake" | "issue" | "reschedule" | "place" | "cancel" | "unpaid" | "video" | "tester" | "closed" | `s${number}`;
+const FILTERS = new Set(["all", "safety", "intake", "issue", "reschedule", "place", "cancel", "unpaid", "video", "tester", "closed", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]);
 
 function query(f: FilterKey, q: string): string {
   const p = new URLSearchParams();
   if (f === "safety" || f === "reschedule") p.set("hold", f);
-  else if (f === "intake" || f === "issue" || f === "place" || f === "cancel" || f === "unpaid") p.set("view", f);
+  else if (f === "intake" || f === "issue" || f === "place" || f === "cancel" || f === "unpaid" || f === "video") p.set("view", f);
   else if (f === "tester") p.set("tester", "1");
   else if (f === "closed") p.set("closed", "1");
   else if (f.startsWith("s")) p.set("stage", f.slice(1));
@@ -194,6 +194,7 @@ function Inner() {
                             {r.hold === "reschedule" && <span className="ml-1 text-xs font-semibold text-[var(--warning)]">· 재조정</span>}
                           </span>
                         )}
+                        {r.videoCleanup && <span className="mt-1 block text-xs font-semibold text-[var(--error)]">기간 종료, 유튜브 영상 비공개·삭제 필요</span>}
                       </td>
                       <td className="px-4 py-3">{r.payState ? <span className="text-[var(--foreground-subtle)]">—</span> : r.intakeSubmitted ? <span className="text-[var(--brand)]">제출 ✓</span> : <span className="text-[var(--foreground-subtle)]">미제출</span>}</td>
                       <td className="px-4 py-3">

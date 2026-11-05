@@ -1,5 +1,6 @@
 // 관리자 신청 목록 한 줄 (adminAssessmentController row)
 export interface Row {
+  videoCleanup?: boolean;
   id: string;
   applicationNo: string;
   name: string;

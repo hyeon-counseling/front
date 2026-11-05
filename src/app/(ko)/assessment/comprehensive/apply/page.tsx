@@ -1,5 +1,6 @@
 "use client";
 
+import { ASSESSMENT_REPORT_PERIOD } from "@/lib/site";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -65,6 +66,7 @@ const CONSENTS: { key: "privacy" | "sensitive" | "testing" | "notice"; title: st
     rows: [
       ["목적", "나를 더 깊이 이해하기 위한 검사예요. 의학적 판단을 내리는 검사가 아니에요."],
       ["비용", "150,000원 — 검사 3종 + 종합 해석 보고서 + 해석 상담 약 60분 + 해석 영상(3만 원 상당)"],
+      ["보고서·영상", ASSESSMENT_REPORT_PERIOD],
       ["해석 방법", "출판사의 채점 자료를 참고하고, 김태현 심리상담가가 접수면접지와 함께 종합해 해석해요."],
       ["비밀보장", "김태현 심리상담가만 보고, 동의 없이 가족·회사 등 다른 사람에게 알리지 않아요. 단, 본인이나 다른 사람의 생명·안전이 위험할 때나 법으로 정한 경우는 예외예요."],
       ["온라인 검사 수칙", "신청한 본인이 직접, 조용한 곳에서 혼자 응답해요. 검사 화면은 사진·녹화·캡처하거나 공유하지 않아요. 검사 문항은 출판사의 저작물이라 옮겨 적거나 퍼뜨리지 않아요."],
@@ -85,6 +87,7 @@ export default function ApplyPage() {
   const { user, loading } = useAuth();
   const [slots, setSlots] = useState<SlotView[] | null>(null);
   const [fromText, setFromText] = useState("");
+  const [untilText, setUntilText] = useState("");
   const [nameEdit, setName] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
   const [gender, setGender] = useState("");
@@ -112,9 +115,10 @@ export default function ApplyPage() {
       router.replace("/login?next=/assessment/comprehensive/apply");
       return;
     }
-    apiRequest<{ fromText: string; slots: SlotView[] }>("/api/assessment/slots").then((r) => {
+    apiRequest<{ fromText: string; untilText?: string; slots: SlotView[] }>("/api/assessment/slots").then((r) => {
       setSlots(r.ok && r.data ? r.data.slots : []);
       setFromText(r.data?.fromText ?? "");
+      setUntilText(r.data?.untilText ?? "");
     });
   }, [loading, user, router]);
 
@@ -495,7 +499,7 @@ export default function ApplyPage() {
                     <div className="mb-3.5 mt-3 flex items-start gap-2.5 rounded-[14px] bg-[var(--mmpi-light)] px-3 py-2.5 text-sm leading-normal text-[var(--tci-dark)]">
                       <Icon name="hourglass" className="mt-px h-5 w-5 text-[var(--mmpi-ink)]" strokeWidth={2} />
                       <span>
-                        검사·보고서 준비 기간이 필요해서 <b>{fromText}</b>부터 고를 수 있어요. (신청일 기준 <b>14일 뒤</b>)
+                        검사·보고서 준비 기간이 필요해서 <b>{fromText}</b>부터{untilText && <> <b>{untilText}</b>까지</>} 고를 수 있어요. (결제일 기준 <b>14일 뒤 ~ 6주</b>)
                       </span>
                     </div>
                   )}
@@ -785,7 +789,7 @@ const INC: { icon: IconName; tile: string; title: string; sub: string; gift?: st
   { icon: "laptop", tile: "bg-[var(--brand-light)] text-[var(--tci)]", title: "온라인 심리검사 3종", sub: "MMPI-3 · TCI-RS · SCT" },
   { icon: "doc", tile: "bg-[#D5EFE4] text-[var(--mmpi-ink)]", title: "종합 해석 보고서", sub: "세 검사와 접수면접지를 함께 읽고 써요" },
   { icon: "chat", tile: "bg-[var(--brand-light)] text-[var(--tci)]", title: "해석 상담 약 60분", sub: "대면 또는 화상" },
-  { icon: "play", tile: "bg-[var(--sct-light)] text-[var(--sct-ink)]", title: "해석 영상", sub: "영상으로도 다시 봐요", gift: "3만 원 상당" },
+  { icon: "play", tile: "bg-[var(--sct-light)] text-[var(--sct-ink)]", title: "해석 영상", sub: "상담 후 14일 동안 볼 수 있어요", gift: "3만 원 상당" },
 ];
 
 const MODES: { v: "offline" | "online"; title: string; tag: string; points: string[]; where?: string }[] = [

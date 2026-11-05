@@ -8,7 +8,7 @@ import { Skeleton, cx } from "@/components/ui";
 /**
  * 관리자 · 공개 슬롯 (해석 상담 가능 시간)
  * 위: 여러 날짜 × 여러 시간을 한꺼번에 열기 (미리 보기 → 열기). 월·수·금 오전(투석)은 서버가 빼 준다.
- * 아래: 6주 달력 — 칸을 눌러 닫기/다시 열기/지우기. 예약된 칸은 바꿀 수 없다.
+ * 아래: 7주 달력 — 칸을 눌러 닫기/다시 열기/지우기. 예약된 칸은 바꿀 수 없다.
  */
 interface AdminSlot {
   id: string;
@@ -24,7 +24,7 @@ const REGIONS = ["홍대", "강남", "종로", "혜화", "사당"];
 const DEFAULT_TIMES = ["14:00", "15:30", "18:00", "19:30"];
 const DEFAULT_DOWS = [3, 4, 5, 6, 0];
 const PRESET_TIMES = ["10:00", "11:00", ...DEFAULT_TIMES, "20:00"];
-const WEEKS = 6;
+const WEEKS = 7; // 고객이 고를 수 있는 끝(오늘 + 6주)이 늘 보이게
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
 function kstToday(): string {
@@ -48,13 +48,14 @@ const STATE_STYLE: Record<AdminSlot["state"], string> = {
 const STATE_LABEL: Record<AdminSlot["state"], string> = { open: "열림", held: "결제 중", booked: "예약됨", closed: "닫힘" };
 
 export default function SlotsPage() {
-  // 화면을 연 날 기준 (다시 그려도 바뀌지 않게). 달력은 이번 주 일요일부터 6주
+  // 화면을 연 날 기준 (다시 그려도 바뀌지 않게). 달력은 이번 주 일요일부터 7주
   const [{ today, start }] = useState(() => {
     const t = kstToday();
     return { today: t, start: addDaysKey(t, -dowOf(t)) };
   });
   const days = Array.from({ length: WEEKS * 7 }, (_, i) => addDaysKey(start, i));
   const firstBookable = addDaysKey(today, 14);
+  const lastBookable = addDaysKey(today, 42);
 
   const [slots, setSlots] = useState<AdminSlot[] | null>(null);
   const [pickDates, setPickDates] = useState<string[]>([]);
@@ -66,6 +67,10 @@ export default function SlotsPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [selected, setSelected] = useState<AdminSlot | null>(null);
+  // 고객이 고를 수 있는 열린 칸이 언제까지 있는지 — 없으면 품절처럼 보인다
+  const lastOpen = slots?.filter((s) => s.state === "open").map((s) => kstParts(s.startsAt).dateKey).sort().pop();
+  const openUntil = !slots ? undefined : lastOpen && lastOpen >= firstBookable ? lastOpen : null;
+  const needsMore = !openUntil || openUntil < addDaysKey(today, 28);
 
   const load = useCallback(() => {
     apiFetch(`/api/admin/assessment/slots?from=${start}&to=${addDaysKey(start, WEEKS * 7 - 1)}`)
@@ -123,8 +128,16 @@ export default function SlotsPage() {
       <p className="text-xs font-semibold text-[var(--foreground-subtle)]">전문 심리검사</p>
       <h1 className="font-display text-2xl text-[var(--foreground)]">공개 슬롯</h1>
       <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-        고객은 신청일 14일 뒤부터 열린 칸만 고를 수 있어요 (오늘 신청하면 {kstParts(`${firstBookable}T03:00:00Z`).dayText}부터). 월·수·금 오전은 열리지 않아요.
+        고객은 결제일 14일 뒤부터 6주까지 열린 칸만 고를 수 있어요 (오늘 신청하면 {kstParts(`${firstBookable}T03:00:00Z`).dayText}부터 {kstParts(`${lastBookable}T03:00:00Z`).dayText}까지). 월·수·금 오전은 열리지 않아요.
       </p>
+      {openUntil !== undefined && (
+        <p className={cx("mt-3 rounded-xl px-4 py-3 text-sm", needsMore ? "bg-amber-50 font-semibold text-amber-800" : "bg-[var(--surface)] text-[var(--foreground-muted)]")}>
+          {openUntil
+            ? <>열린 칸은 {kstParts(`${openUntil}T03:00:00Z`).dayText}까지 있어요. {kstParts(`${addDaysKey(openUntil, -13)}T03:00:00Z`).dayText}부터 신청하는 분은 고를 칸이 없어요. </>
+            : <>고객이 고를 수 있는 열린 칸이 없어요. </>}
+          늘 오늘부터 6주 뒤까지 열어 두고, 일주일에 한 번 다음 한 주를 더 열어 주세요.
+        </p>
+      )}
 
       {/* 한꺼번에 열기 */}
       <section className="card mt-6 space-y-5 p-5">
@@ -218,7 +231,7 @@ export default function SlotsPage() {
         {msg && <p className="text-sm text-[var(--brand)]">{msg}</p>}
       </section>
 
-      {/* 6주 달력 */}
+      {/* 7주 달력 */}
       <section className="mt-6">
         <div className="mb-2 flex flex-wrap gap-3 text-xs text-[var(--foreground-muted)]">
           {(Object.keys(STATE_LABEL) as AdminSlot["state"][]).map((s) => (

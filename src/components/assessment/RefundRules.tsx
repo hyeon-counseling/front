@@ -7,7 +7,7 @@ const ROWS: { tier: RefundTier; when: string; amount: string; sub?: string }[] =
   { tier: "link_not_started", when: "링크를 받았지만 검사를 하나도 시작하지 않았을 때", amount: "120,000원", sub: "검사 실비 3만 원을 빼고" },
   { tier: "started", when: "검사를 시작한 뒤 ~ 검사 마감(상담 7일 전) 전", amount: "90,000원" },
   { tier: "after_deadline", when: "검사 마감 뒤 ~ 상담 3일 전까지", amount: "45,000원" },
-  { tier: "none", when: "상담 2일 전 ~ 당일, 연락 없이 오지 않았을 때", amount: "환불 없음", sub: "준비된 보고서와 해석 영상은 내 페이지로 드려요" },
+  { tier: "none", when: "상담 2일 전 ~ 당일, 연락 없이 오지 않았을 때", amount: "환불 없음", sub: "준비된 보고서와 해석 영상은 내 페이지로 드려요 (상담일 후 14일 동안)" },
 ];
 
 export function RefundRules({ highlight }: { highlight?: RefundTier }) {

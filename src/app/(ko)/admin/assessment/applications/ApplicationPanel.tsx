@@ -34,6 +34,8 @@ interface Detail extends Row {
   report: { name: string; size: number; uploadedAt: string } | null;
   interpretVideoUrl: string | null;
   publishedAt: string | null;
+  reportEndsAt: string | null;
+  reportExpired: boolean;
   sessionAt: string | null;
   cancelRequestedAt: string | null;
   cancelRequest: { reason: string; quoteAmount: number; quoteTier: string; by: string } | null;
@@ -203,7 +205,7 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
           {!d.closed && !d.payState && <TestsBox id={d.id} tests={d.testsDetail} onChanged={refresh} />}
           {!d.closed && !d.payState && <PlaceBox key={`${d.place?.name ?? ""}|${d.videoLink ?? ""}`} id={d.id} method={d.method} place={d.place} videoLink={d.videoLink} onChanged={refresh} />}
 
-          {!d.payState && <ReportBox key={`${d.id}|${d.interpretVideoUrl ?? ""}`} id={d.id} report={d.report} interpretVideoUrl={d.interpretVideoUrl} publishedAt={d.publishedAt} sessionAt={d.sessionAt} closed={d.closed} onChanged={refresh} onToast={setMsg} />}
+          {!d.payState && <ReportBox key={`${d.id}|${d.interpretVideoUrl ?? ""}`} id={d.id} report={d.report} interpretVideoUrl={d.interpretVideoUrl} publishedAt={d.publishedAt} sessionAt={d.sessionAt} closed={d.closed} reportEndsAt={d.reportEndsAt} reportExpired={d.reportExpired} onChanged={refresh} onToast={setMsg} />}
 
           <section>
             <div className="mb-3 flex items-center justify-between">
