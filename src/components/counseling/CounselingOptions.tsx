@@ -1,21 +1,32 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import Link from "next/link";
+import { createContext, useContext, useEffect, useState } from "react";
 import { Icon } from "@/components/assessment/Icon";
 import { StickyApplyBar } from "@/components/assessment/StickyApplyBar";
-import { MULTI_NOTE, PLANS, shopUrl, type PlanKey } from "./CounselingRules";
+import { MULTI_NOTE, PLANS, type PlanKey } from "./CounselingRules";
 
 /**
  * 개인 상담 상세 — 옵션(회기) 고르기. 첫 화면·가격 박스·휴대폰 하단 바가 같은 선택을 함께 쓴다.
- * 신청은 카페24로 보낸다 (옵션별 상품 주소: CounselingRules SHOP_URLS)
+ * 신청은 사이트 결제로 간다 (/counseling/individual/apply → 결제 화면). 금액은 서버 값
  */
-type Plan = (typeof PLANS)[number];
-const Ctx = createContext<{ plan: Plan; setKey: (k: PlanKey) => void } | null>(null);
+type Plan = Omit<(typeof PLANS)[number], "total"> & { total: number };
+const applyHref = (key: string) => `/counseling/individual/apply?plan=${key}`;
+const Ctx = createContext<{ plan: Plan; setKey: (k: PlanKey) => void; totals: Record<string, number> } | null>(null);
 
 export function CounselingOptionsProvider({ children }: { children: React.ReactNode }) {
   const [key, setKey] = useState<PlanKey>("single");
-  const plan = PLANS.find((p) => p.key === key) ?? PLANS[0];
-  return <Ctx.Provider value={{ plan, setKey }}>{children}</Ctx.Provider>;
+  const [totals, setTotals] = useState<Record<string, number>>({});
+  // 금액은 서버 기준 — 못 받으면 코드의 값을 보여 주고, 결제 화면에서는 항상 서버 금액이 나온다
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/counseling/plans`)
+      .then((r) => r.json())
+      .then((b) => setTotals(Object.fromEntries((b.data?.plans ?? []).map((p: { key: string; total: number }) => [p.key, p.total]))))
+      .catch(() => null);
+  }, []);
+  const base = PLANS.find((p) => p.key === key) ?? PLANS[0];
+  const plan: Plan = { ...base, total: totals[base.key] ?? base.total };
+  return <Ctx.Provider value={{ plan, setKey, totals }}>{children}</Ctx.Provider>;
 }
 
 function usePlan() {
@@ -31,12 +42,13 @@ const validLine = (p: Plan) => [p.key === "first" ? "첫 상담 때만" : "", p.
 
 /** 옵션 선택 — 라디오 카드 */
 export function OptionCards({ name }: { name: string }) {
-  const { plan, setKey } = usePlan();
+  const { plan, setKey, totals } = usePlan();
   return (
     <fieldset>
       <legend className="mb-2.5 text-[15px] font-extrabold text-[var(--foreground)]">옵션 선택</legend>
       <div className="grid gap-2.5 sm:grid-cols-2">
-        {PLANS.map((p) => {
+        {PLANS.map((raw) => {
+          const p: Plan = { ...raw, total: totals[raw.key] ?? raw.total };
           const on = p.key === plan.key;
           return (
             <label
@@ -108,18 +120,18 @@ export function PriceBoxHead() {
   );
 }
 
-/** 신청 버튼 — 고른 옵션을 보여 주고 카페24로 */
+/** 신청 버튼 — 고른 옵션을 보여 주고 결제로 */
 export function ApplyButton({ className = "" }: { className?: string }) {
   const { plan } = usePlan();
   return (
-    <a href={shopUrl(plan.key)} target="_blank" rel="noopener noreferrer" className={`as-btn ${className}`}>
+    <Link href={applyHref(plan.key)} className={`as-btn ${className}`}>
       {plan.name} · {won(plan.total)} 신청하기 <Icon name="arrow" className="h-5 w-5" />
-    </a>
+    </Link>
   );
 }
 
 /** 휴대폰 하단 고정 바 */
 export function CounselingStickyBar({ targetId }: { targetId: string }) {
   const { plan } = usePlan();
-  return <StickyApplyBar targetId={targetId} href={shopUrl(plan.key)} price={won(plan.total)} sub={`개인 상담 · ${plan.name}`} />;
+  return <StickyApplyBar targetId={targetId} href={applyHref(plan.key)} price={won(plan.total)} sub={`개인 상담 · ${plan.name}`} />;
 }

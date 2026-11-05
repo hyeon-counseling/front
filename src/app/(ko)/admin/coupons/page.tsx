@@ -210,6 +210,7 @@ export default function AdminCouponsPage() {
           <option value="course">강의 전용</option>
           <option value="program">과정 전용</option>
           <option value="assessment">전문 심리검사</option>
+          <option value="counseling">개인 상담</option>
           <option value="all">강의·과정 모두</option>
         </select>
       </div>
@@ -294,7 +295,7 @@ export default function AdminCouponsPage() {
           <div>
             <label className="mb-1.5 block text-sm font-medium">쿠폰 대상</label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {([["course", "강의 전용"], ["program", "과정 전용"], ["assessment", "전문 심리검사"], ["", "강의·과정 모두"]] as const).map(([v, l]) => {
+              {([["course", "강의 전용"], ["program", "과정 전용"], ["assessment", "전문 심리검사"], ["counseling", "개인 상담"], ["", "강의·과정 모두"]] as const).map(([v, l]) => {
                 const on = v ? form.itemTypes.length === 1 && form.itemTypes[0] === v : form.itemTypes.length === 0;
                 return (
                   <button

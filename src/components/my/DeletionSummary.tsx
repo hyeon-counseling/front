@@ -5,7 +5,7 @@ export interface DeletionItem {
   note?: string;
 }
 export interface DeletionBlocker {
-  code: "admin" | "assessment";
+  code: "admin" | "assessment" | "counseling";
   message: string;
   applicationNos?: string[];
 }

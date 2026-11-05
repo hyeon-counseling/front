@@ -61,6 +61,7 @@ export default function MyAccountPage() {
 
   const assessmentBlock = preview?.blockers.find((b) => b.code === "assessment");
   const adminBlock = preview?.blockers.find((b) => b.code === "admin");
+  const counselingBlock = preview?.blockers.find((b) => b.code === "counseling");
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
@@ -93,10 +94,18 @@ export default function MyAccountPage() {
                   <Alert tone="info">탈퇴 후에는 검사 진행 화면과 보고서를 볼 수 없어요. 보고서는 해석 상담 후 14일 안에 PDF로 저장할 수 있으니, 필요하면 탈퇴 전에 저장해 주세요. 해석 영상은 저장할 수 없어요.</Alert>
                 )}
 
-                {assessmentBlock || adminBlock ? (
+                {assessmentBlock || adminBlock || counselingBlock ? (
                   <div className="rounded-xl bg-[var(--surface)] px-4 py-4 text-sm leading-relaxed text-[var(--foreground-muted)]">
                     <p className="font-bold text-[var(--foreground)]">지금은 탈퇴할 수 없어요</p>
                     {adminBlock && <p className="mt-1">{adminBlock.message}</p>}
+                    {counselingBlock && (
+                      <>
+                        <p className="mt-1">{counselingBlock.message}</p>
+                        <Link href="/contact" className="mt-3 inline-flex h-10 items-center rounded-xl border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--foreground)]">
+                          문의하기
+                        </Link>
+                      </>
+                    )}
                     {assessmentBlock && (
                       <>
                         <p className="mt-1">{assessmentBlock.message}</p>

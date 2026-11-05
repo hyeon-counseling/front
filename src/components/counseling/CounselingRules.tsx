@@ -3,6 +3,7 @@ import Link from "next/link";
 /**
  * 개인 상담 상품·가격·취소·환불 규정 (결정 #56, 10/30 상담가 확정 — 근거: hyeon test test/reports/취소·환불 규칙안 2026-10.md)
  * /counseling(요약)과 /refund(전문)이 같은 값을 쓴다. 가격은 2026-12-31까지 오픈 가격. 부가세 문구는 면세 여부 확인 뒤.
+ * 결제 금액의 기준은 서버(hyeon-back services/counseling/plans.ts)이고, 옵션 화면은 서버 값을 받아 덮어쓴다. 값을 바꾸면 양쪽을 함께 고친다.
  */
 export const PRICE = 60_000; // 1회기 50분, 화상·대면 같음
 export const OPEN_PRICE_UNTIL = "2026년 12월 31일";
@@ -17,14 +18,6 @@ export type PlanKey = (typeof PLANS)[number]["key"];
 
 /** 여러 회기 옵션(2·5·10회) 공통 안내 */
 export const MULTI_NOTE = "첫 상담에서 이후 상담 일정을 함께 조율해요.";
-
-/**
- * 신청·결제는 아직 카페24 — 옵션별 카페24 상품 주소를 넣으면 그 상품으로 바로 간다 (비우면 쇼핑몰 첫 화면)
- * 예: single: "https://hyeoncounseling.cafe24.com/product/개인상담/12/"
- */
-export const SHOP_HOME = process.env.NEXT_PUBLIC_SHOP_URL ?? "https://hyeoncounseling.cafe24.com";
-export const SHOP_URLS: Record<PlanKey, string> = { single: "", first: "", five: "", ten: "" };
-export const shopUrl = (key: PlanKey) => SHOP_URLS[key] || SHOP_HOME;
 
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 

@@ -18,6 +18,7 @@ interface AdminSlot {
   regions: string[];
   state: "open" | "held" | "booked" | "closed" | "personal";
   applicationId: string | null;
+  counseling?: boolean; // 개인 상담으로 잡힌 칸
 }
 
 const REGIONS = ["홍대", "강남", "종로", "혜화", "사당"];
@@ -344,7 +345,7 @@ export default function SlotsPage() {
                             STATE_STYLE[s.state],
                             marked.includes(s.id) && "ring-2 ring-violet-600 ring-offset-1"
                           )}
-                          title={`${STATE_LABEL[s.state]} · ${s.methods.map((m) => (m === "offline" ? "대면" : "화상")).join("·")}`}
+                          title={`${s.counseling ? "개인 상담 " : ""}${STATE_LABEL[s.state]} · ${s.methods.map((m) => (m === "offline" ? "대면" : "화상")).join("·")}`}
                         >
                           {kstParts(s.startsAt).hhmm}
                           <span className="ml-1 font-normal opacity-70">{s.methods.length === 2 ? "" : s.methods[0] === "offline" ? "대면" : "화상"}</span>
@@ -366,7 +367,7 @@ export default function SlotsPage() {
               {kstParts(selected.startsAt).dayText} {kstParts(selected.startsAt).timeText}
             </p>
             <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-              {STATE_LABEL[selected.state]} · {selected.methods.map((m) => (m === "offline" ? "대면" : "화상")).join("·")}
+              {selected.counseling ? "개인 상담 " : ""}{STATE_LABEL[selected.state]} · {selected.methods.map((m) => (m === "offline" ? "대면" : "화상")).join("·")}
               {selected.regions.length > 0 && ` · ${selected.regions.join(", ")}`}
             </p>
             <div className="mt-5 grid gap-2">
