@@ -23,6 +23,8 @@ interface Summary {
   cancelRequests: number;
   unpaid: number;
   videoCleanup: number;
+  bookableSlots: number;
+  slotsLow: boolean;
   intakeMissing: { id: string; applicationNo: string; name: string; days: number }[];
   sessions: { id: string; applicationNo: string; name: string; sessionText: string; methodText: string; ready: boolean }[];
 }
@@ -49,9 +51,10 @@ export default function AdminToday() {
         { n: s.doneToday, label: "검사 완료 확인됨", hint: "내일 아침 완료 안내", href: "/admin/assessment/applications?f=s3" },
         { n: s.videoCleanup, label: "유튜브 영상 정리", hint: "열람 기간 종료, 비공개·삭제 필요", href: "/admin/assessment/applications?f=video" },
         { n: s.failedNotices, label: "알림 실패", hint: "최근 7일", href: "/admin/assessment/applications" },
+        { n: s.bookableSlots, label: "고를 수 있는 칸 부족", hint: "새 신청이 고를 칸이 적어요. 칸을 더 열어 주세요", href: "/admin/assessment/slots", show: s.slotsLow },
       ]
     : [];
-  const open = cards.filter((c) => c.n > 0);
+  const open = cards.filter((c) => ("show" in c ? c.show : c.n > 0));
 
   return (
     <div className="px-4 py-8 sm:px-6">
