@@ -8,14 +8,15 @@ import { Skeleton, cx } from "@/components/ui";
 /**
  * 관리자 · 공개 슬롯 (해석 상담 가능 시간)
  * 위: 여러 날짜 × 여러 시간을 한꺼번에 열기 (미리 보기 → 열기). 월·수·금 오전(투석)은 서버가 빼 준다.
- * 아래: 7주 달력 — 칸을 눌러 닫기/다시 열기/지우기. 예약된 칸은 바꿀 수 없다.
+ * 아래: 7주 달력 — 칸을 눌러 닫기/다시 열기/지우기/개인 일정으로 막기. 예약된 칸은 바꿀 수 없다.
+ * 개인 일정 칸은 고객에게 예약된 칸과 똑같이 '마감'으로 보인다. [여러 칸 고르기]로 한꺼번에 막거나 다시 연다.
  */
 interface AdminSlot {
   id: string;
   startsAt: string;
   methods: ("offline" | "online")[];
   regions: string[];
-  state: "open" | "held" | "booked" | "closed";
+  state: "open" | "held" | "booked" | "closed" | "personal";
   applicationId: string | null;
 }
 
@@ -44,8 +45,9 @@ const STATE_STYLE: Record<AdminSlot["state"], string> = {
   held: "bg-amber-50 text-amber-700 border-amber-200",
   booked: "bg-[var(--brand)] text-white border-[var(--brand)]",
   closed: "bg-[var(--surface)] text-[var(--foreground-subtle)] border-[var(--border-light)] line-through",
+  personal: "bg-violet-50 text-violet-700 border-violet-200",
 };
-const STATE_LABEL: Record<AdminSlot["state"], string> = { open: "열림", held: "결제 중", booked: "예약됨", closed: "닫힘" };
+const STATE_LABEL: Record<AdminSlot["state"], string> = { open: "열림", held: "결제 중", booked: "예약됨", closed: "닫힘", personal: "개인 일정" };
 
 export default function SlotsPage() {
   // 화면을 연 날 기준 (다시 그려도 바뀌지 않게). 달력은 이번 주 일요일부터 7주
@@ -67,6 +69,10 @@ export default function SlotsPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [selected, setSelected] = useState<AdminSlot | null>(null);
+  const [personalMsg, setPersonalMsg] = useState(""); // 달력 쪽 안내 — 위 '열기' 안내와 나눈다
+  const [multi, setMulti] = useState(false); // 여러 칸 고르기
+  const [marked, setMarked] = useState<string[]>([]);
+  const [avail, setAvail] = useState<{ bookable: number; warnBelow: number; low: boolean } | null>(null);
   // 고객이 고를 수 있는 열린 칸이 언제까지 있는지 — 없으면 품절처럼 보인다
   const lastOpen = slots?.filter((s) => s.state === "open").map((s) => kstParts(s.startsAt).dateKey).sort().pop();
   const openUntil = !slots ? undefined : lastOpen && lastOpen >= firstBookable ? lastOpen : null;
@@ -76,6 +82,7 @@ export default function SlotsPage() {
     apiFetch(`/api/admin/assessment/slots?from=${start}&to=${addDaysKey(start, WEEKS * 7 - 1)}`)
       .then(setSlots)
       .catch(() => setSlots([]));
+    apiRequest<{ bookable: number; warnBelow: number; low: boolean }>("/api/admin/assessment/slots/availability").then((r) => setAvail(r.ok && r.data ? r.data : null));
   }, [start]);
   useEffect(load, [load]);
 
@@ -121,6 +128,21 @@ export default function SlotsPage() {
     load();
   };
 
+  // 개인 일정으로 막기 · 다시 열기 (한 칸도 여러 칸도 같은 길)
+  const personal = async (ids: string[], action: "block" | "open") => {
+    setBusy(true);
+    setPersonalMsg("");
+    const r = await apiRequest<{ changed: number; skipped: number }>("/api/admin/assessment/slots/personal", { method: "POST", body: JSON.stringify({ ids, action }) });
+    setBusy(false);
+    if (r.ok && r.data) {
+      const skipped = r.data.skipped ? ` ${r.data.skipped}칸은 ${action === "block" ? "예약됐거나 결제 중이라" : "개인 일정 칸이 아니라"} 건너뛰었어요.` : "";
+      setPersonalMsg(`${r.data.changed}칸을 ${action === "block" ? "개인 일정으로 막았어요" : "다시 열었어요"}.${skipped}`);
+    } else setPersonalMsg(r.message || "바꾸지 못했어요.");
+    setSelected(null);
+    setMarked([]);
+    load();
+  };
+
   const toggle = <T,>(arr: T[], v: T) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
   return (
@@ -136,6 +158,12 @@ export default function SlotsPage() {
             ? <>열린 칸은 {kstParts(`${openUntil}T03:00:00Z`).dayText}까지 있어요. {kstParts(`${addDaysKey(openUntil, -13)}T03:00:00Z`).dayText}부터 신청하는 분은 고를 칸이 없어요. </>
             : <>고객이 고를 수 있는 열린 칸이 없어요. </>}
           늘 오늘부터 6주 뒤까지 열어 두고, 일주일에 한 번 다음 한 주를 더 열어 주세요.
+        </p>
+      )}
+
+      {avail?.low && (
+        <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+          오늘 신청하는 분이 고를 수 있는 칸이 {avail.bookable}칸이에요. {avail.warnBelow}칸보다 적으면 상품을 바로 사기 어려워 보일 수 있어요. 칸을 더 열거나 막은 칸을 다시 열어 주세요.
         </p>
       )}
 
@@ -233,13 +261,39 @@ export default function SlotsPage() {
 
       {/* 7주 달력 */}
       <section className="mt-6">
-        <div className="mb-2 flex flex-wrap gap-3 text-xs text-[var(--foreground-muted)]">
+        <div className="mb-2 flex flex-wrap items-center gap-3 text-xs text-[var(--foreground-muted)]">
           {(Object.keys(STATE_LABEL) as AdminSlot["state"][]).map((s) => (
             <span key={s} className="flex items-center gap-1">
               <span className={cx("h-3 w-3 rounded border", STATE_STYLE[s])} /> {STATE_LABEL[s]}
             </span>
           ))}
+          <button
+            type="button"
+            onClick={() => (setMulti((v) => !v), setMarked([]))}
+            aria-pressed={multi}
+            className={cx("ml-auto h-9 cursor-pointer rounded-lg px-3 text-sm font-semibold", multi ? "bg-violet-600 text-white" : "bg-[var(--surface)] text-[var(--foreground)]")}
+          >
+            {multi ? "여러 칸 고르기 끝내기" : "여러 칸 고르기"}
+          </button>
         </div>
+        {multi && (
+          <div className="sticky top-2 z-10 mb-2 flex flex-wrap items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm">
+            <span className="font-semibold text-violet-800">{marked.length ? `${marked.length}칸 고름` : "달력에서 칸을 눌러 고르세요"}</span>
+            <button disabled={busy || !marked.length} onClick={() => personal(marked, "block")} className="h-9 cursor-pointer rounded-lg bg-violet-600 px-3 font-semibold text-white disabled:opacity-40">
+              개인 일정으로 막기
+            </button>
+            <button disabled={busy || !marked.length} onClick={() => personal(marked, "open")} className="h-9 cursor-pointer rounded-lg bg-white px-3 font-semibold text-violet-800 disabled:opacity-40">
+              다시 열기
+            </button>
+            {marked.length > 0 && (
+              <button onClick={() => setMarked([])} className="cursor-pointer text-[var(--foreground-subtle)] underline underline-offset-2">
+                고른 칸 지우기
+              </button>
+            )}
+            <span className="w-full text-xs text-violet-800">고객에게는 예약된 칸과 똑같이 「마감」으로 보여요. 예약됐거나 결제 중인 칸은 막을 수 없어요.</span>
+          </div>
+        )}
+        {personalMsg && <p className="mb-2 text-sm text-[var(--brand)]">{personalMsg}</p>}
         {!slots ? (
           <Skeleton className="h-96" />
         ) : (
@@ -276,8 +330,20 @@ export default function SlotsPage() {
                         <button
                           key={s.id}
                           type="button"
-                          onClick={() => (s.state === "held" && s.applicationId ? window.location.assign(`/admin/assessment/applications?id=${s.applicationId}`) : setSelected(s))}
-                          className={cx("block w-full cursor-pointer rounded-md border px-1.5 py-0.5 text-left text-[11px] font-semibold", STATE_STYLE[s.state])}
+                          disabled={multi && (s.state === "booked" || s.state === "held")}
+                          aria-pressed={multi ? marked.includes(s.id) : undefined}
+                          onClick={() =>
+                            multi
+                              ? setMarked((x) => toggle(x, s.id))
+                              : s.state === "held" && s.applicationId
+                                ? window.location.assign(`/admin/assessment/applications?id=${s.applicationId}`)
+                                : setSelected(s)
+                          }
+                          className={cx(
+                            "block w-full cursor-pointer rounded-md border px-1.5 py-0.5 text-left text-[11px] font-semibold disabled:cursor-not-allowed disabled:opacity-50",
+                            STATE_STYLE[s.state],
+                            marked.includes(s.id) && "ring-2 ring-violet-600 ring-offset-1"
+                          )}
                           title={`${STATE_LABEL[s.state]} · ${s.methods.map((m) => (m === "offline" ? "대면" : "화상")).join("·")}`}
                         >
                           {kstParts(s.startsAt).hhmm}
@@ -313,8 +379,18 @@ export default function SlotsPage() {
                     </a>
                   )}
                 </>
+              ) : selected.state === "personal" ? (
+                <>
+                  <p className="text-sm text-[var(--foreground-muted)]">고객에게는 「마감」으로 보여요. 지우려면 먼저 다시 열어 주세요.</p>
+                  <button disabled={busy} onClick={() => personal([selected.id], "open")} className="h-11 cursor-pointer rounded-xl bg-[var(--brand)] text-sm font-semibold text-white disabled:opacity-40">
+                    다시 열기
+                  </button>
+                </>
               ) : (
                 <>
+                  <button disabled={busy} onClick={() => personal([selected.id], "block")} className="h-11 cursor-pointer rounded-xl bg-violet-600 text-sm font-semibold text-white disabled:opacity-40">
+                    개인 일정으로 막기 (고객에게 마감으로)
+                  </button>
                   {selected.state === "open" ? (
                     <button onClick={() => act(selected, "closed")} className="h-11 cursor-pointer rounded-xl bg-[var(--surface)] text-sm font-semibold">
                       닫기 (고객에게 안 보이게)
