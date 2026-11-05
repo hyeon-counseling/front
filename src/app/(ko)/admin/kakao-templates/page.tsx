@@ -72,7 +72,7 @@ interface Overview {
     template: { id: string; name: string; templateId: string } | null;
     linkedCount: number;
     status: string | null;
-    method: "alimtalk" | "alimtalk_unapproved" | "sms";
+    method: "alimtalk" | "alimtalk_unapproved" | "sms" | "none";
     lastSent: { at: string; channel: string; result: string } | null;
   }[];
 }
@@ -355,7 +355,7 @@ export default function KakaoTemplatesPage() {
   if (dataLoading && !templates.length) return <div className="p-10 text-sm text-[var(--foreground-muted)]">불러오는 중...</div>;
 
   const groups: Purpose[] = ["assessment", "gift", "order"];
-  const sendingSms = overview?.codes.filter((c) => c.method !== "alimtalk") ?? [];
+  const sendingSms = overview?.codes.filter((c) => c.method !== "alimtalk" && c.method !== "none") ?? [];
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -416,6 +416,8 @@ export default function KakaoTemplatesPage() {
                         <span className="font-semibold text-[var(--brand)]">알림톡</span>
                       ) : c.method === "alimtalk_unapproved" ? (
                         <span className="font-semibold text-[var(--error)]">알림톡 실패 → 문자</span>
+                      ) : c.method === "none" ? (
+                        <span className="text-[var(--foreground-subtle)]">승인 전 안 나감</span>
                       ) : (
                         <span className="text-amber-700">문자</span>
                       )}

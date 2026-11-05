@@ -14,6 +14,7 @@ import { VerifyGate } from "@/components/assessment/VerifyGate";
  * 금액은 서버가 규정대로 계산하고, 상담가가 확인해 확정한다.
  */
 interface QuoteRes {
+  testerProgram?: boolean;
   quote: RefundQuote;
   requestedAt: string | null;
   request: { reason: string; quoteAmount: number } | null;
@@ -51,6 +52,59 @@ export default function CancelPage() {
       내 진행 상황으로
     </Link>
   );
+
+  // 테스터는 환불이 없다 — 환불 표 없이 [테스트 그만두기]만
+  if (data.testerProgram) {
+    if (data.closed) {
+      return (
+        <div className="mx-auto max-w-lg px-4 py-16 text-center">
+          <h1 className="text-xl font-bold text-[var(--foreground)]">테스트 중단을 처리했어요</h1>
+          <p className="mt-3 leading-relaxed text-[var(--foreground-muted)]">알림은 더 보내지 않아요. 이미 만들어진 기록은 일반 고객과 똑같이 10년 보관한 뒤 파기해요.</p>
+          {back}
+        </div>
+      );
+    }
+    const leave = async () => {
+      setBusy(true);
+      setError("");
+      const r = await assessRequest(key, "/tester-withdraw", { method: "POST" });
+      setBusy(false);
+      if (r.ok) setTick((t) => t + 1);
+      else setError(r.message || "처리하지 못했어요. 잠시 뒤 다시 해 주세요.");
+    };
+    return (
+      <div className="px-4 py-10 sm:py-14">
+        <div className="mx-auto max-w-lg">
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">테스트 그만두기</h1>
+          <section className="card mt-6 space-y-3 p-6 leading-relaxed text-[var(--foreground-muted)]">
+            <p>이유를 말하지 않으셔도 돼요. 불이익도 없고, 평소처럼 지내요.</p>
+            <p>그만두면 남은 진행을 멈추고 안내 알림도 보내지 않아요. 상담이 끝난 뒤라면 보고서를 닫고 해석 영상 링크를 내려요. 이미 저장한 PDF는 내 것이에요.</p>
+            <p>이미 만들어진 검사·상담 기록은 지워지지 않아요. 일반 고객과 똑같이 10년 동안 보관한 뒤 파기해요. 이미 내신 설문은 말씀해 주시면 점검 자료에서 빼요.</p>
+          </section>
+          {error && <p className="mt-4 text-sm text-[var(--error)]">{error}</p>}
+          {!confirm ? (
+            <button onClick={() => setConfirm(true)} className="mt-6 h-14 w-full cursor-pointer rounded-xl bg-[var(--surface)] text-lg font-bold text-[var(--foreground)]">
+              테스트 그만두기
+            </button>
+          ) : (
+            <div className="mt-6 rounded-2xl border border-[var(--border-light)] bg-white p-5">
+              <p className="font-bold text-[var(--foreground)]">정말 그만둘까요?</p>
+              <p className="mt-1 text-sm text-[var(--foreground-muted)]">누르면 바로 처리되고 되돌릴 수 없어요.</p>
+              <div className="mt-4 flex gap-2">
+                <button onClick={() => setConfirm(false)} className="h-12 flex-1 cursor-pointer rounded-xl bg-[var(--surface)] font-semibold">
+                  돌아가기
+                </button>
+                <button onClick={leave} disabled={busy} className="h-12 flex-1 cursor-pointer rounded-xl bg-[var(--foreground)] font-bold text-white disabled:opacity-60">
+                  {busy ? "처리 중…" : "그만두기"}
+                </button>
+              </div>
+            </div>
+          )}
+          <div className="text-center">{back}</div>
+        </div>
+      </div>
+    );
+  }
 
   if (data.closed) {
     return (

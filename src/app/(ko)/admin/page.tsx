@@ -23,6 +23,7 @@ interface Summary {
   cancelRequests: number;
   unpaid: number;
   videoCleanup: number;
+  testerTodo: number;
   intakeMissing: { id: string; applicationNo: string; name: string; days: number }[];
   sessions: { id: string; applicationNo: string; name: string; sessionText: string; methodText: string; ready: boolean }[];
 }
@@ -48,6 +49,7 @@ export default function AdminToday() {
         { n: s.unmatchedMails, label: "메일 직접 연결", hint: "이름이 안 맞은 검사 메일", href: "/admin/assessment/codes" },
         { n: s.doneToday, label: "검사 완료 확인됨", hint: "내일 아침 완료 안내", href: "/admin/assessment/applications?f=s3" },
         { n: s.videoCleanup, label: "유튜브 영상 정리", hint: "열람 기간 종료, 비공개·삭제 필요", href: "/admin/assessment/applications?f=video" },
+        { n: s.testerTodo, label: "테스터 안부·슈퍼비전", hint: "해석 상담을 마친 테스터", href: "/admin/assessment/testers" },
         { n: s.failedNotices, label: "알림 실패", hint: "최근 7일", href: "/admin/assessment/applications" },
       ]
     : [];

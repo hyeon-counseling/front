@@ -15,6 +15,7 @@ export interface Row {
   holdLabel: string;
   closed: string | null;
   isTester: boolean;
+  testerProgram?: boolean;
   intakeSubmitted: boolean;
   tests: Record<string, { collected: boolean; done: boolean }>;
   paidAt: string | null;

@@ -169,7 +169,7 @@ function Inner() {
                       <td className="px-4 py-3">
                         <p className="font-semibold text-[var(--foreground)]">
                           <MaskedName name={r.name} />
-                          {r.isTester && <span className="ml-1.5 rounded bg-[var(--surface-muted)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--foreground-muted)]">테스터</span>}
+                          {r.isTester && <span className="ml-1.5 rounded bg-[var(--surface-muted)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--foreground-muted)]">{r.testerProgram ? "테스터 프로그램" : "테스터"}</span>}
                         </p>
                         <p className="text-xs text-[var(--foreground-subtle)]">{r.applicationNo}</p>
                       </td>

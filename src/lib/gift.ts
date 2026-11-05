@@ -1,4 +1,7 @@
+import { pendingTesterPath } from "@/lib/tester";
+
 // 쿠폰 선물 — 받으러 온 선물을 이 기기에 잠깐 기억해 두고, 가입·인증·로그인 뒤 그 선물로 돌려보낸다
+// (테스터 신청도 같은 자리에서 돌아온다 — 알림톡 버튼을 눌렀던 기기에 기억해 둔 주소)
 const KEY = "pending_gift";
 const KEEP_MS = 7 * 86_400_000;
 
@@ -22,6 +25,8 @@ export function rememberGift(giftKey: string) {
 
 /** 기억해 둔 선물 주소 (없거나 오래됐으면 null) */
 export function pendingGiftPath(): string | null {
+  const tester = pendingTesterPath();
+  if (tester) return tester;
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return null;

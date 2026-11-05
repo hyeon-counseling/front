@@ -41,7 +41,18 @@ interface Detail extends Row {
   cancelRequest: { reason: string; quoteAmount: number; quoteTier: string; by: string } | null;
   refund: { amount: number; note: string; processedAt: string } | null;
   refundQuote: RefundQuoteView | null;
+  tester: { id: string; code: string; acquaintance: boolean; avoid: { topics: string[]; other: string }; withdrawnAt: string | null; withdrawnStage: string } | null;
 }
+
+const AVOID_LABEL: Record<string, string> = {
+  family: "가족 이야기",
+  love: "연애·부부 관계",
+  work: "일·학업",
+  childhood: "어린 시절 기억",
+  body: "몸과 건강",
+  mutual: "함께 아는 사람에 대한 이야기",
+  counselor: "상담가와의 관계에 대한 이야기",
+};
 
 const GENDER: Record<string, string> = { female: "여성", male: "남성", other: "기타", undisclosed: "밝히지 않음" };
 const BY: Record<string, string> = { system: "자동", admin: "상담가", customer: "고객" };
@@ -122,6 +133,7 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
               {d.name}
               {d.isTester && <span className="ml-2 rounded bg-[var(--surface-muted)] px-1.5 py-0.5 text-xs font-bold text-[var(--foreground-muted)]">테스터</span>}
             </h2>
+            {!d.tester && (
             <button
               disabled={saving}
               onClick={() => {
@@ -133,12 +145,30 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
             >
               {d.isTester ? "테스터 표시 해제" : "테스터로 표시"}
             </button>
+            )}
             <p className="mt-1 text-sm text-[var(--foreground-muted)]">
               {d.sessionText} · {d.methodText}
               {d.method === "offline" && d.regions[1] && ` (2순위 ${d.regions[1]})`}
             </p>
           </div>
 
+          {d.tester && (
+            <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm">
+              <p className="font-bold text-violet-900">
+                테스터 {d.tester.code}
+                {d.tester.acquaintance && " · 아는 사이"}
+                {d.tester.withdrawnAt && ` · 철회 (${d.tester.withdrawnStage})`}
+              </p>
+              {d.tester.avoid.topics.length > 0 || d.tester.avoid.other ? (
+                <p className="mt-1.5 font-bold text-red-700">듣고 싶지 않은 영역: {[...d.tester.avoid.topics.map((t) => AVOID_LABEL[t] ?? t), d.tester.avoid.other].filter(Boolean).join(" · ")}</p>
+              ) : (
+                <p className="mt-1.5 text-violet-900">듣고 싶지 않은 영역: 고른 것 없음</p>
+              )}
+              <a href="/admin/assessment/testers" className="mt-2 inline-block text-violet-900 underline underline-offset-2">
+                테스터 명단에서 체크리스트·철회 처리
+              </a>
+            </div>
+          )}
           {d.hold === "safety" && (
             <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
               <p className="font-bold text-red-700">● 안전 확인 필요</p>
@@ -264,7 +294,7 @@ export function ApplicationPanel({ id, onClose, onChanged }: { id: string; onClo
             </a>
           </section>
 
-          {!d.payState && <RefundBox id={d.id} closed={d.closed} request={d.cancelRequest} requestedAt={d.cancelRequestedAt} quote={d.refundQuote} refund={d.refund} onChanged={refresh} />}
+          {!d.payState && !d.tester && <RefundBox id={d.id} closed={d.closed} request={d.cancelRequest} requestedAt={d.cancelRequestedAt} quote={d.refundQuote} refund={d.refund} onChanged={refresh} />}
         </div>
       )}
     </aside>

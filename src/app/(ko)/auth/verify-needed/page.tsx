@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { pendingTesterPath } from "@/lib/tester";
 import { apiRequest } from "@/lib/api";
 import { Alert, Button } from "@/components/ui";
 import { readUnverifiedEmail } from "@/lib/authSession";
@@ -39,7 +40,7 @@ export default function VerifyNeededPage() {
     if (!email) return;
     setSending(true);
     setError("");
-    const r = await apiRequest<{ retryAfterSec?: number }>("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email }) });
+    const r = await apiRequest<{ retryAfterSec?: number }>("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email, ...(pendingTesterPath() ? { returnTo: pendingTesterPath() } : {}) }) });
     setSending(false);
     if (r.ok) {
       setSent(true);

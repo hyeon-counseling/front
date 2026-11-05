@@ -60,7 +60,9 @@ export default function MyAssessmentPage() {
                       ? `환불 완료 · ${a.refund.amount.toLocaleString("ko-KR")}원 · ${new Date(a.refund.processedAt).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}`
                       : a.refund
                         ? `취소 완료 · ${new Date(a.refund.processedAt).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}`
-                        : "취소됨"}
+                        : a.testerProgram
+                          ? "테스트 중단"
+                          : "취소됨"}
                   </span>
                   <p className="mt-3 text-xs font-semibold text-[var(--foreground-subtle)]">신청 번호 {a.applicationNo}</p>
                   <h2 className="mt-1 text-lg font-bold text-[var(--foreground-muted)] line-through decoration-1">종합심리검사 + 해석 상담</h2>
@@ -107,7 +109,7 @@ export default function MyAssessmentPage() {
                     <span className="text-xs font-semibold text-[var(--foreground-subtle)]">환불액을 확인하고 있어요</span>
                   ) : (
                     <Link href={`/a/${a.linkKey}/cancel`} className="text-sm text-[var(--foreground-subtle)] underline underline-offset-2 hover:text-[var(--error)]">
-                      취소 요청
+                      {a.testerProgram ? "테스트 그만두기" : "취소 요청"}
                     </Link>
                   )}
                 </div>

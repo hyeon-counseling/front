@@ -25,6 +25,7 @@ export interface ProgressView {
   intakeSubmittedAt: string | null;
   tests: { key: string; label: string; ready: boolean; done: boolean }[];
   isTester: boolean;
+  testerProgram?: boolean;
   paidAt: string | null;
   place: { name: string; address: string; mapUrl: string } | null; // 상담 3일 전부터
   videoReady: boolean; // 화상 링크 — 하루 전부터

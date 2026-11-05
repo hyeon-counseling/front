@@ -19,7 +19,7 @@ function NextAction({ v }: { v: ProgressView }) {
   if (v.closed) {
     return (
       <div className="rounded-2xl bg-[var(--surface)] p-6">
-        <p className="font-bold text-[var(--foreground)]">{v.closed === "refunded" ? "환불된 신청이에요." : "취소된 신청이에요."}</p>
+        <p className="font-bold text-[var(--foreground)]">{v.testerProgram ? "테스트 중단을 처리했어요." : v.closed === "refunded" ? "환불된 신청이에요." : "취소된 신청이에요."}</p>
         {v.refund && v.refund.amount > 0 && <p className="mt-1 text-sm text-[var(--foreground-muted)]">환불 {v.refund.amount.toLocaleString("ko-KR")}원 · 결제한 수단으로 영업일 3~7일(카드사·결제수단에 따라 달라요) 안에 들어가요.</p>}
         <p className="mt-1 text-sm text-[var(--foreground-muted)]">궁금한 점은 카카오톡 채널 「심리상담실 현」으로 물어봐 주세요.</p>
       </div>
@@ -166,7 +166,7 @@ export default function ProgressPage() {
         <h1 className="font-display mt-1 text-2xl text-[var(--foreground)] sm:text-3xl">{view.name}님의 진행 상황</h1>
         <p className="mt-2 inline-flex rounded-full bg-[var(--surface)] px-3 py-1 text-sm font-semibold text-[var(--foreground)]">
           {view.closed ? (
-            view.closed === "refunded" ? "환불됨" : "취소됨"
+            view.testerProgram ? "중단됨" : view.closed === "refunded" ? "환불됨" : "취소됨"
           ) : view.cancelRequestedAt ? (
             "취소 요청됨"
           ) : (
@@ -217,7 +217,7 @@ export default function ProgressPage() {
         {!view.closed && !view.cancelRequestedAt && (
           <p className="mt-3 text-center">
             <Link href={`/a/${view.linkKey}/cancel`} className="text-xs text-[var(--foreground-subtle)] underline underline-offset-2 hover:text-[var(--error)]">
-              취소 요청
+              {view.testerProgram ? "테스트 그만두기" : "취소 요청"}
             </Link>
           </p>
         )}
