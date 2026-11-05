@@ -20,6 +20,7 @@ interface Summary {
   placeNeeded?: number;
   unmatchedMails?: number;
   cancelRequests?: number;
+  testerTodo?: number;
 }
 
 interface NavItem {
@@ -44,6 +45,7 @@ function groups(s: Summary | null): NavGroup[] {
         { label: "전문 검사 신청", href: "/admin/assessment/applications", badge: s ? s.safety + s.reschedule + (s.cancelRequests ?? 0) : 0 },
         { label: "검사 상품·안내", href: "/admin/assessment/product" },
         { label: "공개 슬롯", href: "/admin/assessment/slots" },
+        { label: "테스터 명단", href: "/admin/assessment/testers", badge: s?.testerTodo ?? 0 },
         { label: "코드 발급·수집", href: "/admin/assessment/codes", badge: s ? s.issueWaiting + (s.unmatchedMails ?? 0) : 0 },
         { label: "알림 안내표", href: "/admin/assessment/notices" },
         { label: "간이 무료 검사", href: "/admin/tests" },

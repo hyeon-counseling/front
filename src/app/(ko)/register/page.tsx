@@ -2,13 +2,23 @@
 
 import { SHOW_COURSES } from "@/lib/site";
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { isTesterApplyPath, pendingTesterPath } from "@/lib/tester";
 import { apiFetch } from "@/lib/api";
 import { Alert, Button, Input } from "@/components/ui";
 import { SocialLoginButtons } from "@/components/ko/SocialLoginButtons";
 import { AgreementChecks, ProfileFields, type Gender } from "@/components/ko/ProfileFields";
 
 export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +29,10 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  // 테스터 신청에서 온 사람 — 인증 메일을 어느 브라우저에서 열어도 신청으로 돌아오게 메일 링크에 주소를 싣는다
+  const searchParams = useSearchParams();
+  const paramNext = searchParams.get("next");
+  const returnTo = isTesterApplyPath(paramNext) ? paramNext : typeof window !== "undefined" ? pendingTesterPath() : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +47,7 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      await apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify({ name, email, password, birthDate, gender, agreeTerms, agreePrivacy }) });
+      await apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify({ name, email, password, birthDate, gender, agreeTerms, agreePrivacy, ...(returnTo ? { returnTo } : {}) }) });
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "회원가입에 실패했어요.");
@@ -51,7 +65,7 @@ export default function RegisterPage() {
           <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
             <span className="font-medium text-[var(--foreground)]">{email}</span> 로 인증 링크를 보냈어요. 링크를 누르면 계정이 활성화됩니다. 메일이 안 보이면 스팸함도 확인해 주세요.
           </p>
-          <Link href="/login" className="mt-6 inline-flex items-center rounded-xl bg-[var(--brand)] px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
+          <Link href={returnTo ? `/login?next=${encodeURIComponent(returnTo)}` : "/login"} className="mt-6 inline-flex items-center rounded-xl bg-[var(--brand)] px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--brand-hover)]">
             로그인으로
           </Link>
         </div>

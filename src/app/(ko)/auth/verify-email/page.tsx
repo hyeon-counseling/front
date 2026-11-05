@@ -15,11 +15,14 @@
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { isTesterApplyPath } from "@/lib/tester";
 
 function VerifyEmailHandler() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
+  const paramNext = searchParams.get("next");
+  const loginHref = isTesterApplyPath(paramNext) ? `/login?next=${encodeURIComponent(paramNext)}` : "/login";
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -74,7 +77,7 @@ function VerifyEmailHandler() {
               <h1 className="mb-2 text-xl font-semibold text-[var(--foreground)]">인증이 끝났어요</h1>
               <p className="mb-6 text-sm text-[var(--foreground-muted)]">{message}</p>
               <Link
-                href="/login"
+                href={loginHref}
                 className="inline-block rounded-xl bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
               >
                 로그인
@@ -93,7 +96,7 @@ function VerifyEmailHandler() {
               <p className="mb-6 text-sm text-[var(--foreground-muted)]">{message}</p>
               <div className="flex flex-col gap-3">
                 <Link
-                  href="/login"
+                  href={loginHref}
                   className="inline-block rounded-xl bg-[var(--brand)] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-hover)]"
                 >
                   로그인으로

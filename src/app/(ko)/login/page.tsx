@@ -10,6 +10,7 @@ import { Alert, Button, Input } from "@/components/ui";
 import { SocialLoginButtons, socialErrorMessage } from "@/components/ko/SocialLoginButtons";
 import { EXPIRED_MESSAGE, safeNext, saveUnverifiedEmail } from "@/lib/authSession";
 import { pendingGiftPath } from "@/lib/gift";
+import { isTesterApplyPath } from "@/lib/tester";
 
 function LoginForm() {
   const router = useRouter();
@@ -90,7 +91,7 @@ function LoginForm() {
 
         <p className="mt-6 text-center text-sm text-[var(--foreground-muted)]">
           아직 계정이 없나요?{" "}
-          <Link href="/register" className="font-medium text-[var(--brand)] hover:underline">
+          <Link href={isTesterApplyPath(searchParams.get("next")) ? `/register?next=${encodeURIComponent(searchParams.get("next")!)}` : "/register"} className="font-medium text-[var(--brand)] hover:underline">
             회원가입
           </Link>
         </p>

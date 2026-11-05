@@ -102,6 +102,7 @@ export default function ApplyPage() {
   const [agree, setAgree] = useState<Record<string, boolean>>({});
   const [openDetail, setOpenDetail] = useState<string | null>(null);
   const [refundOpen, setRefundOpen] = useState(false);
+  const [isTesterProgram, setIsTesterProgram] = useState(false); // 테스터 쿠폰을 받은 회원 — 환불이 없어 환불 표를 보이지 않는다
   const [showAll, setShowAll] = useState(false);
   const [bad, setBad] = useState<Set<Field>>(new Set());
   const [error, setError] = useState("");
@@ -115,6 +116,7 @@ export default function ApplyPage() {
       router.replace("/login?next=/assessment/comprehensive/apply");
       return;
     }
+    apiRequest<{ tester: boolean }>("/api/tester/me").then((r) => setIsTesterProgram(!!r.data?.tester));
     apiRequest<{ fromText: string; untilText?: string; slots: SlotView[] }>("/api/assessment/slots").then((r) => {
       setSlots(r.ok && r.data ? r.data.slots : []);
       setFromText(r.data?.fromText ?? "");
@@ -702,13 +704,17 @@ export default function ApplyPage() {
                       결제는 다음 화면에서 <b>카드·간편결제</b>로 해요. 받은 쿠폰이 있으면 <b>[내 쿠폰 선택]</b>을 눌러 함께 쓸 수 있어요.
                     </span>
                   </div>
-                  <p className="px-[18px] pb-4 pt-3 text-[14.5px] text-[var(--foreground-muted)]">
-                    취소·환불은{" "}
-                    <button type="button" onClick={() => setRefundOpen(true)} className="min-h-8 cursor-pointer font-extrabold text-[var(--brand-bright)] underline underline-offset-[3px]">
-                      환불 규정 보기
-                    </button>
-                    를 눌러 확인해 주세요.
-                  </p>
+                  {isTesterProgram ? (
+                    <p className="px-[18px] pb-4 pt-3 text-[14.5px] text-[var(--foreground-muted)]">테스트 신청은 쿠폰으로 0원이 되고, 환불은 따로 없어요. 언제든 그만둘 수 있어요.</p>
+                  ) : (
+                    <p className="px-[18px] pb-4 pt-3 text-[14.5px] text-[var(--foreground-muted)]">
+                      취소·환불은{" "}
+                      <button type="button" onClick={() => setRefundOpen(true)} className="min-h-8 cursor-pointer font-extrabold text-[var(--brand-bright)] underline underline-offset-[3px]">
+                        환불 규정 보기
+                      </button>
+                      를 눌러 확인해 주세요.
+                    </p>
+                  )}
                 </div>
 
                 {error && (
