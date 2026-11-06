@@ -210,6 +210,20 @@ export default function ProgressPage() {
               </div>
             </dl>
             {view.method === "offline" && <p className="mt-4 text-xs text-[var(--foreground-subtle)]">정확한 장소는 상담 3일 전에 알림톡으로 알려 드려요.</p>}
+            {view.reschedule?.mode === "voluntary" && (
+              <div className="mt-4 border-t border-[var(--border-light)] pt-4 text-sm">
+                {view.reschedule.can ? (
+                  <>
+                    <Link href={`/a/${key}/reschedule`} className="link-underline font-semibold text-[var(--brand)]">
+                      해석 상담 일정 바꾸기
+                    </Link>
+                    <p className="mt-1 text-xs text-[var(--foreground-subtle)]">{view.reschedule.changeUntilText}까지 1회 무료로 바꿀 수 있어요.</p>
+                  </>
+                ) : (
+                  <p className="text-xs text-[var(--foreground-subtle)]">{view.reschedule.reason}</p>
+                )}
+              </div>
+            )}
           </section>
         </div>
 
