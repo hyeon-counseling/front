@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "@/lib/api";
 import { SITE_URL } from "@/lib/site";
 import { Skeleton, cx } from "@/components/ui";
@@ -131,10 +131,31 @@ export default function TestersPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [manual, setManual] = useState<{ id: string; text: string } | null>(null); // 복사가 막힌 기기에서 직접 고르기
 
+  // 디스코드 알림의 [테스터 명단에서 보기] (?id=명단id) — 처음 불러왔을 때 그 사람을 펼치고 그 자리로
+  const jumped = useRef(false);
+  const jumpTo = useRef<string | null>(null);
   const load = useCallback(() => {
-    apiRequest<Row[]>("/api/admin/assessment/testers").then((r) => (r.ok && r.data ? setRows(r.data) : setErr(r.message || "불러오지 못했어요.")));
+    apiRequest<Row[]>("/api/admin/assessment/testers").then((r) => {
+      if (!r.ok || !r.data) {
+        setErr(r.message || "불러오지 못했어요.");
+        return;
+      }
+      setRows(r.data);
+      if (jumped.current) return;
+      jumped.current = true;
+      const id = new URLSearchParams(window.location.search).get("id");
+      if (!id || !r.data.some((x) => x.id === id)) return;
+      jumpTo.current = id;
+      setOpenId(id);
+    });
   }, []);
   useEffect(load, [load]);
+  // 펼쳐진 뒤(화면에 그려진 뒤)에 그 자리로 내려간다
+  useEffect(() => {
+    if (!openId || jumpTo.current !== openId) return;
+    jumpTo.current = null;
+    document.getElementById(`tester-${openId}`)?.scrollIntoView({ block: "start" });
+  }, [openId]);
 
   const say = (m: string, e = "") => {
     setMsg(m);
@@ -212,7 +233,7 @@ export default function TestersPage() {
           const open = openId === r.id;
           const link = `${SITE_URL}/tester/${r.inviteKey}`;
           return (
-            <section key={r.id} className="card overflow-hidden">
+            <section key={r.id} id={`tester-${r.id}`} className="card scroll-mt-20 overflow-hidden">
               <button onClick={() => setOpenId(open ? null : r.id)} aria-expanded={open} className="flex w-full cursor-pointer flex-wrap items-center gap-2 p-4 text-left">
                 <span className="font-bold text-[var(--foreground)]">{r.code}</span>
                 <span className="text-[var(--foreground)]">{r.name}</span>
