@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { assessRequest, type RefundQuote } from "@/lib/assessment";
+import { assessRequest, type ProgressView, type RefundQuote } from "@/lib/assessment";
 import { Skeleton } from "@/components/ui";
 import { RefundRules } from "@/components/assessment/RefundRules";
 import { VerifyGate } from "@/components/assessment/VerifyGate";
@@ -32,12 +32,15 @@ export default function CancelPage() {
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
+  // 일정만 바꾸려는 분은 취소 대신 [일정 바꾸기]로 — 진행 화면과 같은 규칙(서버가 계산한 reschedule)
+  const [reschedule, setReschedule] = useState<ProgressView["reschedule"] | null>(null);
 
   useEffect(() => {
     assessRequest<QuoteRes & { needsVerify?: boolean; nameHint?: string }>(key, "/cancel").then((r) => {
       if (r.ok && r.data) {
         setData(r.data);
         setVerify(null);
+        void assessRequest<ProgressView>(key, "").then((p) => setReschedule(p.ok && p.data ? p.data.reschedule ?? null : null));
       } else if (r.status === 403 && r.data?.needsVerify) setVerify(r.data.nameHint ?? "");
       else setError(r.message || "불러오지 못했어요.");
     });
@@ -174,7 +177,17 @@ export default function CancelPage() {
             placeholder="예: 일정이 맞지 않아요 / 지금은 다른 도움이 먼저일 것 같아요"
             className="w-full rounded-xl border border-[var(--border)] px-4 py-3 leading-relaxed focus:border-[var(--brand)] focus:outline-none"
           />
-          <p className="mt-1 text-xs text-[var(--foreground-subtle)]">일정만 바꾸고 싶다면 취소하지 않고 카카오톡 채널로 알려 주세요. 상담 3일 전까지 1회 무료로 바꿀 수 있어요.</p>
+          {reschedule?.can ? (
+            <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
+              일정만 바꾸고 싶다면 취소하지 않고{" "}
+              <Link href={`/a/${key}/reschedule`} className="link-underline font-semibold text-[var(--brand)]">
+                {reschedule.mode === "required" ? "새 일정 고르기" : "일정 바꾸기"}
+              </Link>
+              에서 바꿔 주세요.{reschedule.mode === "voluntary" && reschedule.changeUntilText ? ` ${reschedule.changeUntilText}까지 1회 무료예요.` : ""}
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-[var(--foreground-subtle)]">일정만 바꾸고 싶다면 취소하지 않고 카카오톡 채널로 알려 주세요.</p>
+          )}
         </section>
 
         {error && <p className="mt-4 text-sm text-[var(--error)]">{error}</p>}
