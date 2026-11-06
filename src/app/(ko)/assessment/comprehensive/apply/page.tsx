@@ -525,7 +525,7 @@ export default function ApplyPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                               {d.slots.map((s) => {
-                                const t = slotTime(kstParts(s.startsAt).hhmm);
+                                const hhmm = kstParts(s.startsAt).hhmm; // 24시간제 14:00 · 15:30 (11/7)
                                 const on = s.id === slotId;
                                 return (
                                   <button
@@ -544,8 +544,8 @@ export default function ApplyPage() {
                                           : cx("cursor-pointer bg-white hover:shadow-[inset_0_0_0_1.5px_var(--brand-bright)]", bad.has("slot") ? "shadow-[inset_0_0_0_1.5px_#F2B3A4]" : "shadow-[inset_0_0_0_1.5px_var(--border)]")
                                     )}
                                   >
-                                    <span className={cx(!s.available && "line-through")}>{t.big}</span>
-                                    <small className={cx("mt-0.5 text-[11.5px] font-semibold", !s.available ? "text-[#ADA59A]" : on ? "text-[#CBEBDD]" : "text-[var(--foreground-subtle)]")}>{s.available ? t.small : "마감"}</small>
+                                    <span className={cx(!s.available && "line-through")}>{hhmm}</span>
+                                    {!s.available && <small className="mt-0.5 text-[11.5px] font-semibold text-[#ADA59A]">마감</small>}
                                   </button>
                                 );
                               })}
@@ -815,13 +815,6 @@ const PAY_ROWS: [string, string][] = [
   ["해석 상담 약 60분", "포함"],
   ["해석 영상", "3만 원 상당 포함"],
 ];
-
-/** "15:30" → 큰 글씨 "3:30" + 작은 글씨 "오후" (18시부터는 "저녁") */
-function slotTime(hhmm: string) {
-  const [h, m] = hhmm.split(":").map(Number);
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return { big: m ? `${h12}:${String(m).padStart(2, "0")}` : `${h12}시`, small: h < 12 ? "오전" : h < 18 ? "오후" : "저녁" };
-}
 
 function Req() {
   return <span className="ml-[3px] text-[var(--coral)]">*</span>;

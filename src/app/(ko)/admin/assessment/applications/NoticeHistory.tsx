@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { apiRequest } from "@/lib/api";
 import { cx } from "@/components/ui";
+import { kstDateTime } from "@/lib/assessment";
 
 /**
  * 신청 상세 · 알림 이력 — 줄을 누르면 펼쳐서
@@ -35,8 +36,7 @@ export interface NoticeRow {
   } | null;
 }
 
-const fmt = (iso: string) =>
-  new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const fmt = (iso: string) => kstDateTime(iso);
 const CHANNEL: Record<string, string> = { alimtalk: "알림톡", sms: "문자", none: "—" };
 const RESULT: Record<string, string> = { ok: "접수됨", failed: "실패", skipped: "건너뜀", pending: "보내는 중" };
 const DELIVERY: Record<string, string> = { pending: "전달 확인 중", delivered: "받음 ✓", failed: "전달 실패", unknown: "결과 모름" };

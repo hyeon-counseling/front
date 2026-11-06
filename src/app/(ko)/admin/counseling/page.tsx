@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { Badge, Button, Input, Modal, Skeleton, Toast } from "@/components/ui";
 import { METHOD_LABEL, SESSION_STATUS, type CounselingMethod, type CounselingSlot, type SessionStatus } from "@/lib/counseling";
+import { kstDateTime } from "@/lib/assessment";
 
 // ─────────────────────────────────────────────────────────────────
 // 관리자 · 개인 상담 — 상담권 목록, 세부 신청서, 일정 확정(검사와 같은 일정표), 회기 기록, 연장, 환불
@@ -48,7 +49,7 @@ interface Detail extends Omit<Row, "id"> {
 }
 
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
-const when = (iso: string) => new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric", weekday: "short", hour: "numeric", minute: "2-digit" });
+const when = (iso: string) => kstDateTime(iso);
 const maskName = (n: string) => (n.length <= 1 ? "*" : n.length === 2 ? `${n[0]}*` : `${n[0]}${"*".repeat(n.length - 2)}${n[n.length - 1]}`);
 
 export default function AdminCounselingPage() {

@@ -10,6 +10,7 @@ import { kstParts } from "@/lib/assessment";
 import { PAY_STATE_LABEL, type Row } from "./types";
 import { PlaceBox, RefundBox, ResendBox, TestsBox, UnpaidBox, type RefundQuoteView, type TestDetail } from "./PanelActions";
 import { NoticeHistory, type NoticeRow } from "./NoticeHistory";
+import { kstDateTime } from "@/lib/assessment";
 
 /**
  * 신청 상세 — 오른쪽 패널 (좁은 화면에서는 전체 화면)
@@ -56,8 +57,7 @@ const AVOID_LABEL: Record<string, string> = {
 
 const GENDER: Record<string, string> = { female: "여성", male: "남성", other: "기타", undisclosed: "밝히지 않음" };
 const BY: Record<string, string> = { system: "자동", admin: "상담가", customer: "고객" };
-const fmt = (iso: string) =>
-  new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const fmt = (iso: string) => kstDateTime(iso);
 
 // 접수면접지 키 → 문항 이름 (상세 화면용)
 const LABELS: Record<string, string> = Object.fromEntries(

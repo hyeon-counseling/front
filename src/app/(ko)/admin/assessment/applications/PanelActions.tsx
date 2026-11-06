@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { apiRequest } from "@/lib/api";
 import { cx } from "@/components/ui";
+import { kstDateTime } from "@/lib/assessment";
 
 /**
  * 신청 상세 패널의 일 처리 부분 — 검사 3종(링크 입력·완료 체크) · 장소/화상 링크 · 알림 다시 보내기 · 취소
@@ -39,7 +40,7 @@ const CODES: [string, string][] = [
   ["REFUND", "환불 완료"],
 ];
 
-const fmt = (iso: string) => new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const fmt = (iso: string) => kstDateTime(iso);
 
 export function TestsBox({ id, tests, onChanged }: { id: string; tests: Record<string, TestDetail>; onChanged: () => void }) {
   const [edit, setEdit] = useState<string | null>(null);
