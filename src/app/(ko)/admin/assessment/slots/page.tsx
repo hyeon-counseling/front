@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch, apiRequest } from "@/lib/api";
 import { kstParts } from "@/lib/assessment";
 import { Skeleton, cx } from "@/components/ui";
@@ -9,7 +9,9 @@ import { Skeleton, cx } from "@/components/ui";
  * 관리자 · 공개 슬롯 (해석 상담 가능 시간)
  * 위: 여러 날짜 × 여러 시간을 한꺼번에 열기 (미리 보기 → 열기). 월·수·금 오전(투석)은 서버가 빼 준다.
  * 아래: 7주 달력 — 칸을 눌러 닫기/다시 열기/지우기/개인 일정으로 막기. 예약된 칸은 바꿀 수 없다.
- * 개인 일정 칸은 고객에게 예약된 칸과 똑같이 '마감'으로 보인다. [여러 칸 고르기]로 한꺼번에 막거나 다시 연다.
+ * 개인 일정 칸은 고객에게 예약된 칸과 똑같이 '마감'으로 보인다.
+ * 여러 칸: [여러 칸 고르기] 또는 달력에서 칸을 끌면(세로=같은 날 여러 시간, 가로=여러 날 같은 시간, 대각선=네모) 골라지고,
+ * 고른 칸을 한꺼번에 열기·닫기·개인 일정·지우기. 예약됐거나 결제 중인 칸은 고르지도 바꾸지도 않는다 (서버도 같은 규칙).
  */
 interface AdminSlot {
   id: string;
@@ -50,13 +52,24 @@ const STATE_STYLE: Record<AdminSlot["state"], string> = {
 };
 const STATE_LABEL: Record<AdminSlot["state"], string> = { open: "열림", held: "결제 중", booked: "예약됨", closed: "닫힘", personal: "개인 일정" };
 
+type BulkAction = "open" | "closed" | "personal" | "delete";
+const BULK_BUTTON: Record<BulkAction, string> = { open: "열기", closed: "닫기", personal: "개인 일정으로", delete: "지우기" };
+const BULK_DONE: Record<BulkAction, string> = { open: "열었어요", closed: "닫았어요", personal: "개인 일정으로 막았어요", delete: "지웠어요" };
+interface BulkResult {
+  changed: number;
+  same: number;
+  booked: number;
+  held: number;
+  missing: number;
+}
+
 export default function SlotsPage() {
   // 화면을 연 날 기준 (다시 그려도 바뀌지 않게). 달력은 이번 주 일요일부터 7주
   const [{ today, start }] = useState(() => {
     const t = kstToday();
     return { today: t, start: addDaysKey(t, -dowOf(t)) };
   });
-  const days = Array.from({ length: WEEKS * 7 }, (_, i) => addDaysKey(start, i));
+  const days = useMemo(() => Array.from({ length: WEEKS * 7 }, (_, i) => addDaysKey(start, i)), [start]);
   const firstBookable = addDaysKey(today, 14);
   const lastBookable = addDaysKey(today, 42);
 
@@ -145,6 +158,123 @@ export default function SlotsPage() {
   };
 
   const toggle = <T,>(arr: T[], v: T) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+
+  // ── 고른 칸 한꺼번에 (예약·결제 중 칸은 서버가 건너뛰고 수를 알려 준다) ──
+  const [lockedHint, setLockedHint] = useState("");
+  const bulk = async (action: BulkAction) => {
+    if (!marked.length) return;
+    if (action === "delete" && !window.confirm(`선택한 ${marked.length}칸을 지울까요? 지운 칸은 되돌릴 수 없어요. (예약됐거나 결제 중인 칸은 지우지 않아요)`)) return;
+    setBusy(true);
+    setPersonalMsg("");
+    const r = await apiRequest<BulkResult>("/api/admin/assessment/slots/bulk", { method: "POST", body: JSON.stringify({ ids: marked, action }) });
+    setBusy(false);
+    if (r.ok && r.data) {
+      const d = r.data;
+      const skip = [d.booked && `예약된 ${d.booked}칸`, d.held && `결제 중인 ${d.held}칸`, d.missing && `그새 바뀐 ${d.missing}칸`].filter(Boolean).join(", ");
+      setPersonalMsg(`${d.changed}칸을 ${BULK_DONE[action]}.${d.same ? ` (이미 그 상태였던 ${d.same}칸)` : ""}${skip ? ` ${skip}은 건너뛰었어요.` : ""}`);
+      setMarked([]);
+      setLockedHint("");
+    } else setPersonalMsg(r.message || "바꾸지 못했어요.");
+    load();
+  };
+
+  // ── 끌어서 여러 칸 고르기 ──
+  // 칸 위치 = 달력의 몇째 줄·몇째 칸(요일)·시각. 끌기 시작한 칸과 지금 칸으로 네모를 만들어 그 안의 칸을 고른다
+  const slotPos = useMemo(() => {
+    const idx = new Map(days.map((k, i) => [k, i]));
+    const m = new Map<string, { i: number; t: string; locked: boolean }>();
+    for (const s of slots ?? []) {
+      const p = kstParts(s.startsAt);
+      const i = idx.get(p.dateKey);
+      if (i !== undefined) m.set(s.id, { i, t: p.hhmm, locked: s.state === "booked" || s.state === "held" });
+    }
+    return m;
+  }, [slots, days]);
+
+  const rectSelect = (from: string, to: string, base: string[]) => {
+      const a = slotPos.get(from);
+      const b = slotPos.get(to);
+      if (!a || !b) return;
+      const [r1, r2] = [Math.floor(a.i / 7), Math.floor(b.i / 7)].sort((x, y) => x - y);
+      const [c1, c2] = [a.i % 7, b.i % 7].sort((x, y) => x - y);
+      const [t1, t2] = [a.t, b.t].sort();
+      const inside: string[] = [];
+      let locked = 0;
+      for (const [id, p] of slotPos) {
+        const r = Math.floor(p.i / 7);
+        const c = p.i % 7;
+        if (r < r1 || r > r2 || c < c1 || c > c2 || p.t < t1 || p.t > t2) continue;
+        if (p.locked) locked++;
+        else inside.push(id);
+      }
+      setMarked([...new Set([...base, ...inside])]);
+      setLockedHint(locked ? `예약됐거나 결제 중인 ${locked}칸은 고르지 않았어요.` : "");
+  };
+
+  const drag = useRef<{ anchor: string; base: string[]; moved: boolean; touch: boolean; armed: boolean; x: number; y: number; timer: number | null } | null>(null);
+  const suppressClick = useRef(false);
+
+  const onGridPointerDown = (e: React.PointerEvent) => {
+    const anchor = (e.target as HTMLElement).closest<HTMLElement>("[data-slot-id]")?.dataset.slotId;
+    if (!anchor || e.button !== 0) return;
+    const touch = e.pointerType !== "mouse";
+    if (!touch) e.preventDefault(); // 끌 때 글자가 선택되지 않게 (클릭은 그대로)
+    const keep = e.shiftKey || e.ctrlKey || e.metaKey; // Shift·Ctrl 을 누른 채 끌면 지금 고른 칸에 더한다
+    const st = { anchor, base: keep ? marked : [], moved: false, touch, armed: !touch, x: e.clientX, y: e.clientY, timer: null as number | null };
+    // 휴대폰·태블릿: 길게(0.45초) 누른 뒤 끌기 — 그 전에 움직이면 화면 넘기기로 본다
+    if (touch)
+      st.timer = window.setTimeout(() => {
+        if (drag.current === st) {
+          st.armed = true;
+          navigator.vibrate?.(15);
+        }
+      }, 450);
+    drag.current = st;
+    const over = (x: number, y: number) => (document.elementFromPoint(x, y) as HTMLElement | null)?.closest<HTMLElement>("[data-slot-id]")?.dataset.slotId ?? null;
+    const move = (ev: PointerEvent) => {
+      const d = drag.current;
+      if (!d) return;
+      if (!d.armed) {
+        if (Math.hypot(ev.clientX - d.x, ev.clientY - d.y) > 8) end();
+        return;
+      }
+      const id = over(ev.clientX, ev.clientY);
+      if (!id || (!d.moved && id === d.anchor)) return;
+      if (!d.moved) {
+        d.moved = true;
+        setMulti(true);
+        setSelected(null);
+      }
+      rectSelect(d.anchor, id, d.base);
+    };
+    const block = (ev: TouchEvent) => {
+      if (drag.current?.armed) ev.preventDefault(); // 길게 누른 뒤에는 화면이 움직이지 않게
+    };
+    const end = () => {
+      const d = drag.current;
+      if (d?.timer) clearTimeout(d.timer);
+      if (d?.moved) {
+        suppressClick.current = true; // 끌기 끝의 클릭은 무시
+        window.setTimeout(() => (suppressClick.current = false), 0);
+      } else if (d?.touch && d.armed) {
+        // 길게 누르기만 하고 놓음 → 그 칸 하나 고르기
+        setMulti(true);
+        setSelected(null);
+        if (!slotPos.get(d.anchor)?.locked) setMarked((x) => toggle(x, d.anchor));
+        suppressClick.current = true;
+        window.setTimeout(() => (suppressClick.current = false), 0);
+      }
+      drag.current = null;
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+      window.removeEventListener("touchmove", block);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
+    if (touch) window.addEventListener("touchmove", block, { passive: false });
+  };
 
   return (
     <div className="px-4 py-8 sm:px-6">
@@ -270,7 +400,7 @@ export default function SlotsPage() {
           ))}
           <button
             type="button"
-            onClick={() => (setMulti((v) => !v), setMarked([]))}
+            onClick={() => (setMulti((v) => !v), setMarked([]), setLockedHint(""))}
             aria-pressed={multi}
             className={cx("ml-auto h-9 cursor-pointer rounded-lg px-3 text-sm font-semibold", multi ? "bg-violet-600 text-white" : "bg-[var(--surface)] text-[var(--foreground)]")}
           >
@@ -279,19 +409,29 @@ export default function SlotsPage() {
         </div>
         {multi && (
           <div className="sticky top-2 z-10 mb-2 flex flex-wrap items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm">
-            <span className="font-semibold text-violet-800">{marked.length ? `${marked.length}칸 고름` : "달력에서 칸을 눌러 고르세요"}</span>
-            <button disabled={busy || !marked.length} onClick={() => personal(marked, "block")} className="h-9 cursor-pointer rounded-lg bg-violet-600 px-3 font-semibold text-white disabled:opacity-40">
-              개인 일정으로 막기
-            </button>
-            <button disabled={busy || !marked.length} onClick={() => personal(marked, "open")} className="h-9 cursor-pointer rounded-lg bg-white px-3 font-semibold text-violet-800 disabled:opacity-40">
-              다시 열기
-            </button>
+            <span className="font-semibold text-violet-800">{marked.length ? `${marked.length}칸 고름` : "칸을 누르거나 끌어서 고르세요"}</span>
+            {(["open", "closed", "personal", "delete"] as const).map((a) => (
+              <button
+                key={a}
+                disabled={busy || !marked.length}
+                onClick={() => bulk(a)}
+                className={cx(
+                  "h-9 cursor-pointer rounded-lg px-3 font-semibold disabled:opacity-40",
+                  a === "personal" ? "bg-violet-600 text-white" : a === "delete" ? "bg-white text-[var(--error)]" : a === "open" ? "bg-[var(--brand)] text-white" : "bg-white text-[var(--foreground)]"
+                )}
+              >
+                {marked.length ? `선택한 ${marked.length}칸 ${BULK_BUTTON[a]}` : BULK_BUTTON[a]}
+              </button>
+            ))}
             {marked.length > 0 && (
-              <button onClick={() => setMarked([])} className="cursor-pointer text-[var(--foreground-subtle)] underline underline-offset-2">
-                고른 칸 지우기
+              <button onClick={() => (setMarked([]), setLockedHint(""))} className="cursor-pointer text-[var(--foreground-subtle)] underline underline-offset-2">
+                고르기 취소
               </button>
             )}
-            <span className="w-full text-xs text-violet-800">고객에게는 예약된 칸과 똑같이 「마감」으로 보여요. 예약됐거나 결제 중인 칸은 막을 수 없어요.</span>
+            {lockedHint && <span className="w-full text-xs font-semibold text-amber-800">{lockedHint}</span>}
+            <span className="w-full text-xs text-violet-800">
+              끌면 네모 안의 칸이 한꺼번에 골라져요(세로: 같은 날 여러 시간 · 가로: 여러 날 같은 시간). Shift·Ctrl을 누른 채 끌면 더해지고, 고른 칸을 다시 누르면 풀려요. 휴대폰은 길게 누른 뒤 끌어요. 예약됐거나 결제 중인 칸은 고르지도 바꾸지도 않아요. 개인 일정 칸은 고객에게 「마감」으로 보여요.
+            </span>
           </div>
         )}
         {personalMsg && <p className="mb-2 text-sm text-[var(--brand)]">{personalMsg}</p>}
@@ -299,7 +439,7 @@ export default function SlotsPage() {
           <Skeleton className="h-96" />
         ) : (
           <div className="overflow-x-auto">
-            <div className="grid min-w-[760px] grid-cols-7 gap-1.5">
+            <div className="grid min-w-[760px] select-none grid-cols-7 gap-1.5" onPointerDown={onGridPointerDown} onContextMenu={(e) => drag.current?.touch && e.preventDefault()}>
               {DOW.map((d, i) => (
                 <div key={d} className={cx("pb-1 text-center text-xs font-semibold", i === 0 || i === 6 ? "text-[var(--brand)]" : "text-[var(--foreground-subtle)]")}>
                   {d}
@@ -331,18 +471,23 @@ export default function SlotsPage() {
                         <button
                           key={s.id}
                           type="button"
-                          disabled={multi && (s.state === "booked" || s.state === "held")}
+                          data-slot-id={s.id}
+                          aria-disabled={multi && (s.state === "booked" || s.state === "held") ? true : undefined}
                           aria-pressed={multi ? marked.includes(s.id) : undefined}
-                          onClick={() =>
-                            multi
-                              ? setMarked((x) => toggle(x, s.id))
-                              : s.state === "held" && s.applicationId
-                                ? window.location.assign(`/admin/assessment/applications?id=${s.applicationId}`)
-                                : setSelected(s)
-                          }
+                          onClick={() => {
+                            if (suppressClick.current) return;
+                            if (multi) {
+                              if (s.state !== "booked" && s.state !== "held") setMarked((x) => toggle(x, s.id));
+                              return;
+                            }
+                            if (s.state === "held" && s.applicationId) window.location.assign(`/admin/assessment/applications?id=${s.applicationId}`);
+                            else setSelected(s);
+                          }}
+                          style={{ WebkitTouchCallout: "none" }}
                           className={cx(
-                            "block w-full cursor-pointer rounded-md border px-1.5 py-0.5 text-left text-[11px] font-semibold disabled:cursor-not-allowed disabled:opacity-50",
+                            "block w-full cursor-pointer rounded-md border px-1.5 py-0.5 text-left text-[11px] font-semibold",
                             STATE_STYLE[s.state],
+                            multi && (s.state === "booked" || s.state === "held") && "cursor-not-allowed opacity-50",
                             marked.includes(s.id) && "ring-2 ring-violet-600 ring-offset-1"
                           )}
                           title={`${s.counseling ? "개인 상담 " : ""}${STATE_LABEL[s.state]} · ${s.methods.map((m) => (m === "offline" ? "대면" : "화상")).join("·")}`}
