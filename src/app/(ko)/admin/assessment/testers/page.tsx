@@ -290,7 +290,7 @@ export default function TestersPage() {
                     <p className="font-bold text-[var(--foreground)]">개인 메시지 복사</p>
                     <p className="mt-0.5 text-xs text-[var(--foreground-subtle)]">알림톡 대신 카카오톡으로 보낼 때 써요. 문안과 링크가 한 번에 복사돼요. 지금 단계에 맞는 것만 눌러져요.</p>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {r.messages.map((m) => (
+                      {(r.messages ?? []).map((m) => (
                         <button
                           key={m.code}
                           disabled={busy || !m.enabled}
