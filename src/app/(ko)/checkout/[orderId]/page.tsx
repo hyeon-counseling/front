@@ -62,6 +62,17 @@ export default function CheckoutPage() {
     };
   }, [leaveWatch, orderId]);
 
+  // 토스 결제창(휴대폰은 결제창으로 페이지가 넘어감)에서 [뒤로]로 이 화면에 돌아오면 브라우저가 떠나기 전 화면을 그대로 되살린다(bfcache).
+  // 그때 '결제로 넘어가는 중' 표시가 켜진 채로 남아, 결제하지 않고 사이트 안 다른 화면으로 나가도 바로 취소되지 않았다(10분 자동 취소로만).
+  // 되살아난 순간 그 표시만 끈다 — 화면·문구·결제창 호출·결제 순서는 그대로. 새로고침은 새로 그리는 것이라 여기와 무관하다.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) proceeding.current = false;
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
+
   useEffect(() => {
     if (loading) return;
     if (!user) {
