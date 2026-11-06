@@ -158,8 +158,10 @@ export default function TestersPage() {
   const [preview, setPreview] = useState<{ id: string; code: string; text: string } | null>(null); // 채널 메시지 미리 보기
 
   // 디스코드 알림의 [테스터 명단에서 보기] (?id=명단id) — 처음 불러왔을 때 그 사람을 펼치고 그 자리로
+  // [복사하러 가기] (?id=…&copy=T2) — 그 단계 줄로 내려가 [복사]를 눈에 띄게
   const jumped = useRef(false);
   const jumpTo = useRef<string | null>(null);
+  const [focusMsg, setFocusMsg] = useState<string | null>(null); // "명단id:T2"
   const load = useCallback(() => {
     apiRequest<Row[]>("/api/admin/assessment/testers").then((r) => {
       if (!r.ok || !r.data) {
@@ -172,6 +174,8 @@ export default function TestersPage() {
       const id = new URLSearchParams(window.location.search).get("id");
       if (!id || !r.data.some((x) => x.id === id)) return;
       jumpTo.current = id;
+      const code = new URLSearchParams(window.location.search).get("copy");
+      if (code && /^T[1-5]$/.test(code)) setFocusMsg(`${id}:${code}`);
       setOpenId(id);
     });
   }, []);
@@ -180,8 +184,9 @@ export default function TestersPage() {
   useEffect(() => {
     if (!openId || jumpTo.current !== openId) return;
     jumpTo.current = null;
-    document.getElementById(`tester-${openId}`)?.scrollIntoView({ block: "start" });
-  }, [openId]);
+    const target = (focusMsg?.startsWith(`${openId}:`) && document.getElementById(`msg-${focusMsg.replace(":", "-")}`)) || document.getElementById(`tester-${openId}`);
+    target?.scrollIntoView({ block: focusMsg ? "center" : "start" });
+  }, [openId, focusMsg]);
 
   const say = (m: string, e = "") => {
     setMsg(m);
@@ -376,7 +381,11 @@ export default function TestersPage() {
                     </p>
                     <ul className="mt-2 divide-y divide-[var(--border-light)]">
                       {(r.messages ?? []).map((m) => (
-                        <li key={m.code} className="flex flex-wrap items-center gap-2 py-2">
+                        <li
+                          key={m.code}
+                          id={`msg-${r.id}-${m.code}`}
+                          className={cx("flex flex-wrap items-center gap-2 py-2", focusMsg === `${r.id}:${m.code}` && "-mx-2 rounded-lg bg-amber-50 px-2 ring-2 ring-amber-300")}
+                        >
                           <span className={cx("min-w-[11rem] font-semibold", m.enabled ? "text-[var(--foreground)]" : "text-[var(--foreground-subtle)]")}>
                             {m.code} {m.label}
                             {!m.enabled && <span className="ml-1 text-xs font-normal">· {m.reason}</span>}
