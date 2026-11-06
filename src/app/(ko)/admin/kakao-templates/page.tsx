@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch, apiRequest } from "@/lib/api";
 import { cx } from "@/components/ui";
+import { kstDateTime } from "@/lib/assessment";
 
 // ─────────────────────────────────────────────────────────────────
 // 카카오 알림톡 템플릿 관리 (10/30 운영 개편)
@@ -131,7 +132,7 @@ function guessNoticeCode(name: string, codes: string[]): string {
   return codes.includes(cand) ? cand : "";
 }
 
-const fmt = (iso: string) => new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const fmt = (iso: string) => kstDateTime(iso);
 const PHONE_KEY = "kakao-test-phone";
 
 interface TesterApp {

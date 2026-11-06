@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { assessRequest } from "@/lib/assessment";
+import { assessRequest, kstTime } from "@/lib/assessment";
 import { Skeleton, cx } from "@/components/ui";
 import { VerifyGate } from "@/components/assessment/VerifyGate";
 import { useProgress } from "@/components/assessment/useProgress";
@@ -353,8 +353,7 @@ export default function IntakePage() {
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
         if (saveDraft(key, next, step)) {
-          const d = new Date();
-          setSavedAt(`${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`);
+          setSavedAt(kstTime(new Date()));
         }
       }, 500);
       return next;

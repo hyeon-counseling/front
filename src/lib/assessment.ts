@@ -108,7 +108,18 @@ export async function assessRequest<T = unknown>(key: string, path: string, opti
   }
 }
 
-/** 12월 26일(토) 오후 2시 — 브라우저 시간대와 무관하게 한국 시간으로 */
+/** 12월 26일(토) 14:00 — 브라우저 시간대와 무관하게 한국 시간으로. 시각은 24시간제 「HH:MM」 하나로 (11/7 상담가) */
+/** 11월 25일(수) 14:00 — 날짜와 시각을 함께 보여 주는 곳은 모두 이 형식 */
+export function kstDateTime(iso: string | Date): string {
+  const p = kstParts(typeof iso === "string" ? iso : iso.toISOString());
+  return `${p.dayText} ${p.hhmm}`;
+}
+
+/** 14:00 (24시간제) */
+export function kstTime(iso: string | Date): string {
+  return kstParts(typeof iso === "string" ? iso : iso.toISOString()).hhmm;
+}
+
 export function kstParts(iso: string) {
   const d = new Date(new Date(iso).getTime() + 9 * 3600 * 1000);
   const dow = ["일", "월", "화", "수", "목", "금", "토"][d.getUTCDay()];
@@ -120,7 +131,7 @@ export function kstParts(iso: string) {
     day: d.getUTCDate(),
     dow,
     dayText: `${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일(${dow})`,
-    timeText: `${h < 12 ? "오전" : "오후"} ${h % 12 === 0 ? 12 : h % 12}시${m ? ` ${m}분` : ""}`,
+    timeText: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
     hhmm: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
     isWeekend: d.getUTCDay() === 0 || d.getUTCDay() === 6,
   };

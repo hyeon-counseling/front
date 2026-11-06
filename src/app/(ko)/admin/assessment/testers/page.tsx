@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "@/lib/api";
 import { SITE_URL } from "@/lib/site";
 import { Skeleton, cx } from "@/components/ui";
+import { kstDateTime } from "@/lib/assessment";
 
 /**
  * 관리자 · 테스터 명단 (54-테스터-프로그램 R1·R2·R5·R8)
@@ -121,8 +122,7 @@ const STATUS_TONE: Record<string, string> = {
   신청: "bg-[var(--brand-light)] text-[var(--brand)]",
 };
 
-const fmt = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+const fmt = (iso: string | null | undefined) => (iso ? kstDateTime(iso) : "");
 
 /** 한국 시각 20:50 ~ 08:00 — 채널 메시지를 보내지 않는 시간 (서버도 막는다) */
 const quietNow = () => {

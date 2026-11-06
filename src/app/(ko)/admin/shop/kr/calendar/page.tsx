@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { Reservation, ReservationStatus, RESERVATION_STATUS_LABEL } from "../../../_lib/types";
+import { kstTime } from "@/lib/assessment";
 
 // 예약 캘린더 — 상담/심리검사 예약을 월별로 조회. 가드는 admin/layout.tsx에서 처리.
 
@@ -155,7 +156,7 @@ export default function CalendarPage() {
                         <div className="space-y-1">
                           {(byDay.get(String(day)) ?? []).map((r) => (
                             <button key={r._id} onClick={() => openEdit(r)} className={`block w-full truncate rounded px-1.5 py-0.5 text-left text-[11px] ${statusColor(r.status)}`} title={`${r.customerName ?? ""} ${r.productName}`}>
-                              {new Date(r.scheduledAt!).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })} {r.customerName ?? r.productName}
+                              {kstTime(r.scheduledAt!)} {r.customerName ?? r.productName}
                             </button>
                           ))}
                         </div>

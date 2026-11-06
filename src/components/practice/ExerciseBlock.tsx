@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "@/lib/api";
 import type { Block } from "@/lib/practice";
 import { ExerciseInput } from "./ExerciseInput";
+import { kstTime } from "@/lib/assessment";
 
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
 
@@ -109,7 +110,7 @@ function SaveBadge({ state, savedAt }: { state: SaveState; savedAt: string | nul
       : state === "error"
         ? "저장 실패"
         : savedAt
-          ? `저장됨 · ${new Date(savedAt).toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" })}`
+          ? `저장됨 · ${kstTime(new Date(savedAt))}`
           : "저장됨";
   const tone = state === "error" ? "text-red-600" : state === "saved" ? "text-[var(--brand)]" : "text-[var(--foreground-subtle)]";
   return <span className={`shrink-0 whitespace-nowrap pt-1 text-xs font-medium ${tone}`}>{label}</span>;
