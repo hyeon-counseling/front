@@ -294,7 +294,7 @@ export default function IndividualCounselingPage() {
                   &quot;힘든 사람이 아니어도, 나를 설명할 언어와 틀이 필요할 때가 있어요. 손에 잡히는 마음의 지도를 함께 그려 드릴게요.&quot;
                 </p>
                 <ul className="mt-[18px] flex flex-wrap gap-2" aria-label="학력">
-                  {["상담 및 심리치료 석사", "청소년상담 학사"].map((c) => (
+                  {["상담 및 심리치료 석사", "청소년문화상담학 학사"].map((c) => (
                     <li key={c} className="rounded-full border-[1.5px] border-[var(--border)] bg-[var(--ivory)] px-3 py-1 text-sm font-bold text-[var(--foreground-muted)]">
                       {c}
                     </li>
