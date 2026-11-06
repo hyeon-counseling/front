@@ -10,6 +10,13 @@ import { Skeleton, cx } from "@/components/ui";
  * 신청 답을 받은 사람 등록 = 신청 접수 → 접수 안내(T1 또는 개인 메시지) → 동의·쿠폰(자동) → 신청 → 진행 → 설문 → 종료 / 철회.
  * 승인된 T 템플릿이 없으면 알림은 나가지 않는다 — 링크를 복사해 개인 메시지로 보낸다.
  */
+/** 카카오 채널 메시지(브랜드 메시지) 마지막 결과 */
+interface ChannelStatus {
+  at: string;
+  status: "sending" | "delivered" | "failed" | "unknown";
+  reason: string | null;
+}
+
 interface Row {
   id: string;
   code: string;
@@ -39,7 +46,7 @@ interface Row {
   notices: { code: string; channel: string; result: string; reason: string | null; at: string }[];
   survey: { id: string; answers: Record<string, string | number>; submittedAt: string; excludedAt: string | null } | null;
   history: { at: string; by: string; note: string }[];
-  messages: { code: string; label: string; enabled: boolean; reason: string; text: string }[];
+  messages: { code: string; label: string; enabled: boolean; reason: string; text: string; channel?: ChannelStatus | null }[];
   sendResult?: { sent: boolean; reason?: string };
 }
 
@@ -117,6 +124,24 @@ const STATUS_TONE: Record<string, string> = {
 const fmt = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
 
+/** 한국 시각 20:50 ~ 08:00 — 채널 메시지를 보내지 않는 시간 (서버도 막는다) */
+const quietNow = () => {
+  const k = new Date(Date.now() + 9 * 3600_000);
+  const m = k.getUTCHours() * 60 + k.getUTCMinutes();
+  return m >= 20 * 60 + 50 || m < 8 * 60;
+};
+
+function ChannelLine({ c }: { c: ChannelStatus }) {
+  if (c.status === "delivered") return <span className="text-xs font-semibold text-[var(--brand)]">채널 메시지 받음 · {fmt(c.at)}</span>;
+  if (c.status === "sending") return <span className="text-xs text-[var(--foreground-muted)]">채널 메시지 보냄 · {fmt(c.at)} · 받았는지 확인 중 (새로고침하면 다시 확인해요)</span>;
+  if (c.status === "unknown") return <span className="text-xs text-[var(--foreground-muted)]">채널 메시지 보냄 · {fmt(c.at)} · 결과를 받지 못했어요</span>;
+  return (
+    <span className="text-xs font-semibold text-red-700">
+      채널 메시지 실패 · {fmt(c.at)}{c.reason ? ` · ${c.reason}` : ""} — 채널 친구가 아니면 이렇게 실패해요. [복사]로 개인 메시지를 보내 주세요.
+    </span>
+  );
+}
+
 const NOTICE_REASON: Record<string, string> = { no_template: "승인 템플릿 없음 → 개인 메시지로" };
 
 export default function TestersPage() {
@@ -130,6 +155,7 @@ export default function TestersPage() {
   const [busy, setBusy] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [manual, setManual] = useState<{ id: string; text: string } | null>(null); // 복사가 막힌 기기에서 직접 고르기
+  const [preview, setPreview] = useState<{ id: string; code: string; text: string } | null>(null); // 채널 메시지 미리 보기
 
   // 디스코드 알림의 [테스터 명단에서 보기] (?id=명단id) — 처음 불러왔을 때 그 사람을 펼치고 그 자리로
   const jumped = useRef(false);
@@ -174,6 +200,42 @@ export default function TestersPage() {
     }
     say("", r.message || "처리하지 못했어요.");
     return false;
+  };
+
+  const copyMessage = async (id: string, m: Row["messages"][number]) => {
+    let copied = true;
+    try {
+      await navigator.clipboard.writeText(m.text);
+    } catch {
+      copied = false;
+      setManual({ id, text: m.text });
+    }
+    await call(`/${id}/copied`, "POST", { code: m.code }, () => (copied ? `${m.code} 메시지를 복사했어요. 카카오톡에 붙여 넣어 보내 주세요.` : `${m.code} 복사가 막혀서 아래 칸에 띄웠어요. 길게 눌러 복사해 주세요.`));
+  };
+
+  // 카카오 채널 메시지 — 미리 보기에서 [이대로 보내기]. 이미 보낸 단계면 서버가 묻고, 확인하면 다시 보낸다
+  const sendChannel = async (id: string, code: string, again = false): Promise<void> => {
+    setBusy(true);
+    say("");
+    const res = await apiRequest<Row & { channelResult: { ok: boolean; reason: string | null } }>(`/api/admin/assessment/testers/${id}/channel-send`, {
+      method: "POST",
+      body: JSON.stringify({ code, again }),
+    });
+    setBusy(false);
+    if (!res.ok || !res.data) {
+      const field = (res.data as { field?: string } | null)?.field;
+      if (field === "already") {
+        if (window.confirm(res.message)) return sendChannel(id, code, true);
+        return;
+      }
+      say("", res.message || "보내지 못했어요.");
+      return;
+    }
+    setPreview(null);
+    load();
+    const r = res.data.channelResult;
+    if (r.ok) say(`${code} 채널 메시지를 보냈어요. 받았는지는 잠시 뒤 새로고침하면 보여요.`);
+    else say("", `${code} 채널 메시지를 보내지 못했어요${r.reason ? ` (${r.reason})` : ""}. [복사]로 개인 메시지를 보내 주세요.`);
   };
 
   const create = async (e: React.FormEvent) => {
@@ -308,33 +370,55 @@ export default function TestersPage() {
                   </div>
 
                   <div className="rounded-xl border border-[var(--border-light)] p-3">
-                    <p className="font-bold text-[var(--foreground)]">개인 메시지 복사</p>
-                    <p className="mt-0.5 text-xs text-[var(--foreground-subtle)]">알림톡 대신 카카오톡으로 보낼 때 써요. 문안과 링크가 한 번에 복사돼요. 지금 단계에 맞는 것만 눌러져요.</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <p className="font-bold text-[var(--foreground)]">단계별 메시지</p>
+                    <p className="mt-0.5 text-xs text-[var(--foreground-subtle)]">
+                      알림톡 대신 보낼 때 써요. [복사]는 개인 카카오톡에 붙여 넣고, [채널로 보내기]는 카카오 채널 「심리상담실 현」 이름으로 보내요(채널 친구에게만 가요 · 1건 100원, 부가세 별도). 지금 단계에 맞는 것만 눌러져요.
+                    </p>
+                    <ul className="mt-2 divide-y divide-[var(--border-light)]">
                       {(r.messages ?? []).map((m) => (
-                        <button
-                          key={m.code}
-                          disabled={busy || !m.enabled}
-                          title={m.enabled ? m.text : m.reason}
-                          onClick={async () => {
-                            let copied = true;
-                            try {
-                              await navigator.clipboard.writeText(m.text);
-                            } catch {
-                              copied = false;
-                              setManual({ id: r.id, text: m.text });
-                            }
-                            await call(`/${r.id}/copied`, "POST", { code: m.code }, () => (copied ? `${m.code} 메시지를 복사했어요. 카카오톡에 붙여 넣어 보내 주세요.` : `${m.code} 복사가 막혀서 아래 칸에 띄웠어요. 길게 눌러 복사해 주세요.`));
-                          }}
-                          className={cx("h-9 cursor-pointer rounded-lg px-3 font-semibold disabled:cursor-not-allowed", m.enabled ? "bg-[var(--brand-light)] text-[var(--brand)]" : "bg-[var(--surface)] text-[var(--foreground-subtle)] opacity-60")}
-                        >
-                          {m.code} {m.label}
-                          {!m.enabled && <span className="ml-1 text-xs font-normal">· {m.reason}</span>}
-                        </button>
+                        <li key={m.code} className="flex flex-wrap items-center gap-2 py-2">
+                          <span className={cx("min-w-[11rem] font-semibold", m.enabled ? "text-[var(--foreground)]" : "text-[var(--foreground-subtle)]")}>
+                            {m.code} {m.label}
+                            {!m.enabled && <span className="ml-1 text-xs font-normal">· {m.reason}</span>}
+                          </span>
+                          <button
+                            disabled={busy || !m.enabled}
+                            title={m.enabled ? m.text : m.reason}
+                            onClick={() => copyMessage(r.id, m)}
+                            className={cx("h-9 cursor-pointer rounded-lg px-3 font-semibold disabled:cursor-not-allowed", m.enabled ? "bg-[var(--brand-light)] text-[var(--brand)]" : "bg-[var(--surface)] text-[var(--foreground-subtle)] opacity-60")}
+                          >
+                            복사
+                          </button>
+                          <button
+                            disabled={busy || !m.enabled}
+                            onClick={() => setPreview({ id: r.id, code: m.code, text: m.text })}
+                            className={cx("h-9 cursor-pointer rounded-lg border px-3 font-semibold disabled:cursor-not-allowed", m.enabled ? "border-[var(--brand)] text-[var(--brand)]" : "border-[var(--border)] text-[var(--foreground-subtle)] opacity-60")}
+                          >
+                            채널로 보내기
+                          </button>
+                          {m.channel && <ChannelLine c={m.channel} />}
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                     {manual?.id === r.id && (
                       <textarea readOnly value={manual.text} rows={5} onFocus={(e) => e.target.select()} className="mt-2 w-full rounded-lg border border-[var(--border)] p-2 text-sm" aria-label="복사할 메시지" />
+                    )}
+                    {preview?.id === r.id && (
+                      <div className="mt-2 rounded-xl bg-[var(--surface)] p-3">
+                        <p className="font-semibold text-[var(--foreground)]">
+                          {preview.code} 채널 메시지 미리 보기 · 받는 분 {r.name} ({r.phone})
+                        </p>
+                        <pre className="mt-2 whitespace-pre-wrap rounded-lg border border-[var(--border-light)] bg-white p-3 font-sans text-sm leading-relaxed text-[var(--foreground)]">{preview.text}</pre>
+                        {quietNow() && <p className="mt-2 text-sm font-semibold text-amber-800">지금은 보낼 수 없어요. 밤 8시 50분부터 아침 8시까지는 채널 메시지를 보내지 않아요.</p>}
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button disabled={busy || quietNow()} onClick={() => sendChannel(r.id, preview.code)} className="h-9 cursor-pointer rounded-lg bg-[var(--brand)] px-4 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+                            이대로 보내기
+                          </button>
+                          <button onClick={() => setPreview(null)} className="h-9 cursor-pointer rounded-lg bg-white px-4 font-semibold text-[var(--foreground)]">
+                            닫기
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
 
