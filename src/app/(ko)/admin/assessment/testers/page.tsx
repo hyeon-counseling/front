@@ -39,6 +39,7 @@ interface Row {
   notices: { code: string; channel: string; result: string; reason: string | null; at: string }[];
   survey: { id: string; answers: Record<string, string | number>; submittedAt: string; excludedAt: string | null } | null;
   history: { at: string; by: string; note: string }[];
+  messages: { code: string; label: string; enabled: boolean; reason: string; text: string }[];
   sendResult?: { sent: boolean; reason?: string };
 }
 
@@ -128,6 +129,7 @@ export default function TestersPage() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [manual, setManual] = useState<{ id: string; text: string } | null>(null); // 복사가 막힌 기기에서 직접 고르기
 
   const load = useCallback(() => {
     apiRequest<Row[]>("/api/admin/assessment/testers").then((r) => (r.ok && r.data ? setRows(r.data) : setErr(r.message || "불러오지 못했어요.")));
@@ -237,7 +239,7 @@ export default function TestersPage() {
                         <button onClick={() => copy(link, "참여 안내 링크")} className="h-9 cursor-pointer rounded-lg bg-[var(--surface)] px-3 font-semibold">
                           참여 안내 링크 복사
                         </button>
-                        {!r.consent && (
+                        {!r.consent && !r.declinedAt && (
                           <>
                             <button
                               disabled={busy}
@@ -281,6 +283,37 @@ export default function TestersPage() {
                           철회 대신 처리
                         </button>
                       </>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-[var(--border-light)] p-3">
+                    <p className="font-bold text-[var(--foreground)]">개인 메시지 복사</p>
+                    <p className="mt-0.5 text-xs text-[var(--foreground-subtle)]">알림톡 대신 카카오톡으로 보낼 때 써요. 문안과 링크가 한 번에 복사돼요. 지금 단계에 맞는 것만 눌러져요.</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {(r.messages ?? []).map((m) => (
+                        <button
+                          key={m.code}
+                          disabled={busy || !m.enabled}
+                          title={m.enabled ? m.text : m.reason}
+                          onClick={async () => {
+                            let copied = true;
+                            try {
+                              await navigator.clipboard.writeText(m.text);
+                            } catch {
+                              copied = false;
+                              setManual({ id: r.id, text: m.text });
+                            }
+                            await call(`/${r.id}/copied`, "POST", { code: m.code }, () => (copied ? `${m.code} 메시지를 복사했어요. 카카오톡에 붙여 넣어 보내 주세요.` : `${m.code} 복사가 막혀서 아래 칸에 띄웠어요. 길게 눌러 복사해 주세요.`));
+                          }}
+                          className={cx("h-9 cursor-pointer rounded-lg px-3 font-semibold disabled:cursor-not-allowed", m.enabled ? "bg-[var(--brand-light)] text-[var(--brand)]" : "bg-[var(--surface)] text-[var(--foreground-subtle)] opacity-60")}
+                        >
+                          {m.code} {m.label}
+                          {!m.enabled && <span className="ml-1 text-xs font-normal">· {m.reason}</span>}
+                        </button>
+                      ))}
+                    </div>
+                    {manual?.id === r.id && (
+                      <textarea readOnly value={manual.text} rows={5} onFocus={(e) => e.target.select()} className="mt-2 w-full rounded-lg border border-[var(--border)] p-2 text-sm" aria-label="복사할 메시지" />
                     )}
                   </div>
 
