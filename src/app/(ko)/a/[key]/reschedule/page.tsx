@@ -3,32 +3,38 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { apiRequest } from "@/lib/api";
 import { assessRequest, deadlineText, kstParts, type ProgressView, type SlotView } from "@/lib/assessment";
 import { Skeleton, cx } from "@/components/ui";
 import { VerifyGate } from "@/components/assessment/VerifyGate";
 import { useProgress } from "@/components/assessment/useProgress";
 
 /**
- * 일정 재조정 (/a/:key/reschedule) — N7 [새 일정 고르기]. 공개 슬롯 중 하나를 다시 고르면
- * 새 상담일 7일 전이 새 검사 마감이 되고, 이미 마친 검사는 그대로 인정된다.
+ * 일정 다시 고르기 (/a/:key/reschedule)
+ * - 일정 재조정 필요(검사 마감이 지남) — N7 [새 일정 고르기]
+ * - 상담 3일 전까지 1회 무료 변경 — 진행 화면 [해석 상담 일정 바꾸기]
+ * 공개 슬롯 중 오늘 + 14일 ~ 결제일 + 6주 안에서 다시 고르면 새 상담일 7일 전이 새 검사 마감이 되고, 이미 마친 검사는 그대로 인정된다.
  */
 export default function ReschedulePage() {
   const { key } = useParams<{ key: string }>();
   const { view, setView, needsVerify, error, reload } = useProgress(key);
   const [slots, setSlots] = useState<SlotView[] | null>(null);
   const [fromText, setFromText] = useState("");
+  const [untilText, setUntilText] = useState("");
   const [slotId, setSlotId] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [done, setDone] = useState(false);
 
+  // 이 신청이 고를 수 있는 칸만 (결제일 + 6주까지) — 본인 확인이 끝난 뒤에 부른다
+  const canPick = !!view?.reschedule?.can;
   useEffect(() => {
-    apiRequest<{ fromText: string; slots: SlotView[] }>("/api/assessment/slots?for=reschedule").then((r) => {
+    if (!canPick) return;
+    assessRequest<{ fromText: string; untilText: string; slots: SlotView[] }>(key, "/reschedule-slots").then((r) => {
       setSlots(r.ok && r.data ? r.data.slots : []);
       setFromText(r.data?.fromText ?? "");
+      setUntilText(r.data?.untilText ?? "");
     });
-  }, []);
+  }, [canPick, key]);
 
   const days = useMemo(() => {
     const map = new Map<string, SlotView[]>();
@@ -76,12 +82,18 @@ export default function ReschedulePage() {
     <div className="px-4 py-10 sm:py-14">
       <div className="mx-auto max-w-lg">
         <h1 className="font-display text-2xl text-[var(--foreground)]">해석 상담 일정 다시 고르기</h1>
-        {view.hold !== "reschedule" ? (
-          <p className="mt-4 rounded-2xl bg-[var(--surface)] p-5 text-sm text-[var(--foreground-muted)]">지금은 일정을 바꿀 수 없어요. 바꿔야 하면 카카오톡 채널 「심리상담실 현」으로 알려 주세요.</p>
+        {!view.reschedule?.can ? (
+          <p className="mt-4 rounded-2xl bg-[var(--surface)] p-5 text-sm text-[var(--foreground-muted)]">{view.reschedule?.reason || "지금은 일정을 바꿀 수 없어요. 바꿔야 하면 카카오톡 채널 「심리상담실 현」으로 알려 주세요."}</p>
         ) : (
           <>
+            {view.reschedule.mode === "voluntary" && (
+              <p className="mt-2 rounded-xl bg-[var(--brand-light)] px-4 py-3 text-sm text-[var(--foreground)]">
+                지금 일정: <b>{view.sessionText}</b> · 일정 변경은 1회 무료이고, 바꾼 뒤에는 다시 바꿀 수 없어요.
+              </p>
+            )}
             <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-              이미 마친 검사는 그대로 인정돼요. 새 해석 상담일의 7일 전이 새 검사 마감일이 돼요. {fromText && `${fromText}부터 고를 수 있어요.`}
+              이미 마친 검사는 그대로 인정돼요. 새 해석 상담일의 7일 전이 새 검사 마감일이 돼요.{" "}
+              {fromText && untilText && `${fromText}부터 ${untilText}까지(결제일로부터 6주 안) 고를 수 있어요.`}
             </p>
             {!slots ? (
               <Skeleton className="mt-6 h-40" />

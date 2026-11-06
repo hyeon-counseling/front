@@ -30,6 +30,8 @@ export interface ProgressView {
   place: { name: string; address: string; mapUrl: string } | null; // 상담 3일 전부터
   videoReady: boolean; // 화상 링크 — 하루 전부터
   rescheduleCount: number;
+  /** 일정 바꾸기 — required: 검사 마감이 지나 다시 골라야 함 / voluntary: 상담 3일 전까지 1회 무료 */
+  reschedule?: { mode: "required" | "voluntary" | null; can: boolean; reason: string; changeUntilText: string; fromText: string; untilText: string };
   cancelRequestedAt: string | null;
   cancelRequest: { reason: string; quoteAmount: number; quoteTier: string } | null;
   refund: { amount: number; processedAt: string } | null;
